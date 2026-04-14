@@ -5,28 +5,31 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "reclaimapp",
+    "scheme": "reclaim",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "supportsTablet": true,
+      "bundleIdentifier": "com.reclaim.recovery",
+      "infoPlist": {
+        "NSContactsUsageDescription": "Reclaim needs access to your contacts to quickly reach your accountability partners during moments of struggle.",
+        "NSUserNotificationsUsageDescription": "Reclaim sends you daily check-in reminders and celebrates your milestones to keep you motivated.",
+        "NSPhotoLibraryUsageDescription": "Reclaim needs access to your photo library to set your profile picture"
+      }
     },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "1f40e3fb-59a5-4d54-b7cf-fcf389470581"
+      }
+    },
     "plugins": [
-      "expo-router",
       [
         "expo-splash-screen",
         {
@@ -38,11 +41,10 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    }
+      ],
+      "expo-font",
+      "expo-secure-store",
+      "expo-localization"
+    ]
   }
 }
