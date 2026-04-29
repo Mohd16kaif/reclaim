@@ -63,11 +63,11 @@ jobs:
       - name: Build Archive
         run: |
           cd ios
-          xcodebuild -workspace Reclaim.xcworkspace \
-            -scheme Reclaim \
+          xcodebuild -workspace reclaimapp.xcworkspace \
+            -scheme reclaimapp \
             -sdk iphoneos \
             -configuration Release \
-            -archivePath $RUNNER_TEMP/Reclaim.xcarchive \
+            -archivePath $RUNNER_TEMP/reclaimapp.xcarchive \
             archive \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution: Abdul rehman Khan (6W846KW4B3)" \
@@ -97,7 +97,7 @@ jobs:
           </plist>
           EOF
           xcodebuild -exportArchive \
-            -archivePath $RUNNER_TEMP/Reclaim.xcarchive \
+            -archivePath $RUNNER_TEMP/reclaimapp.xcarchive \
             -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
             -exportPath $RUNNER_TEMP/export
 
@@ -108,7 +108,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           xcrun altool --upload-app \
-            -f $RUNNER_TEMP/export/Reclaim.ipa \
+            -f $RUNNER_TEMP/export/reclaimapp.ipa \
             -t ios \
             -u "$APPLE_ID" \
             -p "$APPLE_APP_PASSWORD" \
