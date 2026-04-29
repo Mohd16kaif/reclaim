@@ -1,0 +1,6 @@
+module Pods_reclaimapp {
+  umbrella header "Pods-reclaimapp-umbrella.h"
+
+  export *
+  module * { export * }
+}
