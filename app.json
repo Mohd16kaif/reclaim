@@ -45,6 +45,9 @@
       "expo-font",
       "expo-secure-store",
       "expo-localization"
-    ]
+    ],
+    "android": {
+      "package": "com.reclaim.recovery"
+    }
   }
 }
