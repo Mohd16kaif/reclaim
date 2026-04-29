@@ -57,7 +57,8 @@ jobs:
 
       - name: Install Pods
         run: |
-          sudo gem install cocoapods --pre
+          sudo gem install xcodeproj --pre
+          sudo gem install cocoapods
           cd ios
           pod install
 
