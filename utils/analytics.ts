@@ -3,13 +3,18 @@ import PostHog from "posthog-react-native";
 // ── Client ────────────────────────────────────────────────────────────────────
 let client: PostHog | null = null;
 
-export const initAnalytics = (): PostHog => {
+export const initAnalytics = (): PostHog | null => {
   if (!client) {
-    client = new PostHog(process.env.EXPO_PUBLIC_POSTHOG_KEY!, {
-      host: "https://us.i.posthog.com",
-      flushInterval: 10000,
-      flushAt: 20,
-    });
+    try {
+      client = new PostHog(process.env.EXPO_PUBLIC_POSTHOG_KEY!, {
+        host: "https://us.i.posthog.com",
+        flushInterval: 10000,
+        flushAt: 20,
+      });
+    } catch (e) {
+      console.warn("PostHog init failed:", e);
+      return null;
+    }
   }
   return client;
 };
