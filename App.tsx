@@ -311,6 +311,44 @@ const appLayoutStyles = StyleSheet.create({
   },
 });
 
+
+// ── Error Boundary ────────────────────────────────────────────────────────────
+import { Text, View, ScrollView } from 'react-native';
+
+class ErrorBoundary extends React.Component
+  { children: React.ReactNode },
+  { error: Error | null }
+> {
+  constructor(props: any) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  componentDidCatch(error: Error, info: any) {
+    console.error('ErrorBoundary caught:', error, info);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <ScrollView style={{ flex: 1, backgroundColor: 'red', padding: 40 }}>
+          <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginTop: 60 }}>
+            CRASH CAUGHT
+          </Text>
+          <Text style={{ color: 'white', fontSize: 14, marginTop: 20 }}>
+            {this.state.error.toString()}
+          </Text>
+          <Text style={{ color: 'white', fontSize: 12, marginTop: 20 }}>
+            {this.state.error.stack}
+          </Text>
+        </ScrollView>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const navigationRef = useNavigationContainerRef();
   const [activeTab, setActiveTab] = useState<TabName>("Home");
@@ -386,6 +424,7 @@ export default function App() {
   }, []);
 
   return (
+    <ErrorBoundary>
     <BlockerProvider>
       <NavigationIndependentTree>
         <NavigationContainer
@@ -510,6 +549,7 @@ export default function App() {
         </NavigationContainer>
       </NavigationIndependentTree>
     </BlockerProvider>
+    </ErrorBoundary>
   );
 }
 
