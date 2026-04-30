@@ -73,11 +73,7 @@ jobs:
             archive \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution: Abdul rehman Khan (6W846KW4B3)" \
-            PROVISIONING_PROFILE_SPECIFIER="Reclaim_App_Store_New" \
             OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/app-signing.keychain-db" \
-            PROVISIONING_PROFILE_SPECIFIER_ReclaimTunnel="Reclaim_Tunnel_App_Store_New" \
-            PROVISIONING_PROFILE_SPECIFIER_ReclaimShieldConfig="Reclaim_ShieldConfig_App_Store" \
-            PROVISIONING_PROFILE_SPECIFIER_ReclaimDeviceActivity="Reclaim_DeviceActivity_App_Store"
 
       - name: Export IPA
         run: |
