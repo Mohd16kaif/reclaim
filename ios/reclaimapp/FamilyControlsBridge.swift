@@ -3,7 +3,6 @@ import FamilyControls
 import DeviceActivity
 import ManagedSettings
 
-@available(iOS 16.0, *)
 @objc(FamilyControlsBridge)
 class FamilyControlsBridge: NSObject {
 
@@ -13,6 +12,10 @@ class FamilyControlsBridge: NSObject {
 
     @objc func requestAuthorization(_ resolve: @escaping RCTPromiseResolveBlock,
                                      rejecter reject: @escaping RCTPromiseRejectBlock) {
+        guard #available(iOS 16.0, *) else {
+            reject("UNAVAILABLE", "FamilyControls requires iOS 16+", nil)
+            return
+        }
         Task {
             do {
                 try await center.requestAuthorization(for: .individual)

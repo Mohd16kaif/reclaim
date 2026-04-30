@@ -17,11 +17,11 @@
 		81344F342F8F5B9C007001BE /* ReclaimShieldConfig.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 81344F282F8F5B9C007001BE /* ReclaimShieldConfig.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		81344F3E2F8F5CAE007001BE /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 81344EDE2F8F5A62007001BE /* NetworkExtension.framework */; };
 		81344F462F8F5CAE007001BE /* ReclaimTunnel.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 81344F3D2F8F5CAE007001BE /* ReclaimTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		81898B242F91241F00CB5D42 /* TunnelBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81898B232F91241F00CB5D42 /* TunnelBridge.swift */; };
-		81898B262F91469000CB5D42 /* FamilyControlsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81898B252F91469000CB5D42 /* FamilyControlsBridge.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		CF946DA77678B60BD9945052 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4B217FF9DB5DA327BF0D3D64 /* PrivacyInfo.xcprivacy */; };
 		D88DBC3820A970C4E3DDFE08 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D321751F7C7D026DB9E9271 /* ExpoModulesProvider.swift */; };
+		AA000001000000000000AAA1 /* TunnelBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001000000000000AAA2 /* TunnelBridge.swift */; };
+		AA000001000000000000BBB1 /* FamilyControlsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001000000000000BBB2 /* FamilyControlsBridge.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
@@ -78,14 +78,14 @@
 		81344F292F8F5B9C007001BE /* ManagedSettings.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettings.framework; path = System/Library/Frameworks/ManagedSettings.framework; sourceTree = SDKROOT; };
 		81344F2B2F8F5B9C007001BE /* ManagedSettingsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettingsUI.framework; path = System/Library/Frameworks/ManagedSettingsUI.framework; sourceTree = SDKROOT; };
 		81344F3D2F8F5CAE007001BE /* ReclaimTunnel.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ReclaimTunnel.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		81898B232F91241F00CB5D42 /* TunnelBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelBridge.swift; sourceTree = "<group>"; };
-		81898B252F91469000CB5D42 /* FamilyControlsBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyControlsBridge.swift; sourceTree = "<group>"; };
 		8E043182416C5800B490F7EF /* Pods-reclaimapp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-reclaimapp.release.xcconfig"; path = "Target Support Files/Pods-reclaimapp/Pods-reclaimapp.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = reclaimapp/SplashScreen.storyboard; sourceTree = "<group>"; };
 		B5FB7FAD21195A78D2CE8F89 /* libPods-reclaimapp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-reclaimapp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		D75550931DAD19895DDB51ED /* Pods-reclaimapp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-reclaimapp.debug.xcconfig"; path = "Target Support Files/Pods-reclaimapp/Pods-reclaimapp.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		AA000001000000000000AAA2 /* TunnelBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TunnelBridge.swift; path = reclaimapp/TunnelBridge.swift; sourceTree = "<group>"; };
+		AA000001000000000000BBB2 /* FamilyControlsBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FamilyControlsBridge.swift; path = reclaimapp/FamilyControlsBridge.swift; sourceTree = "<group>"; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = reclaimapp/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* reclaimapp-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "reclaimapp-Bridging-Header.h"; path = "reclaimapp/reclaimapp-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -193,9 +193,9 @@
 		13B07FAE1A68108700A75B9A /* reclaimapp */ = {
 			isa = PBXGroup;
 			children = (
-				81898B252F91469000CB5D42 /* FamilyControlsBridge.swift */,
-				81898B232F91241F00CB5D42 /* TunnelBridge.swift */,
-				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
+		AA000001000000000000AAA2 /* TunnelBridge.swift */,
+		AA000001000000000000BBB2 /* FamilyControlsBridge.swift */,
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */,
 				F11748442D0722820044C1D9 /* reclaimapp-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
@@ -597,9 +597,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				81898B262F91469000CB5D42 /* FamilyControlsBridge.swift in Sources */,
-				81898B242F91241F00CB5D42 /* TunnelBridge.swift in Sources */,
-				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
+		AA000001000000000000AAA1 /* TunnelBridge.swift in Sources */,
+		AA000001000000000000BBB1 /* FamilyControlsBridge.swift in Sources */,
+		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
 				D88DBC3820A970C4E3DDFE08 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
