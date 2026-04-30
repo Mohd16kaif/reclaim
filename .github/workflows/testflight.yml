@@ -72,6 +72,7 @@ jobs:
       - name: Build Archive
         run: |
           cd ios
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 3" ios/reclaimapp/Info.plist
           xcodebuild -workspace reclaimapp.xcworkspace \
             -scheme reclaimapp \
             -sdk iphoneos \
