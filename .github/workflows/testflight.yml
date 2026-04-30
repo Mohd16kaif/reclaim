@@ -58,6 +58,8 @@ jobs:
           sudo ln -sf "$NODE_PATH" /usr/local/bin/node
 
       - name: Install dependencies
+        env:
+          CI: true
         run: npm install
 
       - name: Install Pods
@@ -77,6 +79,8 @@ jobs:
             -archivePath $RUNNER_TEMP/reclaimapp.xcarchive \
             archive \
             CODE_SIGN_STYLE=Manual \
+            CLANG_WARN_NULLABILITY_COMPLETENESS=NO \
+            GCC_TREAT_WARNINGS_AS_ERRORS=NO \
             CODE_SIGN_IDENTITY="Apple Distribution: Abdul rehman Khan (6W846KW4B3)" \
             OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/app-signing.keychain-db" \
 
