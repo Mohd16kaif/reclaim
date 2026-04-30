@@ -312,48 +312,19 @@ const appLayoutStyles = StyleSheet.create({
 });
 
 
->
-          <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginTop: 60 }}>
-            CRASH CAUGHT
-          </Text>
-          <Text style={{ color: 'white', fontSize: 14, marginTop: 20 }}>
-            {this.state.error.toString()}
-          </Text>
-          <Text style={{ color: 'white', fontSize: 12, marginTop: 20 }}>
-            {this.state.error.stack}
-          </Text>
-        </ScrollView>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-
-class ErrorBoundary extends React.Component
-  { children: React.ReactNode },
-  { error: Error | null }
-> {
-  constructor(props: { children: React.ReactNode }) {
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {error: Error | null}> {
+  constructor(props: {children: React.ReactNode}) {
     super(props);
     this.state = { error: null };
   }
-  static getDerivedStateFromError(error: Error) {
-    return { error };
-  }
+  static getDerivedStateFromError(error: Error) { return { error }; }
   render() {
     if (this.state.error) {
       return (
-        <View style={{ flex: 1, backgroundColor: 'red', padding: 40, justifyContent: 'center' }}>
-          <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginTop: 60 }}>
-            CRASH CAUGHT
-          </Text>
-          <Text style={{ color: 'white', fontSize: 14, marginTop: 20 }}>
-            {this.state.error.toString()}
-          </Text>
-          <Text style={{ color: 'white', fontSize: 12, marginTop: 20 }}>
-            {this.state.error.stack}
-          </Text>
+        <View style={{flex:1,backgroundColor:'red',padding:40,justifyContent:'center'}}>
+          <Text style={{color:'white',fontSize:18,fontWeight:'bold',marginTop:60}}>CRASH CAUGHT</Text>
+          <Text style={{color:'white',fontSize:14,marginTop:20}}>{this.state.error.toString()}</Text>
+          <Text style={{color:'white',fontSize:12,marginTop:20}}>{this.state.error.stack}</Text>
         </View>
       );
     }
