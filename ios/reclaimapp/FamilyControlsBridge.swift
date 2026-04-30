@@ -8,8 +8,8 @@ import ManagedSettings
 class FamilyControlsBridge: NSObject {
 
     lazy var store = ManagedSettingsStore(named: ManagedSettingsStore.Name("reclaim.panic"))
-    let center = AuthorizationCenter.shared
-    let activityName = DeviceActivityName("reclaim.panic.session")
+    lazy var center = AuthorizationCenter.shared
+    lazy var activityName = DeviceActivityName("reclaim.panic.session")
 
     @objc func requestAuthorization(_ resolve: @escaping RCTPromiseResolveBlock,
                                      rejecter reject: @escaping RCTPromiseRejectBlock) {
