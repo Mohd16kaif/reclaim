@@ -75,6 +75,6 @@ class FamilyControlsBridge: NSObject {
     }
 
     @objc static func requiresMainQueueSetup() -> Bool {
-        return false
+        return true
     }
 }

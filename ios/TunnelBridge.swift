@@ -110,6 +110,6 @@ class TunnelBridge: NSObject {
     // Required by React Native native modules
     // -------------------------------------------------------------------------
     @objc static func requiresMainQueueSetup() -> Bool {
-        return false
+        return true
     }
 }
