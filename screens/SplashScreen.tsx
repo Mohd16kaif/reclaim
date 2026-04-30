@@ -1,7 +1,8 @@
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { NativeModules } from "react-native";
 import { Image, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -16,6 +17,13 @@ type SplashScreenNavigationProp = StackNavigationProp<
 >;
 
 const SPLASH_DURATION_MS = 2000;
+
+async function getLastCrash(): Promise<string | null> {
+  try {
+    const { AsyncStorage } = await import('@react-native-async-storage/async-storage');
+    return await AsyncStorage.getItem('lastCrashLog');
+  } catch { return null; }
+}
 const logoImage = require("../assets/images/reclaim-logo-app.png");
 
 export default function SplashScreen(): JSX.Element {
@@ -32,6 +40,15 @@ export default function SplashScreen(): JSX.Element {
 
     return () => clearTimeout(timeout);
   }, [navigation]);
+
+  if (crashLog) {
+    return (
+      <SafeAreaView style={{flex:1,backgroundColor:'red',padding:30}}>
+        <Text style={{color:'white',fontSize:16,fontWeight:'bold',marginTop:60}}>PREVIOUS CRASH:</Text>
+        <Text style={{color:'white',fontSize:11,marginTop:10}}>{crashLog}</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>

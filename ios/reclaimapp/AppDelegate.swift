@@ -29,6 +29,12 @@ public class AppDelegate: ExpoAppDelegate {
       launchOptions: launchOptions)
 #endif
 
+    NSSetUncaughtExceptionHandler { exception in
+      let msg = "EXCEPTION: \(exception.name.rawValue) | \(exception.reason ?? "no reason") | \(exception.callStackSymbols.prefix(5).joined(separator: " | "))"
+      UserDefaults.standard.set(msg, forKey: "lastCrashLog")
+      UserDefaults.standard.synchronize()
+    }
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
