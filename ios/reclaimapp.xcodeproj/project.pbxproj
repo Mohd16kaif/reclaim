@@ -91,21 +91,21 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		81344F202F8F5B5B007001BE /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		81344F202F8F5B5B007001BE /* Exceptions for "ReclaimDeviceActivity" folder in "ReclaimDeviceActivity" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 81344F142F8F5B5B007001BE /* ReclaimDeviceActivity */;
 		};
-		81344F352F8F5B9C007001BE /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		81344F352F8F5B9C007001BE /* Exceptions for "ReclaimShieldConfig" folder in "ReclaimShieldConfig" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 81344F272F8F5B9C007001BE /* ReclaimShieldConfig */;
 		};
-		81344F472F8F5CAE007001BE /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		81344F472F8F5CAE007001BE /* Exceptions for "ReclaimTunnel" folder in "ReclaimTunnel" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -115,9 +115,42 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		81344F182F8F5B5B007001BE /* ReclaimDeviceActivity */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (81344F202F8F5B5B007001BE /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ReclaimDeviceActivity; sourceTree = "<group>"; };
-		81344F2D2F8F5B9C007001BE /* ReclaimShieldConfig */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (81344F352F8F5B9C007001BE /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ReclaimShieldConfig; sourceTree = "<group>"; };
-		81344F3F2F8F5CAE007001BE /* ReclaimTunnel */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (81344F472F8F5CAE007001BE /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ReclaimTunnel; sourceTree = "<group>"; };
+		81344F182F8F5B5B007001BE /* ReclaimDeviceActivity */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				81344F202F8F5B5B007001BE /* Exceptions for "ReclaimDeviceActivity" folder in "ReclaimDeviceActivity" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = ReclaimDeviceActivity;
+			sourceTree = "<group>";
+		};
+		81344F2D2F8F5B9C007001BE /* ReclaimShieldConfig */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				81344F352F8F5B9C007001BE /* Exceptions for "ReclaimShieldConfig" folder in "ReclaimShieldConfig" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = ReclaimShieldConfig;
+			sourceTree = "<group>";
+		};
+		81344F3F2F8F5CAE007001BE /* ReclaimTunnel */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				81344F472F8F5CAE007001BE /* Exceptions for "ReclaimTunnel" folder in "ReclaimTunnel" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = ReclaimTunnel;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
