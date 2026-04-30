@@ -7,7 +7,7 @@ import ManagedSettings
 @objc(FamilyControlsBridge)
 class FamilyControlsBridge: NSObject {
 
-    let store = ManagedSettingsStore(named: ManagedSettingsStore.Name("reclaim.panic"))
+    lazy var store = ManagedSettingsStore(named: ManagedSettingsStore.Name("reclaim.panic"))
     let center = AuthorizationCenter.shared
     let activityName = DeviceActivityName("reclaim.panic.session")
 
