@@ -92,7 +92,7 @@ jobs:
           <plist version="1.0">
           <dict>
             <key>method</key>
-            <string>app-store</string>
+            <string>app-store-connect</string>
             <key>teamID</key>
             <string>${{ secrets.APPLE_TEAM_ID }}</string>
             <key>signingStyle</key>
@@ -100,13 +100,13 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>com.reclaim.recovery</key>
-              <string>Reclaim_App_Store_New</string>
+              <string>f8fee1c5-0ef0-4877-b95a-f02e31d1809e</string>
               <key>com.reclaim.recovery.ReclaimTunnel</key>
-              <string>Reclaim_Tunnel_App_Store_New</string>
+              <string>b9d0158d-6ccb-4c83-8bc4-5c30201c7c7c</string>
               <key>com.reclaim.recovery.ReclaimShieldConfig</key>
-              <string>Reclaim_ShieldConfig_App_Store</string>
+              <string>2bf19260-6079-4832-9568-ce6f1b206573</string>
               <key>com.reclaim.recovery.ReclaimDeviceActivity</key>
-              <string>Reclaim_DeviceActivity_App_Store</string>
+              <string>fbd6d5a9-2b35-4084-8376-5c165b20ba70</string>
             </dict>
           </dict>
           </plist>
