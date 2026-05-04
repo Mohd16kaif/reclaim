@@ -101,6 +101,26 @@ import UrgeIntensityScreen from "./screens/UrgeIntensityScreen";
 import UrgeLoopScreen from "./screens/UrgeLoopScreen";
 import UrgeResponseScreen from "./screens/UrgeResponseScreen";
 import WelcomeScreen from "./screens/WelcomeScreen";
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: 'https://65ec470b0a740d1f87e6167dad540946@o4511331120447488.ingest.us.sentry.io/4511331122413568',
+
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+
+  // Enable Logs
+  enableLogs: true,
+
+  // Configure Session Replay
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -332,7 +352,7 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {error:
   }
 }
 
-export default function App() {
+export default Sentry.wrap(function App() {
   const navigationRef = useNavigationContainerRef();
   const [activeTab, setActiveTab] = useState<TabName>("Home");
   const [currentRoute, setCurrentRoute] = useState<string>("Splash");
@@ -534,7 +554,7 @@ export default function App() {
     </BlockerProvider>
     </ErrorBoundary>
   );
-}
+});
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 

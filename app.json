@@ -44,7 +44,15 @@
       ],
       "expo-font",
       "expo-secure-store",
-      "expo-localization"
+      "expo-localization",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "reclaim-p0"
+        }
+      ]
     ],
     "android": {
       "package": "com.reclaim.recovery"

@@ -43,3 +43,7 @@ app-example
 .env
 ios/Pods/
 ios/build/
+
+.env.local
+ios/sentry.properties
+android/sentry.properties
