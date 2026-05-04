@@ -80,7 +80,7 @@ jobs:
       - name: Build Archive
         run: |
           cd ios
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 21" reclaimapp/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 22" reclaimapp/Info.plist
           xcodebuild -workspace reclaimapp.xcworkspace \
             -scheme reclaimapp \
             -sdk iphoneos \
