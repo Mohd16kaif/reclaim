@@ -9,6 +9,9 @@ jobs:
   build:
     runs-on: macos-15
 
+    env:
+      SENTRY_ALLOW_FAILURE: true
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
