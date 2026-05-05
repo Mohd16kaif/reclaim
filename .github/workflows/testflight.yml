@@ -24,7 +24,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: 26.0
 
       - name: Install Apple Certificate
         env:
@@ -80,7 +80,7 @@ jobs:
       - name: Build Archive
         run: |
           cd ios
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 22" reclaimapp/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 23" reclaimapp/Info.plist
           xcodebuild -workspace reclaimapp.xcworkspace \
             -scheme reclaimapp \
             -sdk iphoneos \
