@@ -1,5 +1,6 @@
 import { uploadAvatar, getAvatarUrl } from "./supabase";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setSecure, getSecure } from './secureStorage';
 
 const PROFILE_KEYS = {
   USER_NAME: 'userName',
@@ -22,21 +23,21 @@ const daysBetween = (start: Date, end: Date): number => {
 };
 
 export async function getUserName(): Promise<string> {
-  const name = await AsyncStorage.getItem(PROFILE_KEYS.USER_NAME);
+  const name = await getSecure(PROFILE_KEYS.USER_NAME);
   return name ?? '';
 }
 
 export async function setUserName(name: string): Promise<void> {
-  await AsyncStorage.setItem(PROFILE_KEYS.USER_NAME, name);
+  await setSecure(PROFILE_KEYS.USER_NAME, name);
 }
 
 export async function getUserEmail(): Promise<string> {
-  const email = await AsyncStorage.getItem(PROFILE_KEYS.USER_EMAIL);
+  const email = await getSecure(PROFILE_KEYS.USER_EMAIL);
   return email ?? '';
 }
 
 export async function setUserEmail(email: string): Promise<void> {
-  await AsyncStorage.setItem(PROFILE_KEYS.USER_EMAIL, email);
+  await setSecure(PROFILE_KEYS.USER_EMAIL, email);
 }
 
 export async function getAvatarBase64Jpeg(): Promise<string | null> {

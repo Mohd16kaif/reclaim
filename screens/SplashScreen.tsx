@@ -1,8 +1,8 @@
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect } from "react";
-import { Image, StyleSheet, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { AccessibilityInfo, Image, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type RootStackParamList = {
@@ -21,6 +21,13 @@ const logoImage = require("../assets/images/reclaim-logo-app.png");
 
 export default function SplashScreen(): JSX.Element {
   const navigation = useNavigation<SplashScreenNavigationProp>();
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -29,10 +36,10 @@ export default function SplashScreen(): JSX.Element {
         index: 0,
         routes: [{ name: "Welcome" }],
       });
-    }, SPLASH_DURATION_MS);
+    }, reduceMotion ? 0 : SPLASH_DURATION_MS);
 
     return () => clearTimeout(timeout);
-  }, [navigation]);
+  }, [navigation, reduceMotion]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

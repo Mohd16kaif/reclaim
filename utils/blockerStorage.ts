@@ -86,9 +86,13 @@ export const getCustomHours = async (): Promise<{ start: number; end: number }> 
 export const getBlockedCategories = async (): Promise<string[]> => {
   try {
     const val = await AsyncStorage.getItem(BLOCKER_STORAGE_KEYS.BLOCKED_CATEGORIES);
-    if (val) return JSON.parse(val);
+    if (!val) return DEFAULT_SETTINGS.blockedCategories;
+    const parsed = JSON.parse(val);
+    if (Array.isArray(parsed)) return parsed;
+    console.warn("[blockerStorage] getBlockedCategories: parsed value is not array, returning default");
     return DEFAULT_SETTINGS.blockedCategories;
-  } catch {
+  } catch (e) {
+    console.warn("[blockerStorage] getBlockedCategories parse failed:", e);
     return DEFAULT_SETTINGS.blockedCategories;
   }
 };
@@ -96,9 +100,13 @@ export const getBlockedCategories = async (): Promise<string[]> => {
 export const getBlockEventLog = async (): Promise<BlockEvent[]> => {
   try {
     const val = await AsyncStorage.getItem(BLOCKER_STORAGE_KEYS.BLOCK_EVENT_LOG);
-    if (val) return JSON.parse(val);
+    if (!val) return [];
+    const parsed = JSON.parse(val);
+    if (Array.isArray(parsed)) return parsed;
+    console.warn("[blockerStorage] getBlockEventLog: parsed value is not array, returning empty");
     return [];
-  } catch {
+  } catch (e) {
+    console.warn("[blockerStorage] getBlockEventLog parse failed:", e);
     return [];
   }
 };

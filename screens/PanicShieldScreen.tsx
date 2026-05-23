@@ -3,6 +3,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { useCallback, useEffect, useRef } from 'react';
 import {
+  AccessibilityInfo,
   Animated,
   BackHandler,
   Image,
@@ -30,6 +31,9 @@ const PanicShieldScreen: React.FC = () => {
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(
+      'Panic mode active. Triple-tap home button to exit if needed.'
+    );
     Animated.parallel([
       Animated.timing(scaleAnim, {
         toValue: 1,

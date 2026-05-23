@@ -171,6 +171,8 @@ const DateOfBirthPickerScreen: React.FC = () => {
             style={styles.backButton}
             activeOpacity={0.7}
             onPress={handleBack}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
             <Text style={styles.backArrow}>{"←"}</Text>
           </TouchableOpacity>
@@ -198,6 +200,7 @@ const DateOfBirthPickerScreen: React.FC = () => {
                 onValueChange={handleMonthChange}
                 style={styles.picker}
                 itemStyle={styles.pickerItem}
+                accessibilityLabel="Month"
               >
                 {MONTHS.map((month, index) => (
                   <Picker.Item key={index} label={month} value={index} />
@@ -212,6 +215,7 @@ const DateOfBirthPickerScreen: React.FC = () => {
                 onValueChange={handleDayChange}
                 style={styles.picker}
                 itemStyle={styles.pickerItem}
+                accessibilityLabel="Day"
               >
                 {days.map((day) => (
                   <Picker.Item key={day} label={String(day)} value={day} />
@@ -226,6 +230,7 @@ const DateOfBirthPickerScreen: React.FC = () => {
                 onValueChange={handleYearChange}
                 style={styles.picker}
                 itemStyle={styles.pickerItem}
+                accessibilityLabel="Year"
               >
                 {YEARS_ARRAY.map((year) => (
                   <Picker.Item key={year} label={String(year)} value={year} />

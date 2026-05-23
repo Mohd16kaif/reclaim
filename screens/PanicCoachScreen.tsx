@@ -8,6 +8,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import * as Haptics from "expo-haptics";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  AccessibilityInfo,
   Animated,
   BackHandler,
   Dimensions,
@@ -329,6 +330,13 @@ const PanicCoachScreen: React.FC = () => {
   const [coachName, setCoachName] = useState<string>("Sofia");
   const scrollViewRef = useRef<ScrollView>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Announce panic mode active for assistive tech users
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(
+      'Panic mode active. Triple-tap home button to exit if needed.'
+    );
+  }, []);
 
   // Load AI Coach mode and build system prompt with session memory
   useEffect(() => {

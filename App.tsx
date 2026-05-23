@@ -10,8 +10,10 @@ import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  AccessibilityInfo,
   Animated,
   Image,
+  InteractionManager,
   Platform,
   StyleSheet,
   Text,
@@ -103,20 +105,27 @@ import UrgeResponseScreen from "./screens/UrgeResponseScreen";
 import WelcomeScreen from "./screens/WelcomeScreen";
 import * as Sentry from '@sentry/react-native';
 
+const SENSITIVE_SCREEN_RE = /Masturbation|SexualFantasy|UrgeIntensity|RelationshipImpact|Relapse|Panic/;
+
 Sentry.init({
   dsn: 'https://65ec470b0a740d1f87e6167dad540946@o4511331120447488.ingest.us.sentry.io/4511331122413568',
 
-  // Adds more context data to events (IP address, cookies, user, etc.)
-  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
-  sendDefaultPii: true,
+  // Hardened: do not send PII or verbose logs from a sensitive-domain app.
+  sendDefaultPii: false,
+  enableLogs: false,
 
-  // Enable Logs
-  enableLogs: true,
-
-  // Configure Session Replay
-  
-  
-  
+  beforeSend(event) {
+    if (event.breadcrumbs) {
+      event.breadcrumbs = event.breadcrumbs.filter((b: any) => {
+        const screen = b?.data?.screen;
+        if (typeof screen === 'string' && SENSITIVE_SCREEN_RE.test(screen)) {
+          return false;
+        }
+        return true;
+      });
+    }
+    return event;
+  },
 
   // uncomment the line below to enable Spotlight (https://spotlightjs.com)
   // spotlight: __DEV__,
@@ -242,10 +251,21 @@ const LiquidGlassNavbar: React.FC<NavbarProps> = ({
     }
   };
 
+  const PillBackground: React.FC<{ children: React.ReactNode }> = ({ children }) =>
+    Platform.OS === "ios" ? (
+      <BlurView intensity={80} tint="light" style={navStyles.blurPill}>
+        {children}
+      </BlurView>
+    ) : (
+      <View style={[navStyles.blurPill, { backgroundColor: "rgba(245,245,245,0.96)" }]}>
+        {children}
+      </View>
+    );
+
   return (
     <View style={navStyles.outerWrapper}>
       <View style={navStyles.pillShadow}>
-        <BlurView intensity={80} tint="light" style={navStyles.blurPill}>
+        <PillBackground>
           <View style={navStyles.warmTint} />
           <View style={navStyles.specularHighlight} />
           <View style={navStyles.innerBorder} />
@@ -254,6 +274,11 @@ const LiquidGlassNavbar: React.FC<NavbarProps> = ({
             {TABS.map((tab) => {
               const isActive = activeTab === tab;
               const isProfile = tab === "Profile";
+              const a11yLabel = isProfile
+                ? "Profile"
+                : tab === "AICoach"
+                  ? "AI Coach"
+                  : tab;
 
               return (
                 <TouchableOpacity
@@ -261,6 +286,9 @@ const LiquidGlassNavbar: React.FC<NavbarProps> = ({
                   style={navStyles.tabItem}
                   onPress={() => handleTabPress(tab)}
                   activeOpacity={1}
+                  accessibilityRole="tab"
+                  accessibilityLabel={a11yLabel}
+                  accessibilityState={{ selected: isActive }}
                 >
                   <Animated.View
                     style={[
@@ -293,7 +321,7 @@ const LiquidGlassNavbar: React.FC<NavbarProps> = ({
                         <Ionicons
                           name={getIconName(tab, isActive)}
                           size={26}
-                          color={isActive ? "#000000" : "rgba(0,0,0,0.4)"}
+                          color={isActive ? "#000000" : "rgba(0,0,0,0.6)"}
                         />
                         <Text
                           style={[
@@ -310,7 +338,7 @@ const LiquidGlassNavbar: React.FC<NavbarProps> = ({
               );
             })}
           </View>
-        </BlurView>
+        </PillBackground>
       </View>
     </View>
   );
@@ -338,13 +366,47 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {error:
     this.state = { error: null };
   }
   static getDerivedStateFromError(error: Error) { return { error }; }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    try {
+      Sentry.captureException(error, { extra: { componentStack: info.componentStack } as any });
+    } catch {
+      // swallow — never let the reporter itself crash the boundary
+    }
+  }
+  reset = () => this.setState({ error: null });
   render() {
     if (this.state.error) {
+      if (__DEV__) {
+        return (
+          <View style={{flex:1,backgroundColor:'red',padding:40,justifyContent:'center'}}>
+            <Text style={{color:'white',fontSize:18,fontWeight:'bold',marginTop:60}}>CRASH CAUGHT</Text>
+            <Text style={{color:'white',fontSize:14,marginTop:20}}>{this.state.error.toString()}</Text>
+            <Text style={{color:'white',fontSize:12,marginTop:20}}>{this.state.error.stack}</Text>
+            <TouchableOpacity
+              onPress={this.reset}
+              style={{marginTop:24,backgroundColor:'white',paddingVertical:12,paddingHorizontal:20,borderRadius:8,alignSelf:'flex-start'}}
+              accessibilityRole="button"
+              accessibilityLabel="Try again"
+            >
+              <Text style={{color:'red',fontWeight:'600'}}>Try Again</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      }
       return (
-        <View style={{flex:1,backgroundColor:'red',padding:40,justifyContent:'center'}}>
-          <Text style={{color:'white',fontSize:18,fontWeight:'bold',marginTop:60}}>CRASH CAUGHT</Text>
-          <Text style={{color:'white',fontSize:14,marginTop:20}}>{this.state.error.toString()}</Text>
-          <Text style={{color:'white',fontSize:12,marginTop:20}}>{this.state.error.stack}</Text>
+        <View style={{flex:1,backgroundColor:'#FFFFFF',padding:32,justifyContent:'center',alignItems:'center'}}>
+          <Text style={{color:'#111',fontSize:20,fontWeight:'700',textAlign:'center'}}>Something went wrong</Text>
+          <Text style={{color:'#555',fontSize:15,marginTop:12,textAlign:'center',lineHeight:22}}>
+            We hit an unexpected problem. Your progress is safe — please try again.
+          </Text>
+          <TouchableOpacity
+            onPress={this.reset}
+            style={{marginTop:28,backgroundColor:'#111',paddingVertical:14,paddingHorizontal:28,borderRadius:999}}
+            accessibilityRole="button"
+            accessibilityLabel="Try again"
+          >
+            <Text style={{color:'#FFF',fontWeight:'600',fontSize:16}}>Try Again</Text>
+          </TouchableOpacity>
         </View>
       );
     }
@@ -356,6 +418,15 @@ export default Sentry.wrap(function App() {
   const navigationRef = useNavigationContainerRef();
   const [activeTab, setActiveTab] = useState<TabName>("Home");
   const [currentRoute, setCurrentRoute] = useState<string>("Splash");
+  const screenTrackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (screenTrackTimeoutRef.current) {
+        clearTimeout(screenTrackTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const showNavbar = NAVBAR_VISIBLE_SCREENS.includes(currentRoute);
 
@@ -372,58 +443,94 @@ export default Sentry.wrap(function App() {
   }, [currentRoute]);
 
   useEffect(() => {
-      const startup = async () => {
-        try {
-          initAnalytics();
+    // ── Sync, foreground-critical work ────────────────────────────────
+    try {
+      initAnalytics();
+    } catch (e) {
+      console.error("initAnalytics failed:", e);
+    }
 
-          // Always sync user to ensure the row exists and is updated
-          await syncUserToSupabase();
+    const today = new Date().toISOString().split("T")[0];
 
-          // Restore data if it's a fresh install
-          if (await shouldRestore()) {
-            await restoreFromSupabase();
-          }
-
-          const progress = await loadUserProgress();
-
-      const [deviceId, userName, memberSinceDate, gender, coachMode] =
-        await Promise.all([
+    // Parallelize the foreground AsyncStorage reads (including the trailing two).
+    (async () => {
+      try {
+        const [
+          deviceId,
+          userName,
+          memberSinceDate,
+          gender,
+          coachMode,
+          currentStreakRaw,
+          lastCheckIn,
+        ] = await Promise.all([
           AsyncStorage.getItem("deviceId"),
           AsyncStorage.getItem("userName"),
           AsyncStorage.getItem("memberSinceDate"),
           AsyncStorage.getItem("selectedGender"),
           AsyncStorage.getItem("aiCoachMode"),
+          AsyncStorage.getItem("currentStreak"),
+          AsyncStorage.getItem("lastCheckInDate"),
         ]);
 
-      if (deviceId) {
-        identifyUser(deviceId, {
-          name: userName ?? undefined,
-          memberSinceDate: memberSinceDate ?? undefined,
-          gender: gender ?? undefined,
-          coachMode: coachMode ?? undefined,
-        });
+        if (deviceId) {
+          try {
+            identifyUser(deviceId, {
+              name: userName ?? undefined,
+              memberSinceDate: memberSinceDate ?? undefined,
+              gender: gender ?? undefined,
+              coachMode: coachMode ?? undefined,
+            });
+          } catch (e) {
+            console.error("identifyUser failed:", e);
+          }
+        }
+
+        try {
+          const currentStreak = parseInt(currentStreakRaw ?? "0", 10);
+          trackAppOpened({
+            currentStreak,
+            hasCheckedInToday: lastCheckIn === today,
+          });
+        } catch (e) {
+          console.error("trackAppOpened failed:", e);
+        }
+      } catch (e) {
+        console.error("AsyncStorage foreground reads failed:", e);
       }
+    })();
 
-      const currentStreak = parseInt(
-        (await AsyncStorage.getItem("currentStreak")) ?? "0",
-        10,
-      );
-      const lastCheckIn = await AsyncStorage.getItem("lastCheckInDate");
-      const today = new Date().toISOString().split("T")[0];
+    // ── Defer Supabase sync + restore until after first paint ─────────
+    const interactionHandle = InteractionManager.runAfterInteractions(() => {
+      (async () => {
+        try {
+          await syncUserToSupabase();
+        } catch (e) {
+          console.error("syncUserToSupabase failed:", e);
+        }
 
-      trackAppOpened({
-        currentStreak,
-        hasCheckedInToday: lastCheckIn === today,
-      });
-    } catch (e) {
-      console.error("App startup error:", e);
-    }
+        try {
+          if (await shouldRestore()) {
+            await restoreFromSupabase();
+          }
+        } catch (e) {
+          console.error("restoreFromSupabase failed:", e);
+        }
 
-      // No longer need to call here, it's handled at the start of startup()
-      // syncUserToSupabase();
+        try {
+          await loadUserProgress();
+        } catch (e) {
+          console.error("loadUserProgress failed:", e);
+        }
+      })();
+    });
+
+    return () => {
+      // Best-effort cancel of the deferred work if the component unmounts.
+      if (interactionHandle && typeof (interactionHandle as any).cancel === "function") {
+        (interactionHandle as any).cancel();
+      }
     };
-
-    startup();
   }, []);
 
   return (
@@ -437,9 +544,20 @@ export default Sentry.wrap(function App() {
             if (route?.name) {
               setCurrentRoute(route.name);
               if (!SKIP_TRACKING_SCREENS.includes(route.name)) {
-                trackScreenViewed(route.name, {
-                  time_of_day: getTimeOfDay(),
-                });
+                try {
+                  AccessibilityInfo.announceForAccessibility(route.name);
+                } catch {
+                  // best-effort: announceForAccessibility is platform-flaky
+                }
+                if (screenTrackTimeoutRef.current) {
+                  clearTimeout(screenTrackTimeoutRef.current);
+                }
+                const name = route.name;
+                screenTrackTimeoutRef.current = setTimeout(() => {
+                  trackScreenViewed(name, {
+                    time_of_day: getTimeOfDay(),
+                  });
+                }, 300);
               }
             }
           }}
@@ -597,7 +715,7 @@ const navStyles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.08)", borderRadius: 28,
   },
-  tabLabel: { fontSize: 10, fontWeight: "500", color: "rgba(0,0,0,0.4)", marginTop: 1 },
+  tabLabel: { fontSize: 10, fontWeight: "500", color: "rgba(0,0,0,0.6)", marginTop: 1 },
   tabLabelActive: { color: "#000000", fontWeight: "600" },
   profileCircle: {
     width: 40, height: 40, borderRadius: 20,

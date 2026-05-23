@@ -34,7 +34,7 @@ const BuiltForConsistencyScreen: React.FC = () => {
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <View style={styles.content}>
           <Animated.View style={{ opacity: headerOpacity }}>
-            <TouchableOpacity onPress={handleBackPress} style={styles.backButton}><Text style={styles.backArrow}>←</Text></TouchableOpacity>
+            <TouchableOpacity onPress={handleBackPress} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back"><Text style={styles.backArrow}>←</Text></TouchableOpacity>
           </Animated.View>
           <Animated.View style={[styles.phoneSection, { opacity: phoneOpacity, transform: [{ scale: phoneScale }] }]}>
             <Image source={require('../assets/images/built-for-consistency.png')} style={styles.phoneImage} resizeMode="contain" />

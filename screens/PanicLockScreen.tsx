@@ -2,6 +2,7 @@ import { RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navig
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   Alert,
   BackHandler,
   Image,
@@ -71,6 +72,13 @@ const PanicLockScreen = (): React.ReactElement => {
 
   const [remaining, setRemaining] = useState(initialRemaining);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── Announce panic mode for assistive tech ────────────────────────────
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(
+      'Panic mode active. Triple-tap home button to exit if needed.'
+    );
+  }, []);
 
   // ── Countdown timer (continuous from previous screens) ────────────────
   useEffect(() => {

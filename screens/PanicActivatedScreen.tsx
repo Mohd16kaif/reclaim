@@ -4,6 +4,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  AccessibilityInfo,
   BackHandler,
   Image,
   ScrollView,
@@ -113,35 +114,42 @@ const PanicActivatedScreen: React.FC = () => {
   );
   const [remaining, setRemaining] = useState<number>(DEFAULT_DURATION_SECONDS);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sessionStartedRef = useRef<boolean>(false);
 
-  // Load saved duration on mount
+  // Load saved duration on mount + start countdown only AFTER duration is loaded
   useEffect(() => {
-    const loadDuration = async () => {
+    let cancelled = false;
+    const loadDurationAndStart = async () => {
       const saved = await AsyncStorage.getItem("defaultPanicDuration");
       const durationSeconds = saved ? parseInt(saved, 10) : DEFAULT_DURATION_SECONDS;
+      if (cancelled) return;
       setTotalSeconds(durationSeconds);
       setRemaining(durationSeconds);
-      // Convert seconds to minutes and store on the session
-      // so totalTimeReclaimed is always historically accurate
-      const durationMinutes = Math.round(durationSeconds / 60);
-      await startPanicSession(durationMinutes);
+      // Gate startPanicSession to prevent duplicate sessions on remount
+      if (!sessionStartedRef.current) {
+        sessionStartedRef.current = true;
+        const durationMinutes = Math.round(durationSeconds / 60);
+        await startPanicSession(durationMinutes);
+      }
+      // Announce panic mode active for assistive tech users
+      AccessibilityInfo.announceForAccessibility(
+        "Panic mode active. Triple-tap home button to exit if needed."
+      );
+      // Start countdown AFTER setRemaining(durationSeconds)
+      if (cancelled) return;
+      intervalRef.current = setInterval(() => {
+        setRemaining((prev) => {
+          if (prev <= 1) {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     };
-    loadDuration();
-  }, []);
-
-  // ── Countdown timer ──────────────────────────────────────────────────
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setRemaining((prev) => {
-        if (prev <= 1) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
+    loadDurationAndStart();
     return () => {
+      cancelled = true;
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
@@ -174,7 +182,13 @@ const PanicActivatedScreen: React.FC = () => {
             style={styles.logoImage}
             resizeMode="contain"
           />
-          <TouchableOpacity style={styles.bellButton} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.bellButton}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+          >
             <NotificationBellIcon />
           </TouchableOpacity>
         </View>
@@ -193,8 +207,12 @@ const PanicActivatedScreen: React.FC = () => {
             active.
           </Text>
 
-          {/* Illustration cards */}
-          <View style={styles.cardsRow}>
+          {/* Illustration cards (decorative) */}
+          <View
+            style={styles.cardsRow}
+            accessibilityElementsHidden={true}
+            importantForAccessibility="no-hide-descendants"
+          >
             <NsfwCard />
             <LockCard />
             <BrowserBlockedCard />
@@ -204,7 +222,13 @@ const PanicActivatedScreen: React.FC = () => {
           <Text style={styles.protectedLabel}>
             You{"'"}re Protected for the Next
           </Text>
-          <Text style={styles.timerText}>{timerDisplay}</Text>
+          <Text
+            style={styles.timerText}
+            accessibilityLiveRegion="polite"
+            accessibilityLabel={`${Math.floor(remaining / 60)} minutes ${remaining % 60} seconds remaining`}
+          >
+            {timerDisplay}
+          </Text>
 
           {/* Sub-label */}
           <Text style={styles.noDecisions}>
@@ -215,10 +239,15 @@ const PanicActivatedScreen: React.FC = () => {
           <View style={styles.statusList}>
             <StatusRow color="#22C55E" label="Browser Locked" />
             <StatusRow color="#3B82F6" label="Protection Active" />
-            <StatusRow
-              color="#F97316"
-              label={`${timerDisplay} Countdown Running`}
-            />
+            <View
+              accessibilityLiveRegion="polite"
+              accessibilityLabel={`${Math.floor(remaining / 60)} minutes ${remaining % 60} seconds countdown running`}
+            >
+              <StatusRow
+                color="#F97316"
+                label={`${timerDisplay} Countdown Running`}
+              />
+            </View>
             <StatusRow color="#EF4444" label="Adult Sites Blocked" />
             <StatusRow color="#EF4444" label="Distractions Restricted" />
             <StatusRow color="#22C55E" label="Focus Mode Engaged" />

@@ -48,7 +48,7 @@ const AlwaysOnBlockingScreen: React.FC = () => {
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <View style={styles.content}>
           <Animated.View style={{ opacity: headerOpacity }}>
-            <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+            <TouchableOpacity onPress={handleBackPress} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
               <Text style={styles.backArrow}>←</Text>
             </TouchableOpacity>
           </Animated.View>

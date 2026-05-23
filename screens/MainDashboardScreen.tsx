@@ -13,6 +13,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import * as Haptics from "expo-haptics";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  AccessibilityInfo,
   Alert,
   Animated,
   Image,
@@ -118,31 +119,43 @@ const WarningIcon = () => (
 const AnimatedFlame: React.FC = () => {
   const flameScale = useRef(new Animated.Value(1)).current;
   const flameY = useRef(new Animated.Value(0)).current;
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      flameScale.setValue(1);
+      flameY.setValue(0);
+      return;
+    }
     const animation = Animated.loop(
       Animated.parallel([
         Animated.sequence([
           Animated.timing(flameScale, {
             toValue: 1.12,
-            duration: 900,
+            duration: reduceMotion ? 0 : 900,
             useNativeDriver: true,
           }),
           Animated.timing(flameScale, {
             toValue: 0.95,
-            duration: 900,
+            duration: reduceMotion ? 0 : 900,
             useNativeDriver: true,
           }),
         ]),
         Animated.sequence([
           Animated.timing(flameY, {
             toValue: -8,
-            duration: 900,
+            duration: reduceMotion ? 0 : 900,
             useNativeDriver: true,
           }),
           Animated.timing(flameY, {
             toValue: 4,
-            duration: 900,
+            duration: reduceMotion ? 0 : 900,
             useNativeDriver: true,
           }),
         ]),
@@ -150,7 +163,7 @@ const AnimatedFlame: React.FC = () => {
     );
     animation.start();
     return () => animation.stop();
-  }, [flameScale, flameY]);
+  }, [flameScale, flameY, reduceMotion]);
 
   return (
     <Animated.Text
@@ -327,6 +340,13 @@ const MainDashboardScreen: React.FC = () => {
   const [relapseCommitment, setRelapseCommitment] = useState<string>("");
 
   const [isPanicVerdictVisible, setIsPanicVerdictVisible] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => sub.remove();
+  }, []);
 
   const [weeklyStats, setWeeklyStats] = useState({
     safeDays: 0,
@@ -820,11 +840,11 @@ syncStreakToSupabase();
     if (!loading) {
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
+        duration: reduceMotion ? 0 : 500,
         useNativeDriver: true,
       }).start();
     }
-  }, [loading, fadeAnim]);
+  }, [loading, fadeAnim, reduceMotion]);
 
   const d = data || {
     streak: 0,

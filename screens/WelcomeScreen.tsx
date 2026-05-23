@@ -1,7 +1,8 @@
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+    AccessibilityInfo,
     Animated,
     ScrollView,
     StyleSheet,
@@ -29,14 +30,21 @@ const ANIMATION_DURATION = 500;
 const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation<WelcomeScreenNavigationProp>();
   const opacity = useRef(new Animated.Value(0)).current;
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     Animated.timing(opacity, {
       toValue: 1,
-      duration: ANIMATION_DURATION,
+      duration: reduceMotion ? 0 : ANIMATION_DURATION,
       useNativeDriver: true,
     }).start();
-  }, [opacity]);
+  }, [opacity, reduceMotion]);
 
   const handleGetStarted = () => {
     navigation.navigate("OnboardingQuestion", {

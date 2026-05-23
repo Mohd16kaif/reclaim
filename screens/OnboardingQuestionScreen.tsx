@@ -93,6 +93,8 @@ const OnboardingQuestionScreen: React.FC = () => {
             style={styles.backButton}
             activeOpacity={0.7}
             onPress={handleBack}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
             <Text style={styles.backArrow}>{"←"}</Text>
           </TouchableOpacity>
@@ -115,6 +117,7 @@ const OnboardingQuestionScreen: React.FC = () => {
             textAlign="center"
             value={userName}
             onChangeText={setUserName}
+            accessibilityLabel="Your name"
           />
         </View>
 
@@ -128,6 +131,7 @@ const OnboardingQuestionScreen: React.FC = () => {
             activeOpacity={isNameValid ? 0.85 : 1}
             onPress={handleContinue}
             disabled={!isNameValid}
+            accessibilityState={{ disabled: !isNameValid }}
           >
             <Text style={styles.continueButtonText}>Continue</Text>
           </TouchableOpacity>

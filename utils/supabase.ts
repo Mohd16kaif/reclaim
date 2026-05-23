@@ -94,7 +94,7 @@ export const syncStreakToSupabase = async (): Promise<void> => {
       AsyncStorage.getItem("longestStreak"),
     ]);
 
-    const currentStreakDays = parseInt(currentStreak ?? "0");
+    const currentStreakDays = parseInt(currentStreak ?? "0", 10);
 
     // Calculate streak directly from streakStartDate instead of trusting
     // the cached currentStreak value which may not be updated yet
@@ -136,7 +136,7 @@ export const syncStreakToSupabase = async (): Promise<void> => {
           ? new Date(streakStart).toISOString()
           : null,
         current_streak_days: streakToSync,
-        longest_streak_days: parseInt(longestStreak ?? "0"),
+        longest_streak_days: parseInt(longestStreak ?? "0", 10),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "device_id" },
@@ -184,7 +184,7 @@ export const syncSettingsToSupabase = async (): Promise<void> => {
     const { error } = await supabase.from("settings").upsert(
       {
         device_id: deviceId,
-        panic_duration_minutes: parseInt(panicDuration ?? "15"),
+        panic_duration_minutes: parseInt(panicDuration ?? "15", 10),
         coach_mode: coachMode ?? "calm",
         dns_shield_installed: dnsInstalled === "installed",
         updated_at: new Date().toISOString(),
@@ -237,11 +237,17 @@ export const restoreFromSupabase = async (): Promise<void> => {
     ]);
 
     if (streaksResult.data) {
-      await Promise.all([
-        AsyncStorage.setItem("streakStartDate", new Date(streaksResult.data.streak_start_date).toISOString()),
-        AsyncStorage.setItem("currentStreak", String(streaksResult.data.current_streak_days)),
-        AsyncStorage.setItem("longestStreak", String(streaksResult.data.longest_streak_days)),
-      ]);
+      const writes: Promise<void>[] = [];
+      const srcStreakStart = streaksResult.data.streak_start_date;
+      if (srcStreakStart != null) {
+        const parsed = new Date(srcStreakStart);
+        if (!isNaN(parsed.getTime())) {
+          writes.push(AsyncStorage.setItem("streakStartDate", parsed.toISOString()));
+        }
+      }
+      writes.push(AsyncStorage.setItem("currentStreak", String(streaksResult.data.current_streak_days)));
+      writes.push(AsyncStorage.setItem("longestStreak", String(streaksResult.data.longest_streak_days)));
+      await Promise.all(writes);
     } else if (streaksResult.error) {
       console.log("[Supabase] streaks restore error:", streaksResult.error.message);
     }

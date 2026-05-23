@@ -8,6 +8,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type RootStackParamList = {
@@ -210,13 +211,14 @@ type RelationshipImpactRouteProp = RouteProp<
 const ANIMATION_DURATION = 400;
 const DEFAULT_TOTAL_QUESTIONS = 25;
 
-type ImpactOption = "Not really" | "A little" | "A lot" | "I'm not sure";
+type ImpactOption = "Not really" | "A little" | "A lot" | "I'm not sure" | "Prefer not to say";
 
 const impactOptions: ImpactOption[] = [
   "Not really",
   "A little",
   "A lot",
   "I'm not sure",
+  "Prefer not to say",
 ];
 
 const RelationshipImpactScreen: React.FC = () => {
@@ -303,6 +305,8 @@ const RelationshipImpactScreen: React.FC = () => {
             style={styles.backButton}
             activeOpacity={0.7}
             onPress={handleBack}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
             <Text style={styles.backArrow}>{"←"}</Text>
           </TouchableOpacity>
@@ -316,8 +320,17 @@ const RelationshipImpactScreen: React.FC = () => {
 
         {/* Main content */}
         <View style={styles.content}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+            <Ionicons name="lock-closed-outline" size={14} color="#666" />
+            <Text style={{ fontSize: 12, color: "#666", marginLeft: 6 }}>
+              Private — stored on device only
+            </Text>
+          </View>
           <Text style={styles.heading}>
             Has porn affected your real-life relationships?
+          </Text>
+          <Text style={{ fontSize: 13, color: "#666", marginBottom: 8, marginTop: -16 }}>
+            Your answers stay on your device. There are no wrong answers.
           </Text>
 
           <View style={styles.optionsContainer}>

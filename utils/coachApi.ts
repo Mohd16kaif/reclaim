@@ -1,8 +1,6 @@
+// SECURITY: Move Groq calls to server-side proxy (Supabase Edge Function).
+// EXPO_PUBLIC_* env vars ship in client bundle and are extractable.
 const GROQ_API_KEY = process.env.EXPO_PUBLIC_GROQ_API_KEY ?? "";
-console.log(
-  "[CoachAPI] Key loaded:",
-  GROQ_API_KEY ? "YES" : "NO - KEY MISSING",
-);
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.1-8b-instant";
 const MAX_TOKENS = 300;

@@ -154,6 +154,8 @@ const QuittingReasonScreen: React.FC = () => {
             style={styles.backButton}
             activeOpacity={0.7}
             onPress={handleBack}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
             <Text style={styles.backArrow}>{"←"}</Text>
           </TouchableOpacity>

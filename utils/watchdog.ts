@@ -84,7 +84,7 @@ export const runWatchdogCheck = async (): Promise<WatchdogCheckResult> => {
   const prevScoreRaw = await AsyncStorage.getItem(
     WATCHDOG_KEYS.LAST_KNOWN_SCORE,
   );
-  const previousScore = prevScoreRaw ? parseInt(prevScoreRaw) : 100;
+  const previousScore = prevScoreRaw ? parseInt(prevScoreRaw, 10) : 100;
 
   // Run full layer verification
   const layerStatuses = await verifyAndUpdateLayers();
@@ -153,7 +153,7 @@ const checkAlertCooldown = async (): Promise<boolean> => {
   );
   if (!lastAlertRaw) return true;
 
-  const lastAlert = parseInt(lastAlertRaw);
+  const lastAlert = parseInt(lastAlertRaw, 10);
   const elapsed = Date.now() - lastAlert;
   return elapsed >= ALERT_COOLDOWN_MS;
 };
@@ -171,6 +171,14 @@ export interface WatchdogOptions {
 }
 
 export const startWatchdog = (options?: WatchdogOptions): void => {
+  // Singleton guard — if already running, warn and don't overwrite callbacks
+  if (foregroundPollTimer !== null) {
+    console.warn(
+      "[Watchdog] startWatchdog called but watchdog already running — ignoring duplicate start to preserve existing callbacks",
+    );
+    return;
+  }
+
   if (options?.onStatusChange) {
     onStatusChange = options.onStatusChange;
   }
@@ -182,11 +190,9 @@ export const startWatchdog = (options?: WatchdogOptions): void => {
   runWatchdogCheck().catch(console.error);
 
   // Poll every minute while in foreground
-  if (!foregroundPollTimer) {
-    foregroundPollTimer = setInterval(() => {
-      runWatchdogCheck().catch(console.error);
-    }, FOREGROUND_POLL_INTERVAL_MS);
-  }
+  foregroundPollTimer = setInterval(() => {
+    runWatchdogCheck().catch(console.error);
+  }, FOREGROUND_POLL_INTERVAL_MS);
 
   // Run check every time app comes to foreground
   if (!appStateSubscription) {
@@ -244,7 +250,7 @@ export const getWatchdogCachedStatus = async (): Promise<{
   state: OverallShieldState;
 }> => {
   const raw = await AsyncStorage.getItem(WATCHDOG_KEYS.LAST_KNOWN_SCORE);
-  const score = raw ? parseInt(raw) : 0;
+  const score = raw ? parseInt(raw, 10) : 0;
   return {
     score,
     state: getOverallShieldState(score),

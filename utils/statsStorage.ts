@@ -53,7 +53,7 @@ export type StatsTimeRange = "Day" | "Week" | "Month";
 export const getUserPanicDuration = async (): Promise<number> => {
   const raw = await AsyncStorage.getItem("defaultPanicDuration");
   if (!raw) return 15; // default 15 minutes
-  const value = parseInt(raw);
+  const value = parseInt(raw, 10);
   // defaultPanicDuration is stored in SECONDS (e.g. 900 = 15 min, 1800 = 30 min)
   // Convert to minutes for all stats calculations
   return Math.round(value / 60);
@@ -165,7 +165,14 @@ export const recordCheckIn = async (
 
 export const getCheckInHistory = async (): Promise<CheckInEntry[]> => {
   const raw = await AsyncStorage.getItem(STATS_KEYS.CHECK_IN_HISTORY);
-  return raw ? JSON.parse(raw) : [];
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.warn("[statsStorage] getCheckInHistory parse failed:", e);
+    return [];
+  }
 };
 
 // ============================================================================
@@ -198,7 +205,14 @@ export const recordRelapseEvent = async (
 
 export const getRelapseHistory = async (): Promise<RelapseEntry[]> => {
   const raw = await AsyncStorage.getItem(STATS_KEYS.RELAPSE_HISTORY);
-  return raw ? JSON.parse(raw) : [];
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.warn("[statsStorage] getRelapseHistory parse failed:", e);
+    return [];
+  }
 };
 
 // ============================================================================
@@ -306,7 +320,14 @@ export const hasPendingVerdict = async (): Promise<boolean> => {
 
 export const getPanicSessions = async (): Promise<PanicSession[]> => {
   const raw = await AsyncStorage.getItem(STATS_KEYS.PANIC_SESSIONS);
-  return raw ? JSON.parse(raw) : [];
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.warn("[statsStorage] getPanicSessions parse failed:", e);
+    return [];
+  }
 };
 
 // ============================================================================

@@ -57,7 +57,7 @@ const LeaveRatingScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <SafeAreaView style={styles.safeArea} edges={["top"]}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+          <TouchableOpacity onPress={handleBackPress} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
             <Text style={styles.backArrow}>←</Text>
           </TouchableOpacity>
           <Text style={styles.heading}>Leave us a rating</Text>
