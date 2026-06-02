@@ -6,8 +6,6 @@ workflows:
       groups:
         - reclaim
       ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.reclaim.recovery
         certificate: Reclaim Distribution
         provisioning_profiles:
           - reclaim_app_store
@@ -32,9 +30,7 @@ workflows:
         script: |
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME" \
-            --export-options-plist /Users/builder/export_options.plist \
-            --archive-flags="-destination 'generic/platform=iOS'"
+            --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
