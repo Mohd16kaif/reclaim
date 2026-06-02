@@ -6,7 +6,6 @@ workflows:
       groups:
         - reclaim
       ios_signing:
-        certificate: Reclaim Distribution
         provisioning_profiles:
           - reclaim_app_store
           - reclaim_device_activity
