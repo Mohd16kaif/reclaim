@@ -8,6 +8,12 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.reclaim.recovery
+        certificate: Reclaim Distribution
+        provisioning_profiles:
+          - reclaim_app_store
+          - reclaim_device_activity
+          - reclaim_shield_config
+          - reclaim_tunnel
       vars:
         XCODE_WORKSPACE: "ios/reclaimapp.xcworkspace"
         XCODE_SCHEME: "reclaimapp"
@@ -19,11 +25,16 @@ workflows:
         script: npm install
       - name: Install CocoaPods
         script: cd ios && pod install
+      - name: Set Xcode project to manual signing
+        script: |
+          xcode-project use-profiles
       - name: Build iOS
         script: |
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --export-options-plist /Users/builder/export_options.plist \
+            --archive-flags="-destination 'generic/platform=iOS'"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
