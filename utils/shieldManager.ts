@@ -5,12 +5,14 @@
 // Central manager for DNS shield state, OS-level filter tracking,
 // self-heal flow state, and full shield status snapshots.
 //
-// All functions are pure AsyncStorage / Linking based — no native
-// entitlements required beyond those already in watchdog.ts.
+// All functions use AsyncStorage and the native TunnelBridge VPN tunnel.
+// Requires packet-tunnel-provider entitlement in main app.
 // ============================================================================
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Linking, Platform } from "react-native";
+import { NativeModules, Platform } from "react-native";
+
+const { TunnelBridge } = NativeModules;
 import {
   computeShieldScore,
   DEFAULT_LAYER_STATUSES,
@@ -53,8 +55,18 @@ export type DNSProfileStatus =
 /**
  * Returns the persisted DNS profile status.
  * Defaults to "not_installed" on first run.
+ * Checks native VPN tunnel status first, falls back to AsyncStorage.
  */
 export const getDNSProfileStatus = async (): Promise<DNSProfileStatus> => {
+  try {
+    const nativeStatus = await TunnelBridge.getTunnelStatus();
+    if (nativeStatus?.status === "enabled") {
+      await AsyncStorage.setItem(KEYS.DNS_PROFILE_STATUS, "installed");
+      return "installed";
+    }
+  } catch {
+    // Native bridge unavailable — fall back to AsyncStorage
+  }
   try {
     const raw = await AsyncStorage.getItem(KEYS.DNS_PROFILE_STATUS);
     if (
@@ -84,14 +96,21 @@ const setDNSProfileStatus = async (
 // ============================================================================
 
 /**
- * Opens the DNS configuration profile URL and marks status as "pending".
- * The profile URL should be hosted at your backend — replace the placeholder.
+ * Starts the VPN tunnel via the native TunnelBridge.
+ * On success marks status as "installed"; on failure marks "pending".
  */
 export const enableShield = async (): Promise<void> => {
-  // TODO: Replace with your actual hosted mobileconfig URL
-  const PROFILE_URL = "https://reclaim.app/shield/reclaim-dns.mobileconfig";
-  await setDNSProfileStatus("pending");
-  await Linking.openURL(PROFILE_URL);
+  try {
+    const result = await TunnelBridge.startTunnel();
+    if (result?.success === true) {
+      await setDNSProfileStatus("installed");
+      await AsyncStorage.setItem(KEYS.LAST_VERIFIED_AT, Date.now().toString());
+    } else {
+      await setDNSProfileStatus("pending");
+    }
+  } catch {
+    await setDNSProfileStatus("pending");
+  }
 };
 
 // ============================================================================
@@ -116,10 +135,14 @@ export const confirmShieldInstalled = async (): Promise<void> => {
 // ============================================================================
 
 /**
- * Resets the DNS profile status to "not_installed" and clears layer state.
- * The user must manually remove the profile from iOS Settings.
+ * Stops the VPN tunnel via the native TunnelBridge and clears local state.
  */
 export const disableShield = async (): Promise<void> => {
+  try {
+    await TunnelBridge.stopTunnel();
+  } catch {
+    // Ignore stop errors — we still clear local state
+  }
   await setDNSProfileStatus("not_installed");
   await AsyncStorage.removeItem(KEYS.LAYER_STATUSES);
   await AsyncStorage.removeItem(KEYS.LAST_VERIFIED_AT);
@@ -177,7 +200,7 @@ const setSelfHealPending = async (): Promise<void> => {
 // ============================================================================
 
 /**
- * Initiates a shield re-install by opening the mobileconfig URL.
+ * Initiates a shield re-start via the VPN tunnel.
  * Equivalent to enableShield() but intended for the self-heal flow context.
  */
 export const selfHealShield = async (): Promise<void> => {
