@@ -37,15 +37,8 @@ class FamilyControlsBridge: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
-    do {
-      store.webContent.blockedByFilter = .enabled(
-        autofilterEnabled: true,
-        allowedActivityCategories: ActivityCategoryPolicy.none
-      )
-      resolve(["success": true])
-    } catch {
-      reject("FILTER_ERROR", error.localizedDescription, error)
-    }
+    store.webContent.blockedByFilter = .automatic()
+    resolve(["success": true])
   }
 
   // -------------------------------------------------------------------------
@@ -57,12 +50,8 @@ class FamilyControlsBridge: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
-    do {
-      store.webContent.blockedByFilter = nil
-      resolve(["success": true])
-    } catch {
-      reject("FILTER_ERROR", error.localizedDescription, error)
-    }
+    store.webContent.blockedByFilter = nil
+    resolve(["success": true])
   }
 
   // -------------------------------------------------------------------------
