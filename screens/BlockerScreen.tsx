@@ -307,6 +307,12 @@ const BlockerScreen = (): React.ReactElement => {
       setDnsLoading(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       await enableShield();
+      // Refresh actual status from native bridge after attempting to start
+      const updatedStatus = await getDNSProfileStatus();
+      setDnsStatus(updatedStatus);
+      if (updatedStatus === "installed") {
+        await setBlockerEnabled(true);
+      }
     } catch {
       // Shield enable failed - user will see UI state unchanged
     } finally {
@@ -417,18 +423,8 @@ const BlockerScreen = (): React.ReactElement => {
               {dnsStatus === "pending" && (
                 <View style={styles.pendingContainer}>
                   <Text style={styles.pendingText}>
-                    {"1. Go to Settings app\n"}
-                    {"2. Tap 'Profile Downloaded' at the top\n"}
-                    {"3. Tap 'Install' then enter passcode\n"}
-                    {"4. Come back to RECLAIM"}
+                    Starting protection... If this takes too long, tap the toggle again.
                   </Text>
-                  <TouchableOpacity
-                    style={styles.primaryButton}
-                    onPress={handleEnableShield}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.primaryButtonText}>Open Profile Again</Text>
-                  </TouchableOpacity>
                 </View>
               )}
             </View>

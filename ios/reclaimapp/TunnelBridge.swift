@@ -35,12 +35,22 @@ class TunnelBridge: NSObject {
                     reject("TUNNEL_SAVE_ERROR", saveError.localizedDescription, saveError)
                     return
                 }
-
-                do {
-                    try manager.connection.startVPNTunnel()
-                    resolve(["success": true, "status": "enabled"])
-                } catch {
-                    reject("TUNNEL_START_ERROR", error.localizedDescription, error)
+                // Must reload after save for iOS to register the configuration
+                NETunnelProviderManager.loadAllFromPreferences { reloadedManagers, reloadError in
+                    if let reloadError = reloadError {
+                        reject("TUNNEL_RELOAD_ERROR", reloadError.localizedDescription, reloadError)
+                        return
+                    }
+                    guard let reloadedManager = reloadedManagers?.first else {
+                        reject("TUNNEL_NOT_FOUND", "VPN configuration not found after save", nil)
+                        return
+                    }
+                    do {
+                        try reloadedManager.connection.startVPNTunnel()
+                        resolve(["success": true, "status": "enabled"])
+                    } catch {
+                        reject("TUNNEL_START_ERROR", error.localizedDescription, error)
+                    }
                 }
             }
         }
