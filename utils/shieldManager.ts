@@ -5,14 +5,13 @@
 // Central manager for DNS shield state, OS-level filter tracking,
 // self-heal flow state, and full shield status snapshots.
 //
-// All functions use AsyncStorage and the native TunnelBridge VPN tunnel.
-// Requires packet-tunnel-provider entitlement in main app.
+// All functions use AsyncStorage and the native FamilyControlsBridge.
+// Requires Family Controls entitlement in main app.
 // ============================================================================
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeModules, Platform } from "react-native";
-
-const { TunnelBridge } = NativeModules;
+const { FamilyControlsBridge } = NativeModules;
 import {
   computeShieldScore,
   DEFAULT_LAYER_STATUSES,
@@ -55,14 +54,15 @@ export type DNSProfileStatus =
 /**
  * Returns the persisted DNS profile status.
  * Defaults to "not_installed" on first run.
- * Checks native VPN tunnel status first, falls back to AsyncStorage.
+ * Checks Family Controls authorization status first, falls back to AsyncStorage.
  */
 export const getDNSProfileStatus = async (): Promise<DNSProfileStatus> => {
   try {
-    const nativeStatus = await TunnelBridge.getTunnelStatus();
-    if (nativeStatus?.status === "enabled") {
-      await AsyncStorage.setItem(KEYS.DNS_PROFILE_STATUS, "installed");
-      return "installed";
+    const statusResult = await FamilyControlsBridge.getAuthorizationStatus();
+    if (statusResult?.status === "authorized") {
+      // Authorization is granted — check if filter is actually marked installed
+      const raw = await AsyncStorage.getItem(KEYS.DNS_PROFILE_STATUS);
+      if (raw === "installed") return "installed";
     }
   } catch {
     // Native bridge unavailable — fall back to AsyncStorage
@@ -96,19 +96,33 @@ const setDNSProfileStatus = async (
 // ============================================================================
 
 /**
- * Starts the VPN tunnel via the native TunnelBridge.
+ * Enables the adult content filter via FamilyControlsBridge.
  * On success marks status as "installed"; on failure marks "pending".
  */
 export const enableShield = async (): Promise<void> => {
   try {
-    const result = await TunnelBridge.startTunnel();
-    if (result?.success === true) {
+    // Step 1: Check if already authorized
+    const statusResult = await FamilyControlsBridge.getAuthorizationStatus();
+    
+    // Step 2: Request authorization if not yet approved
+    if (statusResult?.status !== "authorized") {
+      const authResult = await FamilyControlsBridge.requestAuthorization();
+      if (!authResult?.authorized) {
+        // User denied permission — do not mark as installed
+        await setDNSProfileStatus("not_installed");
+        return;
+      }
+    }
+
+    // Step 3: Enable the content filter
+    const filterResult = await FamilyControlsBridge.enableContentFilter();
+    if (filterResult?.success === true) {
       await setDNSProfileStatus("installed");
       await AsyncStorage.setItem(KEYS.LAST_VERIFIED_AT, Date.now().toString());
     } else {
       await setDNSProfileStatus("pending");
     }
-  } catch {
+  } catch (error) {
     await setDNSProfileStatus("pending");
   }
 };
@@ -135,13 +149,13 @@ export const confirmShieldInstalled = async (): Promise<void> => {
 // ============================================================================
 
 /**
- * Stops the VPN tunnel via the native TunnelBridge and clears local state.
+ * Disables the adult content filter via FamilyControlsBridge and clears local state.
  */
 export const disableShield = async (): Promise<void> => {
   try {
-    await TunnelBridge.stopTunnel();
+    await FamilyControlsBridge.disableContentFilter();
   } catch {
-    // Ignore stop errors — we still clear local state
+    // Ignore errors — still clear local state
   }
   await setDNSProfileStatus("not_installed");
   await AsyncStorage.removeItem(KEYS.LAYER_STATUSES);
@@ -200,7 +214,7 @@ const setSelfHealPending = async (): Promise<void> => {
 // ============================================================================
 
 /**
- * Initiates a shield re-start via the VPN tunnel.
+ * Initiates a shield re-start via FamilyControlsBridge.
  * Equivalent to enableShield() but intended for the self-heal flow context.
  */
 export const selfHealShield = async (): Promise<void> => {
