@@ -46,7 +46,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     private func createTunnelSettings() -> NEPacketTunnelNetworkSettings {
         let settings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
         
-        // Configure DNS to use CleanBrowsing Adult Filter
+        // DNS through CleanBrowsing Adult Filter
         let dnsSettings = NEDNSSettings(servers: [
             "185.228.168.9",
             "185.228.169.9",
@@ -57,24 +57,15 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         dnsSettings.searchDomains = []
         settings.dnsSettings = dnsSettings
         
-        // Route ALL traffic through tunnel so DNS settings take effect
+        // Use split tunneling — only route DNS, not all traffic
+        // This keeps YouTube, WhatsApp etc working normally
         let ipv4Settings = NEIPv4Settings(
-            addresses: ["10.8.0.1"],
-            subnetMasks: ["255.255.255.0"]
+            addresses: ["192.168.2.1"],
+            subnetMasks: ["255.255.255.255"]
         )
-        let defaultRoute = NEIPv4Route.default()
-        ipv4Settings.includedRoutes = [defaultRoute]
-        ipv4Settings.excludedRoutes = []
+        ipv4Settings.includedRoutes = []
+        ipv4Settings.excludedRoutes = [NEIPv4Route.default()]
         settings.ipv4Settings = ipv4Settings
-        
-        // IPv6 routing
-        let ipv6Settings = NEIPv6Settings(
-            addresses: ["fd00::1"],
-            networkPrefixLengths: [64]
-        )
-        ipv6Settings.includedRoutes = [NEIPv6Route.default()]
-        ipv6Settings.excludedRoutes = []
-        settings.ipv6Settings = ipv6Settings
         
         return settings
     }
