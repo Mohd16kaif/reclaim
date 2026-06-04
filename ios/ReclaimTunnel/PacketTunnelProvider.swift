@@ -44,32 +44,37 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     // Routes DNS through CleanBrowsing
     // -------------------------------------------------------------------------
     private func createTunnelSettings() -> NEPacketTunnelNetworkSettings {
-        // Use a local loopback address for the tunnel interface
         let settings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
         
         // Configure DNS to use CleanBrowsing Adult Filter
         let dnsSettings = NEDNSSettings(servers: [
-            "185.228.168.9",   // CleanBrowsing Adult Filter primary
-            "185.228.169.9",   // CleanBrowsing Adult Filter secondary
-            "1.1.1.3",         // Cloudflare Family fallback primary
-            "1.0.0.3"          // Cloudflare Family fallback secondary
+            "185.228.168.9",
+            "185.228.169.9",
+            "1.1.1.3",
+            "1.0.0.3"
         ])
-        
-        // Force SafeSearch on major search engines via DNS
-        dnsSettings.matchDomains = [""] // Match all domains
+        dnsSettings.matchDomains = [""]
         dnsSettings.searchDomains = []
-        
         settings.dnsSettings = dnsSettings
         
-        // Minimal routing — only DNS traffic goes through tunnel
-        // This means browsing speed is not affected
+        // Route ALL traffic through tunnel so DNS settings take effect
         let ipv4Settings = NEIPv4Settings(
-            addresses: ["192.168.1.1"],
-            subnetMasks: ["255.255.255.255"]
+            addresses: ["10.8.0.1"],
+            subnetMasks: ["255.255.255.0"]
         )
-        ipv4Settings.includedRoutes = []
+        let defaultRoute = NEIPv4Route.default()
+        ipv4Settings.includedRoutes = [defaultRoute]
         ipv4Settings.excludedRoutes = []
         settings.ipv4Settings = ipv4Settings
+        
+        // IPv6 routing
+        let ipv6Settings = NEIPv6Settings(
+            addresses: ["fd00::1"],
+            networkPrefixLengths: [64]
+        )
+        ipv6Settings.includedRoutes = [NEIPv6Route.default()]
+        ipv6Settings.excludedRoutes = []
+        settings.ipv6Settings = ipv6Settings
         
         return settings
     }

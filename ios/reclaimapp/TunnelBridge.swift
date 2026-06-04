@@ -5,7 +5,8 @@ import NetworkExtension
 class TunnelBridge: NSObject {
     private let tunnelBundleId = "com.reclaim.recovery.ReclaimTunnel"
 
-    @objc func startTunnel(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    @objc func startTunnel(_ resolve: @escaping RCTPromiseResolveBlock, 
+                            rejecter reject: @escaping RCTPromiseRejectBlock) {
         NETunnelProviderManager.loadAllFromPreferences { managers, error in
             if let error = error {
                 reject("TUNNEL_LOAD_ERROR", error.localizedDescription, error)
@@ -25,7 +26,8 @@ class TunnelBridge: NSObject {
                 manager.isEnabled = true
             }
 
-            if manager.connection.status == .connected || manager.connection.status == .connecting {
+            if manager.connection.status == .connected || 
+               manager.connection.status == .connecting {
                 resolve(["success": true, "status": "enabled"])
                 return
             }
@@ -35,7 +37,6 @@ class TunnelBridge: NSObject {
                     reject("TUNNEL_SAVE_ERROR", saveError.localizedDescription, saveError)
                     return
                 }
-                // Must reload after save for iOS to register the configuration
                 NETunnelProviderManager.loadAllFromPreferences { reloadedManagers, reloadError in
                     if let reloadError = reloadError {
                         reject("TUNNEL_RELOAD_ERROR", reloadError.localizedDescription, reloadError)
@@ -47,7 +48,15 @@ class TunnelBridge: NSObject {
                     }
                     do {
                         try reloadedManager.connection.startVPNTunnel()
-                        resolve(["success": true, "status": "enabled"])
+                        // Wait briefly then check actual connection status
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            let status = reloadedManager.connection.status
+                            if status == .connected || status == .connecting {
+                                resolve(["success": true, "status": "enabled"])
+                            } else {
+                                resolve(["success": false, "status": "disabled"])
+                            }
+                        }
                     } catch {
                         reject("TUNNEL_START_ERROR", error.localizedDescription, error)
                     }
