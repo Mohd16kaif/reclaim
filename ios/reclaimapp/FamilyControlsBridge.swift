@@ -7,45 +7,39 @@ class FamilyControlsBridge: NSObject {
 
   private let store = ManagedSettingsStore()
 
-  // -------------------------------------------------------------------------
-  // requestAuthorization
-  // Requests Family Controls authorization from the user.
-  // Shows the system permission popup if not already authorized.
-  // Returns { authorized: true } on success, rejects on failure.
-  // -------------------------------------------------------------------------
   @objc func requestAuthorization(
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
-    Task {
-      do {
-        try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
-        resolve(["authorized": true])
-      } catch {
-        reject("AUTH_ERROR", error.localizedDescription, error)
+    if #available(iOS 16.0, *) {
+      Task {
+        do {
+          try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
+          resolve(["authorized": true])
+        } catch {
+          reject("AUTH_ERROR", error.localizedDescription, error)
+        }
+      }
+    } else {
+      AuthorizationCenter.shared.requestAuthorization { result in
+        switch result {
+        case .success:
+          resolve(["authorized": true])
+        case .failure(let error):
+          reject("AUTH_ERROR", error.localizedDescription, error)
+        }
       }
     }
   }
 
-  // -------------------------------------------------------------------------
-  // enableContentFilter
-  // Enables Apple's built-in adult content web filter via ManagedSettingsStore.
-  // Must be called AFTER requestAuthorization succeeds.
-  // Returns { success: true } on success, rejects on failure.
-  // -------------------------------------------------------------------------
   @objc func enableContentFilter(
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
-    store.webContent.blockedByFilter = .automatic()
+    store.webContent.blockedByFilter = .autoFilter
     resolve(["success": true])
   }
 
-  // -------------------------------------------------------------------------
-  // disableContentFilter
-  // Removes the adult content web filter from ManagedSettingsStore.
-  // Returns { success: true } on success, rejects on failure.
-  // -------------------------------------------------------------------------
   @objc func disableContentFilter(
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
@@ -54,12 +48,6 @@ class FamilyControlsBridge: NSObject {
     resolve(["success": true])
   }
 
-  // -------------------------------------------------------------------------
-  // getAuthorizationStatus
-  // Returns the current Family Controls authorization status.
-  // Returns { status: "authorized" } or { status: "notDetermined" } or
-  // { status: "denied" }
-  // -------------------------------------------------------------------------
   @objc func getAuthorizationStatus(
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
@@ -75,9 +63,6 @@ class FamilyControlsBridge: NSObject {
     }
   }
 
-  // -------------------------------------------------------------------------
-  // startPanicSession — stub, will be implemented later
-  // -------------------------------------------------------------------------
   @objc func startPanicSession(
     _ durationMinutes: Int,
     resolver resolve: @escaping RCTPromiseResolveBlock,
@@ -86,9 +71,6 @@ class FamilyControlsBridge: NSObject {
     resolve(["success": false, "message": "not implemented yet"])
   }
 
-  // -------------------------------------------------------------------------
-  // stopPanicSession — stub, will be implemented later
-  // -------------------------------------------------------------------------
   @objc func stopPanicSession(
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
