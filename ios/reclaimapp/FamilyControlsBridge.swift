@@ -36,7 +36,7 @@ class FamilyControlsBridge: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
-    store.webContent.blockedByFilter = .autoFilter
+    store.webContent.blockedByFilter = .auto([])
     resolve(["success": true])
   }
 
