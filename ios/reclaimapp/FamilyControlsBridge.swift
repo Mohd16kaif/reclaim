@@ -8,7 +8,13 @@ import SwiftUI
 @objc(FamilyControlsBridge)
 class FamilyControlsBridge: NSObject {
 
-  private let store = ManagedSettingsStore(named: ManagedSettingsStore.Name("reclaim.panic"))
+  private var store: ManagedSettingsStore {
+    if #available(iOS 16.0, *) {
+      return ManagedSettingsStore(named: ManagedSettingsStore.Name("reclaim.panic"))
+    } else {
+      return ManagedSettingsStore()
+    }
+  }
   private let activityCenter = DeviceActivityCenter()
   private let appGroupID = "group.com.reclaim.recovery"
   private let panicActivity = DeviceActivityName("reclaim.panic.session")
@@ -119,12 +125,6 @@ class FamilyControlsBridge: NSObject {
       store.shield.applications = tokens
     }
 
-    // Also shield app categories as fallback
-    store.shield.applicationCategories = ShieldSettings.ActivityCategoryPolicy.specific(
-      [.socialNetworking, .entertainment],
-      except: Set()
-    )
-
     // Save end time for reference
     let endTime = Date().addingTimeInterval(TimeInterval(durationSeconds))
     defaults?.set(endTime.timeIntervalSince1970, forKey: panicEndTimeKey)
@@ -174,7 +174,9 @@ class FamilyControlsBridge: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
-    store.webContent.blockedByFilter = .auto([])
+    if #available(iOS 16.0, *) {
+      store.webContent.blockedByFilter = .auto([])
+    }
     resolve(["success": true])
   }
 
@@ -182,7 +184,9 @@ class FamilyControlsBridge: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
-    store.webContent.blockedByFilter = nil
+    if #available(iOS 16.0, *) {
+      store.webContent.blockedByFilter = nil
+    }
     resolve(["success": true])
   }
 
@@ -190,14 +194,18 @@ class FamilyControlsBridge: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
-    let status = AuthorizationCenter.shared.authorizationStatus
-    switch status {
-    case .approved:
-      resolve(["status": "authorized"])
-    case .denied:
-      resolve(["status": "denied"])
-    default:
-      resolve(["status": "notDetermined"])
+    if #available(iOS 16.0, *) {
+      let status = AuthorizationCenter.shared.authorizationStatus
+      switch status {
+      case .approved:
+        resolve(["status": "authorized"])
+      case .denied:
+        resolve(["status": "denied"])
+      default:
+        resolve(["status": "notDetermined"])
+      }
+    } else {
+      resolve(["status": "unavailable"])
     }
   }
 
