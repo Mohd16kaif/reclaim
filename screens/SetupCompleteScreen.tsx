@@ -70,6 +70,8 @@ const SetupCompleteScreen: React.FC = () => {
       // ignore storage failures and continue navigation
     }
 
+    await AsyncStorage.setItem("@reclaim_onboarding_complete", "true");
+
     navigation.reset({
       index: 0,
       routes: [{ name: "OnboardingResult" as never }],

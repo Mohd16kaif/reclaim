@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { StatusBar } from "expo-status-bar";
@@ -8,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 type RootStackParamList = {
   Splash: undefined;
   Welcome: undefined;
+  MainDashboard: undefined;
 };
 
 type SplashScreenNavigationProp = StackNavigationProp<
@@ -16,6 +18,7 @@ type SplashScreenNavigationProp = StackNavigationProp<
 >;
 
 const SPLASH_DURATION_MS = 2000;
+const ONBOARDING_COMPLETE_KEY = "@reclaim_onboarding_complete";
 
 const logoImage = require("../assets/images/reclaim-logo-app.png");
 
@@ -25,17 +28,30 @@ export default function SplashScreen(): JSX.Element {
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
-    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener(
+      "reduceMotionChanged",
+      setReduceMotion
+    );
     return () => sub.remove();
   }, []);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      // Replace the splash screen so it isn't in the back stack
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Welcome" }],
-      });
+    const timeout = setTimeout(async () => {
+      try {
+        const completed = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
+        navigation.reset({
+          index: 0,
+          routes: [
+            { name: completed === "true" ? "MainDashboard" : "Welcome" },
+          ],
+        });
+      } catch {
+        // If AsyncStorage fails, default to Welcome
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Welcome" }],
+        });
+      }
     }, reduceMotion ? 0 : SPLASH_DURATION_MS);
 
     return () => clearTimeout(timeout);
