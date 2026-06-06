@@ -170,13 +170,13 @@ class FamilyControlsBridge: NSObject {
 
   // MARK: - Content Filter (existing blocker shield)
 
+  private let contentFilterStore = ManagedSettingsStore()
+
   @objc func enableContentFilter(
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
-    if #available(iOS 16.0, *) {
-      store.webContent.blockedByFilter = .auto([])
-    }
+    contentFilterStore.webContent.blockedByFilter = .auto([])
     resolve(["success": true])
   }
 
@@ -184,9 +184,7 @@ class FamilyControlsBridge: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
-    if #available(iOS 16.0, *) {
-      store.webContent.blockedByFilter = nil
-    }
+    contentFilterStore.webContent.blockedByFilter = nil
     resolve(["success": true])
   }
 
