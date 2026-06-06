@@ -12,6 +12,7 @@ import React, { useEffect, useState } from "react";
 import {
   Alert,
   Dimensions,
+  NativeModules,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,6 +20,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const { FamilyControlsBridge } = NativeModules;
 
 // TypeScript types for navigation
 type RootStackParamList = {
@@ -55,6 +58,16 @@ const GrantPermissionsScreen: React.FC = () => {
   const checkPermissions = async () => {
     const { status: nStatus } = await Notifications.getPermissionsAsync();
     setNotificationStatus(nStatus);
+
+    try {
+      const authResult = await FamilyControlsBridge.getAuthorizationStatus();
+      const appsResult = await FamilyControlsBridge.hasSelectedApps();
+      if (authResult?.status === 'authorized' && appsResult?.hasApps) {
+        setScreenTimeStatus('granted');
+      } else if (authResult?.status === 'denied') {
+        setScreenTimeStatus('denied');
+      }
+    } catch {}
   };
 
   const handleGrantPermissions = async () => {
@@ -196,16 +209,33 @@ const GrantPermissionsScreen: React.FC = () => {
               description="Temporarily blocks distracting apps during Panic Mode sessions"
               why="Panic protection — blocks Instagram, YouTube, Safari during urges"
               status={screenTimeStatus}
-              onPress={() => {
+              onPress={async () => {
                 if (screenTimeStatus === 'denied') {
                   Linking.openSettings();
-                } else {
-                  Alert.alert(
-                    'Screen Time Permission',
-                    'You will be asked for Screen Time permission the first time you use the Panic Button.',
-                    [{ text: 'Got it' }]
-                  );
+                  return;
                 }
+                if (screenTimeStatus === 'granted') return;
+
+                setScreenTimeStatus('undetermined');
+
+                try {
+                  const authResult = await FamilyControlsBridge.requestAuthorization();
+                  if (!authResult?.authorized) {
+                    setScreenTimeStatus('denied');
+                    return;
+                  }
+                } catch {
+                  setScreenTimeStatus('denied');
+                  return;
+                }
+
+                try {
+                  const pickerResult = await FamilyControlsBridge.presentAppPicker();
+                  if (pickerResult?.success) {
+                    setScreenTimeStatus('granted');
+                    await AsyncStorage.setItem('panicAppsSelected', 'true');
+                  }
+                } catch {}
               }}
             />
           </ScrollView>

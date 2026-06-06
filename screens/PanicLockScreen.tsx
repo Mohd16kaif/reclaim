@@ -6,6 +6,7 @@ import {
   Alert,
   BackHandler,
   Image,
+  NativeModules,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -15,6 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { completePanicSessionWithGrace } from '../utils/statsStorage';
+
+const { FamilyControlsBridge } = NativeModules;
 
 // ============================================================================
 // TYPES
@@ -84,7 +87,10 @@ const PanicLockScreen = (): React.ReactElement => {
   useEffect(() => {
     if (initialRemaining <= 0) {
       // Timer already expired — go home immediately
-      completePanicSessionWithGrace().then(() => {
+      Promise.all([
+        completePanicSessionWithGrace(),
+        FamilyControlsBridge.stopPanicSession().catch(() => {}),
+      ]).then(() => {
         navigation.reset({
           index: 0,
           routes: [{ name: 'MainDashboard', params: { _panicResume: Date.now() } }],
@@ -111,7 +117,10 @@ const PanicLockScreen = (): React.ReactElement => {
   // Navigate home when timer hits 0
   useEffect(() => {
     if (remaining === 0 && initialRemaining > 0) {
-      completePanicSessionWithGrace().then(() => {
+      Promise.all([
+        completePanicSessionWithGrace(),
+        FamilyControlsBridge.stopPanicSession().catch(() => {}),
+      ]).then(() => {
         navigation.reset({
           index: 0,
           routes: [{ name: 'MainDashboard', params: { _panicResume: Date.now() } }],

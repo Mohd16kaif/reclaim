@@ -19,6 +19,7 @@
 		81344F462F8F5CAE007001BE /* ReclaimTunnel.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 81344F3D2F8F5CAE007001BE /* ReclaimTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AA000001000000000000AAA1 /* TunnelBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001000000000000AAA2 /* TunnelBridge.swift */; };
 		AA000001000000000000BBB1 /* FamilyControlsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001000000000000BBB2 /* FamilyControlsBridge.swift */; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* FamilyPickerHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F3 /* FamilyPickerHostingController.swift */; };
 		AA000001000000000000CCC1 /* TunnelBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000001000000000000CCC2 /* TunnelBridge.m */; };
 		AA000001000000000000DDD1 /* FamilyControlsBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = AA000001000000000000DDD2 /* FamilyControlsBridge.m */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
@@ -83,6 +84,7 @@
 		8E043182416C5800B490F7EF /* Pods-reclaimapp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-reclaimapp.release.xcconfig"; path = "Target Support Files/Pods-reclaimapp/Pods-reclaimapp.release.xcconfig"; sourceTree = "<group>"; };
 		AA000001000000000000AAA2 /* TunnelBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TunnelBridge.swift; path = reclaimapp/TunnelBridge.swift; sourceTree = "<group>"; };
 		AA000001000000000000BBB2 /* FamilyControlsBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FamilyControlsBridge.swift; path = reclaimapp/FamilyControlsBridge.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F3 /* FamilyPickerHostingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FamilyPickerHostingController.swift; path = reclaimapp/FamilyPickerHostingController.swift; sourceTree = "<group>"; };
 		AA000001000000000000CCC2 /* TunnelBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = TunnelBridge.m; path = reclaimapp/TunnelBridge.m; sourceTree = "<group>"; };
 		AA000001000000000000DDD2 /* FamilyControlsBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FamilyControlsBridge.m; path = reclaimapp/FamilyControlsBridge.m; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = reclaimapp/SplashScreen.storyboard; sourceTree = "<group>"; };
@@ -199,6 +201,7 @@
 			children = (
 				AA000001000000000000AAA2 /* TunnelBridge.swift */,
 				AA000001000000000000BBB2 /* FamilyControlsBridge.swift */,
+				A1B2C3D4E5F6A7B8C9D0E1F3 /* FamilyPickerHostingController.swift */,
 				AA000001000000000000CCC2 /* TunnelBridge.m */,
 				AA000001000000000000DDD2 /* FamilyControlsBridge.m */,
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
@@ -622,6 +625,7 @@
 			files = (
 				AA000001000000000000AAA1 /* TunnelBridge.swift in Sources */,
 				AA000001000000000000BBB1 /* FamilyControlsBridge.swift in Sources */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* FamilyPickerHostingController.swift in Sources */,
 				AA000001000000000000CCC1 /* TunnelBridge.m in Sources */,
 				AA000001000000000000DDD1 /* FamilyControlsBridge.m in Sources */,
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,

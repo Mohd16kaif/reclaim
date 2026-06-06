@@ -1,12 +1,15 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { useCallback, useEffect, useRef } from 'react';
 import {
   AccessibilityInfo,
+  Alert,
   Animated,
   BackHandler,
   Image,
+  NativeModules,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -14,6 +17,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fireBlockingActivated } from '../utils/notificationManager';
+
+const { FamilyControlsBridge } = NativeModules;
 
 type RootStackParamList = {
   PanicShield: undefined;
@@ -77,11 +82,64 @@ const PanicShieldScreen: React.FC = () => {
   });
 
   useEffect(() => {
-    const timer = setTimeout(async () => {
+    const initPanic = async () => {
+      const authResult = await FamilyControlsBridge.getAuthorizationStatus();
+      const isAuthorized = authResult?.status === 'authorized';
+
+      if (!isAuthorized) {
+        Alert.alert(
+          'Panic Protection Needs Permission',
+          'To block distracting apps during panic, Reclaim needs Screen Time access.',
+          [
+            {
+              text: 'Skip',
+              style: 'cancel',
+              onPress: () => proceedToPanic(false),
+            },
+            {
+              text: 'Set Up Now',
+              onPress: async () => {
+                try {
+                  const result = await FamilyControlsBridge.requestAuthorization();
+                  if (result?.authorized) {
+                    await FamilyControlsBridge.presentAppPicker();
+                    await AsyncStorage.setItem('panicAppsSelected', 'true');
+                  }
+                } catch {}
+                proceedToPanic(true);
+              },
+            },
+          ]
+        );
+        return;
+      }
+
+      const appsResult = await FamilyControlsBridge.hasSelectedApps();
+      if (!appsResult?.hasApps) {
+        try {
+          await FamilyControlsBridge.presentAppPicker();
+          await AsyncStorage.setItem('panicAppsSelected', 'true');
+        } catch {}
+      }
+
+      proceedToPanic(true);
+    };
+
+    const proceedToPanic = async (startBlocking: boolean) => {
+      if (startBlocking) {
+        const saved = await AsyncStorage.getItem('defaultPanicDuration');
+        const durationSeconds = saved ? parseInt(saved, 10) : 1800;
+        await FamilyControlsBridge.startPanicSession(durationSeconds);
+      }
+
       await fireBlockingActivated();
-      navigation.replace('PanicActivated');
-    }, 3000);
-    return () => clearTimeout(timer);
+
+      setTimeout(() => {
+        navigation.replace('PanicActivated');
+      }, 3000);
+    };
+
+    initPanic();
   }, [navigation]);
 
   useEffect(() => {
