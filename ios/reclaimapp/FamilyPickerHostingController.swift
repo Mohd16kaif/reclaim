@@ -1,12 +1,12 @@
 import SwiftUI
 import FamilyControls
 import ManagedSettings
+import UIKit
 
 @available(iOS 16.0, *)
 class FamilyPickerHostingController: UIViewController {
 
   private var onComplete: (Data?) -> Void
-  private var selection = FamilyActivitySelection()
 
   init(onComplete: @escaping (Data?) -> Void) {
     self.onComplete = onComplete
@@ -18,40 +18,30 @@ class FamilyPickerHostingController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    let pickerView = FamilyActivityPickerView(selection: $selection) { [weak self] in
-      self?.handleDone()
+    let pickerView = FamilyActivityPickerView { [weak self] data in
+      self?.onComplete(data)
+      self?.dismiss(animated: true)
     } onCancel: { [weak self] in
-      self?.handleCancel()
+      self?.onComplete(nil)
+      self?.dismiss(animated: true)
     }
 
     let host = UIHostingController(rootView: pickerView)
     addChild(host)
     host.view.frame = view.bounds
-    host.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    host.view.autoresizingMask = [
+      UIView.AutoresizingMask.flexibleWidth,
+      UIView.AutoresizingMask.flexibleHeight
+    ]
     view.addSubview(host.view)
     host.didMove(toParent: self)
-  }
-
-  private func handleDone() {
-    let tokens = selection.applicationTokens
-    if let data = try? JSONEncoder().encode(tokens) {
-      onComplete(data)
-    } else {
-      onComplete(nil)
-    }
-    dismiss(animated: true)
-  }
-
-  private func handleCancel() {
-    onComplete(nil)
-    dismiss(animated: true)
   }
 }
 
 @available(iOS 16.0, *)
 struct FamilyActivityPickerView: View {
-  @Binding var selection: FamilyActivitySelection
-  let onDone: () -> Void
+  @State private var selection = FamilyActivitySelection()
+  let onDone: (Data?) -> Void
   let onCancel: () -> Void
 
   var body: some View {
@@ -64,8 +54,12 @@ struct FamilyActivityPickerView: View {
             Button("Cancel") { onCancel() }
           }
           ToolbarItem(placement: .navigationBarTrailing) {
-            Button("Done") { onDone() }
-              .fontWeight(.bold)
+            Button("Done") {
+              let tokens = selection.applicationTokens
+              let data = try? JSONEncoder().encode(tokens)
+              onDone(data)
+            }
+            .fontWeight(.bold)
           }
         }
     }
