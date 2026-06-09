@@ -182,7 +182,20 @@ class FamilyControlsBridge: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
+    // Layer 1: Block adult content in Safari
     contentFilterStore.webContent.blockedByFilter = .auto([])
+
+    // Layer 2: Shield third-party browsers using tokens saved during setup
+    let defaults = UserDefaults(suiteName: appGroupID)
+    if let categoryData = defaults?.data(forKey: "blocker_browser_categories"),
+       let tokens = try? JSONDecoder().decode(
+         Set<ActivityCategoryToken>.self, from: categoryData
+       ) {
+      contentFilterStore.shield.applicationCategories = .specific(
+        tokens, except: Set()
+      )
+    }
+
     resolve(["success": true])
   }
 
@@ -191,6 +204,22 @@ class FamilyControlsBridge: NSObject {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     contentFilterStore.webContent.blockedByFilter = nil
+    contentFilterStore.shield.applicationCategories = nil
+    resolve(["success": true])
+  }
+
+  @objc func saveBrowserCategoryTokens(
+    _ tokenData: String,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    guard let data = Data(base64Encoded: tokenData) else {
+      reject("INVALID_DATA", "Could not decode category token data", nil)
+      return
+    }
+    let defaults = UserDefaults(suiteName: appGroupID)
+    defaults?.set(data, forKey: "blocker_browser_categories")
+    defaults?.synchronize()
     resolve(["success": true])
   }
 

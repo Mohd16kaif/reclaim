@@ -28,6 +28,8 @@ import {
   enableShield,
   getDNSProfileStatus,
 } from "../utils/shieldManager";
+import BrowserBlockerSetup, { BROWSER_SETUP_KEY } from "../components/BrowserBlockerSetup";
+import { NativeModules } from "react-native";
 
 // ============================================================================
 // TYPES
@@ -191,11 +193,17 @@ const BlockerScreen = (): React.ReactElement => {
   // Shield state
   const [dnsStatus, setDnsStatus] = useState<DNSProfileStatus>("not_installed");
   const [dnsLoading, setDnsLoading] = useState(false);
+  const [browserSetupDone, setBrowserSetupDone] = useState<boolean | null>(null);
   const appState = useRef(AppState.currentState);
 
-  // Load shield status on mount
+  // Load shield status and browser setup status on mount
   useEffect(() => {
     loadShieldStatus();
+    const checkBrowserSetup = async (): Promise<void> => {
+      const done = await AsyncStorage.getItem(BROWSER_SETUP_KEY);
+      setBrowserSetupDone(done === "true");
+    };
+    void checkBrowserSetup();
   }, []);
 
   const loadShieldStatus = async (): Promise<void> => {
@@ -306,13 +314,16 @@ const BlockerScreen = (): React.ReactElement => {
     try {
       setDnsLoading(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      await enableShield();
-      // Refresh actual status from native bridge after attempting to start
-      const updatedStatus = await getDNSProfileStatus();
-      setDnsStatus(updatedStatus);
-      if (updatedStatus === "installed") {
-        await setBlockerEnabled(true);
-      }
+
+      // Request FamilyControls authorization first
+      const { FamilyControlsBridge } = NativeModules;
+      await FamilyControlsBridge.requestAuthorization();
+
+      // Enable content filter (Safari adult filter + browser shields)
+      await FamilyControlsBridge.enableContentFilter();
+
+      setDnsStatus("installed");
+      await setBlockerEnabled(true);
     } catch {
       // Shield enable failed - user will see UI state unchanged
     } finally {
@@ -321,10 +332,15 @@ const BlockerScreen = (): React.ReactElement => {
   };
 
   const handleDisableShield = async (): Promise<void> => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await disableShield();
-    setDnsStatus("not_installed");
-    await setBlockerEnabled(false);
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      const { FamilyControlsBridge } = NativeModules;
+      await FamilyControlsBridge.disableContentFilter();
+      setDnsStatus("not_installed");
+      await setBlockerEnabled(false);
+    } catch {
+      // Silently fail - UI will reflect unchanged state
+    }
   };
 
   // ── Derived values ─────────────────────────────────────────────────────────
@@ -334,6 +350,20 @@ const BlockerScreen = (): React.ReactElement => {
   // ============================================================================
   // RENDER
   // ============================================================================
+
+  // Show browser setup screen on first time before showing blocker
+  if (browserSetupDone === false) {
+    return (
+      <BrowserBlockerSetup
+        onSetupComplete={() => setBrowserSetupDone(true)}
+      />
+    );
+  }
+
+  // Still loading setup status — render nothing to avoid flash
+  if (browserSetupDone === null) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>

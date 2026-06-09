@@ -73,3 +73,8 @@ export const saveSelectedAppTokens = async (tokenData: string): Promise<boolean>
     return false;
   }
 };
+
+export async function saveBrowserCategoryTokens(tokenData: string): Promise<void> {
+  const { FamilyControlsBridge } = NativeModules;
+  await FamilyControlsBridge.saveBrowserCategoryTokens(tokenData);
+}

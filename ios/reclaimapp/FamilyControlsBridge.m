@@ -31,4 +31,8 @@ RCT_EXTERN_METHOD(hasSelectedApps:(RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(presentAppPicker:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(saveBrowserCategoryTokens:(NSString *)tokenData
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 @end
