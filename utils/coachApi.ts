@@ -1,8 +1,8 @@
 // SECURITY: Move Groq calls to server-side proxy (Supabase Edge Function).
 // EXPO_PUBLIC_* env vars ship in client bundle and are extractable.
-const GROQ_API_KEY = process.env.EXPO_PUBLIC_GROQ_API_KEY ?? "";
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.1-8b-instant";
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "";
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
+const PROXY_URL = `${SUPABASE_URL}/functions/v1/groq-proxy`;
 const MAX_TOKENS = 300;
 const TEMPERATURE = 0.7;
 const MAX_HISTORY_MESSAGES = 10; // Only send last 10 messages to save tokens
@@ -65,14 +65,7 @@ const trimHistory = (messages: ChatMessage[]): ChatMessage[] => {
   return messages.slice(messages.length - MAX_HISTORY_MESSAGES);
 };
 
-// Validate API key exists
-const validateConfig = (): void => {
-  if (!GROQ_API_KEY) {
-    throw new Error(
-      "GROQ API key is missing. Add EXPO_PUBLIC_GROQ_API_KEY to your .env file.",
-    );
-  }
-};
+
 
 // ============================================================================
 // MAIN FUNCTION
@@ -82,34 +75,24 @@ export async function getCoachResponse(
   messages: ChatMessage[],
   systemPrompt?: string,
 ): Promise<string> {
-  validateConfig();
-
   const trimmedMessages = trimHistory(messages);
 
-  const groqMessages = [
-    {
-      role: "system" as const,
-      content: systemPrompt ?? SYSTEM_PROMPTS.calm,
-    },
-    ...trimmedMessages.map((msg) => ({
+  try {
+    const conversationMessages = trimmedMessages.map((msg) => ({
       role: msg.role === "coach" ? ("assistant" as const) : ("user" as const),
       content: msg.text,
-    })),
-  ];
+    }));
 
-  try {
-    const response = await fetch(GROQ_API_URL, {
+    const response = await fetch(PROXY_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${GROQ_API_KEY}`,
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: groqMessages,
-        max_tokens: MAX_TOKENS,
-        temperature: TEMPERATURE,
-        stream: false,
+        messages: conversationMessages,
+        systemPrompt: systemPrompt ?? SYSTEM_PROMPTS.calm,
       }),
     });
 
@@ -123,7 +106,7 @@ export async function getCoachResponse(
         return "I'm a little overwhelmed right now. Give me a moment and try again.";
       }
 
-      throw new Error(`Groq API error: ${errorMsg}`);
+      throw new Error(`Proxy error: ${errorMsg}`);
     }
 
     const data = await response.json();

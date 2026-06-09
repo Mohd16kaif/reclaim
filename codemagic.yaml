@@ -10,7 +10,6 @@ workflows:
           - reclaim_app_store
           - reclaim_device_activity
           - reclaim_shield_config
-          - reclaim_tunnel
       vars:
         XCODE_WORKSPACE: "ios/reclaimapp.xcworkspace"
         XCODE_SCHEME: "reclaimapp"

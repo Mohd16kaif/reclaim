@@ -21,6 +21,15 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { IconSymbol } from '../components/ui/icon-symbol';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { getAvatarBase64Jpeg } from '../utils/profileStorage';
+import {
+  scheduleDailyCheckIn,
+  cancelDailyCheckIn,
+  scheduleRiskWindowReminder,
+  cancelRiskWindowReminder,
+  requestNotificationPermission,
+} from '../utils/notificationManager';
+
+const NOTIF_PREFS_KEY = '@reclaim_notif_prefs';
 
 // ============================================================================
 // TYPES
@@ -334,10 +343,27 @@ const SettingsScreen: React.FC = () => {
   const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
 
   // Toggle states
-  const [dailyCheckIn, setDailyCheckIn] = useState(true);
-  const [motivationReminder, setMotivationReminder] = useState(true);
-  const [riskAlert, setRiskAlert] = useState(true);
-  const [milestoneAlert, setMilestoneAlert] = useState(true);
+  const [dailyCheckIn, setDailyCheckIn] = useState(false);
+  const [motivationReminder, setMotivationReminder] = useState(false);
+  const [riskAlert, setRiskAlert] = useState(false);
+  const [milestoneAlert, setMilestoneAlert] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+      const loadNotifPrefs = async () => {
+        const saved = await AsyncStorage.getItem(NOTIF_PREFS_KEY);
+        if (!saved || !mounted) return;
+        const prefs = JSON.parse(saved);
+        setDailyCheckIn(prefs.dailyCheckIn ?? false);
+        setMotivationReminder(prefs.motivationReminder ?? false);
+        setRiskAlert(prefs.riskAlert ?? false);
+        setMilestoneAlert(prefs.milestoneAlert ?? false);
+      };
+      loadNotifPrefs();
+      return () => { mounted = false; };
+    }, [])
+  );
 
   // Panic Duration label
   const [panicDurationLabel, setPanicDurationLabel] = useState<string>('30 min');
@@ -421,6 +447,51 @@ const SettingsScreen: React.FC = () => {
   const stubAction = useCallback((label: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Alert.alert(label, 'Coming soon in production build!');
+  }, []);
+
+  const handleNotifToggle = useCallback(async (
+    key: 'dailyCheckIn' | 'motivationReminder' | 'riskAlert' | 'milestoneAlert',
+    val: boolean
+  ) => {
+    if (val) {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        Alert.alert(
+          'Notifications Disabled',
+          'Please enable notifications in your iPhone Settings to use this feature.'
+        );
+        return;
+      }
+    }
+
+    const setters = {
+      dailyCheckIn: setDailyCheckIn,
+      motivationReminder: setMotivationReminder,
+      riskAlert: setRiskAlert,
+      milestoneAlert: setMilestoneAlert,
+    };
+    setters[key](val);
+
+    const saved = await AsyncStorage.getItem(NOTIF_PREFS_KEY);
+    const prefs = saved ? JSON.parse(saved) : {};
+    prefs[key] = val;
+    await AsyncStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(prefs));
+
+    if (key === 'dailyCheckIn') {
+      if (val) {
+        await scheduleDailyCheckIn(20, 0);
+      } else {
+        await cancelDailyCheckIn();
+      }
+    }
+
+    if (key === 'riskAlert') {
+      if (val) {
+        await scheduleRiskWindowReminder(21, 0);
+      } else {
+        await cancelRiskWindowReminder();
+      }
+    }
   }, []);
 
   // ============================================================================
@@ -522,7 +593,7 @@ const SettingsScreen: React.FC = () => {
               iconBackground="#FFD60A"
               title="Daily Check-in"
               value={dailyCheckIn}
-              onValueChange={setDailyCheckIn}
+              onValueChange={(val) => handleNotifToggle('dailyCheckIn', val)}
             />
             <InsetDivider />
             <SettingsToggleRow
@@ -530,7 +601,7 @@ const SettingsScreen: React.FC = () => {
               iconBackground="#007AFF"
               title="Motivation Reminder"
               value={motivationReminder}
-              onValueChange={setMotivationReminder}
+              onValueChange={(val) => handleNotifToggle('motivationReminder', val)}
             />
             <InsetDivider />
             <SettingsToggleRow
@@ -538,7 +609,7 @@ const SettingsScreen: React.FC = () => {
               iconBackground="#FF3B30"
               title="Risk Alert"
               value={riskAlert}
-              onValueChange={setRiskAlert}
+              onValueChange={(val) => handleNotifToggle('riskAlert', val)}
             />
             <InsetDivider />
             <SettingsToggleRow
@@ -546,7 +617,7 @@ const SettingsScreen: React.FC = () => {
               iconBackground="#FF9500"
               title="Milestone Alert"
               value={milestoneAlert}
-              onValueChange={setMilestoneAlert}
+              onValueChange={(val) => handleNotifToggle('milestoneAlert', val)}
             />
             <InsetDivider />
 

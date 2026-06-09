@@ -170,7 +170,13 @@ class FamilyControlsBridge: NSObject {
 
   // MARK: - Content Filter (existing blocker shield)
 
-  private let contentFilterStore = ManagedSettingsStore()
+  private var contentFilterStore: ManagedSettingsStore {
+    if #available(iOS 16.0, *) {
+      return ManagedSettingsStore(named: ManagedSettingsStore.Name("reclaim.blocker"))
+    } else {
+      return ManagedSettingsStore()
+    }
+  }
 
   @objc func enableContentFilter(
     _ resolve: @escaping RCTPromiseResolveBlock,

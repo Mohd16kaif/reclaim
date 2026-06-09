@@ -257,7 +257,7 @@ const GrantPermissionsScreen: React.FC = () => {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.secondaryButton} onPress={handleSkip}>
-     
+              <Text style={styles.secondaryButtonText}>Skip for now</Text>
             </TouchableOpacity>
             
           </View>
