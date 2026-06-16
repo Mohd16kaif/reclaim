@@ -242,5 +242,87 @@ class FamilyControlsBridge: NSObject {
     }
   }
 
+  // MARK: - Blocker with Duration
+
+  @objc func enableBlockerWithDuration(_ days: NSNumber,
+                                        resolver: @escaping RCTPromiseResolveBlock,
+                                        rejecter: @escaping RCTPromiseRejectBlock) {
+      guard #available(iOS 16.0, *) else {
+          rejecter("UNSUPPORTED", "Requires iOS 16", nil)
+          return
+      }
+
+      let daysInt = days.intValue
+      let store = ManagedSettingsStore(named: ManagedSettingsStore.Name("reclaim.blocker"))
+      let sharedDefaults = UserDefaults(suiteName: "group.com.reclaim.recovery")
+
+      // Apply the filter immediately — do not wait for schedule
+      store.webContent.blockedByFilter = .auto()
+      NSLog("FamilyControlsBridge: Adult content filter enabled")
+
+      // Handle permanent block (days == 0 means forever)
+      if daysInt == 0 {
+          sharedDefaults?.set(true, forKey: "blocker_is_permanent")
+          sharedDefaults?.removeObject(forKey: "blocker_unblock_at")
+          NSLog("FamilyControlsBridge: Permanent block set — no schedule needed")
+          resolver(nil)
+          return
+      }
+
+      // Save the target unblock date
+      let unblockAt = Calendar.current.date(byAdding: .day, value: daysInt, to: Date())!
+      sharedDefaults?.set(unblockAt, forKey: "blocker_unblock_at")
+      sharedDefaults?.removeObject(forKey: "blocker_is_permanent")
+
+      // Schedule first chunk (max 7 days)
+      let chunkDays = min(daysInt, 7)
+      let chunkEnd = Calendar.current.date(byAdding: .day, value: chunkDays, to: Date())!
+
+      var startComponents = Calendar.current.dateComponents([.hour, .minute, .second], from: Date())
+      startComponents.second = 0
+
+      var endComponents = Calendar.current.dateComponents([.hour, .minute, .second], from: chunkEnd)
+      endComponents.second = 0
+
+      let schedule = DeviceActivitySchedule(
+          intervalStart: startComponents,
+          intervalEnd: endComponents,
+          repeats: false
+      )
+
+      do {
+          try DeviceActivityCenter().startMonitoring(
+              DeviceActivityName("reclaim.blocker.session"),
+              during: schedule
+          )
+          NSLog("FamilyControlsBridge: Blocker scheduled for \(daysInt) days, first chunk \(chunkDays) days")
+          resolver(nil)
+      } catch {
+          // Filter is already on even if scheduling fails — don't reject
+          NSLog("FamilyControlsBridge: Schedule failed but filter is active: \(error.localizedDescription)")
+          resolver(nil)
+      }
+  }
+
+  @objc func disableBlocker(_ resolver: @escaping RCTPromiseResolveBlock,
+                             rejecter: @escaping RCTPromiseRejectBlock) {
+      guard #available(iOS 16.0, *) else {
+          rejecter("UNSUPPORTED", "Requires iOS 16", nil)
+          return
+      }
+
+      let store = ManagedSettingsStore(named: ManagedSettingsStore.Name("reclaim.blocker"))
+      store.webContent.blockedByFilter = nil
+
+      DeviceActivityCenter().stopMonitoring([DeviceActivityName("reclaim.blocker.session")])
+
+      let sharedDefaults = UserDefaults(suiteName: "group.com.reclaim.recovery")
+      sharedDefaults?.removeObject(forKey: "blocker_unblock_at")
+      sharedDefaults?.removeObject(forKey: "blocker_is_permanent")
+
+      NSLog("FamilyControlsBridge: Blocker fully disabled")
+      resolver(nil)
+  }
+
   @objc static func requiresMainQueueSetup() -> Bool { return false }
 }

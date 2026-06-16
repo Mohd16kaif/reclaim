@@ -4,10 +4,12 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import * as Haptics from "expo-haptics";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActionSheetIOS,
   Animated,
   AppState,
   AppStateStatus,
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Switch,
@@ -29,6 +31,7 @@ import {
   getDNSProfileStatus,
 } from "../utils/shieldManager";
 import BrowserBlockerSetup, { BROWSER_SETUP_KEY } from "../components/BrowserBlockerSetup";
+import { enableBlockerWithDuration, disableBlocker } from "../utils/familyControls";
 import { NativeModules } from "react-native";
 
 // ============================================================================
@@ -57,6 +60,8 @@ interface Notification {
 const ANIMATION_DURATION = 400;
 const PULSE_SCALE_MAX = 1.04;
 const PULSE_DURATION = 2000;
+const BLOCKER_DURATION_KEY = '@reclaim_blocker_duration_days';
+const BLOCKER_UNBLOCK_AT_KEY = '@reclaim_blocker_unblock_at';
 
 // ============================================================================
 // ICONS
@@ -192,6 +197,7 @@ const BlockerScreen = (): React.ReactElement => {
 
   // Shield state
   const [dnsStatus, setDnsStatus] = useState<DNSProfileStatus>("not_installed");
+  const [blockerDays, setBlockerDays] = useState<number | null>(null);
   const [dnsLoading, setDnsLoading] = useState(false);
   const [browserSetupDone, setBrowserSetupDone] = useState<boolean | null>(null);
   const appState = useRef(AppState.currentState);
@@ -204,6 +210,11 @@ const BlockerScreen = (): React.ReactElement => {
       setBrowserSetupDone(done === "true");
     };
     void checkBrowserSetup();
+    const loadSavedDuration = async (): Promise<void> => {
+      const saved = await AsyncStorage.getItem(BLOCKER_DURATION_KEY);
+      if (saved !== null) setBlockerDays(Number(saved));
+    };
+    void loadSavedDuration();
   }, []);
 
   const loadShieldStatus = async (): Promise<void> => {
@@ -310,36 +321,71 @@ const BlockerScreen = (): React.ReactElement => {
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
-  const handleEnableShield = async (): Promise<void> => {
-    try {
-      setDnsLoading(true);
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  const showDurationPicker = (): void => {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ['Cancel', 'Lock for 10 days', 'Lock for one month', 'Lock forever'],
+        cancelButtonIndex: 0,
+        title: 'How long do you want to block?',
+      },
+      async (buttonIndex) => {
+        let days = 0;
+        if (buttonIndex === 0) return; // Cancel tapped — do nothing, keep toggle off
+        if (buttonIndex === 1) days = 10;
+        if (buttonIndex === 2) days = 30;
+        if (buttonIndex === 3) days = 0; // 0 = permanent
 
-      // Request FamilyControls authorization first
-      const { FamilyControlsBridge } = NativeModules;
-      await FamilyControlsBridge.requestAuthorization();
+        try {
+          setDnsLoading(true);
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      // Enable content filter (Safari adult filter + browser shields)
-      await FamilyControlsBridge.enableContentFilter();
+          // Request FamilyControls authorization if not already granted
+          const { FamilyControlsBridge } = NativeModules;
+          await FamilyControlsBridge.requestAuthorization();
 
-      setDnsStatus("installed");
-      await setBlockerEnabled(true);
-    } catch {
-      // Shield enable failed - user will see UI state unchanged
-    } finally {
-      setDnsLoading(false);
-    }
+          // Enable filter with chosen duration
+          await enableBlockerWithDuration(days);
+
+          // Persist chosen duration for display purposes
+          const unblockAt = days === 0
+            ? null
+            : new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
+          await AsyncStorage.setItem(BLOCKER_DURATION_KEY, String(days));
+          if (unblockAt) {
+            await AsyncStorage.setItem(BLOCKER_UNBLOCK_AT_KEY, unblockAt);
+          } else {
+            await AsyncStorage.removeItem(BLOCKER_UNBLOCK_AT_KEY);
+          }
+
+          setBlockerDays(days);
+          setDnsStatus('installed');
+          await setBlockerEnabled(true);
+        } catch {
+          // Revert toggle visually if something failed
+          setDnsStatus('not_installed');
+        } finally {
+          setDnsLoading(false);
+        }
+      }
+    );
+  };
+
+  const handleEnableShield = (): void => {
+    showDurationPicker();
   };
 
   const handleDisableShield = async (): Promise<void> => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      const { FamilyControlsBridge } = NativeModules;
-      await FamilyControlsBridge.disableContentFilter();
-      setDnsStatus("not_installed");
+      await disableBlocker();
+      await AsyncStorage.removeItem(BLOCKER_DURATION_KEY);
+      await AsyncStorage.removeItem(BLOCKER_UNBLOCK_AT_KEY);
+      setBlockerDays(null);
+      setDnsStatus('not_installed');
       await setBlockerEnabled(false);
     } catch {
-      // Silently fail - UI will reflect unchanged state
+      // Silently fail — UI reflects unchanged state
     }
   };
 
@@ -431,9 +477,16 @@ const BlockerScreen = (): React.ReactElement => {
                   ) : (
                     <View style={styles.toggleInactiveIcon} />
                   )}
-                  <Text style={styles.toggleLabel}>
-                    {shieldActive ? "Blocker is active" : "Blocker is inactive"}
-                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.toggleLabel}>
+                      {shieldActive ? "Blocker is active" : "Blocker is inactive"}
+                    </Text>
+                    {shieldActive && blockerDays !== null && (
+                      <Text style={styles.durationLabel}>
+                        {blockerDays === 0 ? 'Locked forever' : `${blockerDays} days`}
+                      </Text>
+                    )}
+                  </View>
                 </View>
                 <Switch
                   value={shieldActive}
@@ -594,6 +647,11 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   toggleLabel: { fontSize: 16, fontWeight: "600", color: "#000000", flexShrink: 1 },
+  durationLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+  },
   toggleInactiveIcon: {
     width: 22,
     height: 22,

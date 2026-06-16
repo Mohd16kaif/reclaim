@@ -35,4 +35,11 @@ RCT_EXTERN_METHOD(saveBrowserCategoryTokens:(NSString *)tokenData
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(enableBlockerWithDuration:(nonnull NSNumber *)days
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(disableBlocker:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 @end

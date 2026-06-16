@@ -78,3 +78,18 @@ export async function saveBrowserCategoryTokens(tokenData: string): Promise<void
   const { FamilyControlsBridge } = NativeModules;
   await FamilyControlsBridge.saveBrowserCategoryTokens(tokenData);
 }
+
+/**
+ * Enables adult content web filter for a given number of days.
+ * Pass 0 for permanent (no expiry).
+ */
+export const enableBlockerWithDuration = async (days: number): Promise<void> => {
+  await FamilyControlsBridge.enableBlockerWithDuration(days);
+};
+
+/**
+ * Disables adult content web filter and cancels any active schedule.
+ */
+export const disableBlocker = async (): Promise<void> => {
+  await FamilyControlsBridge.disableBlocker();
+};
