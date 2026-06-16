@@ -28,10 +28,11 @@ import {
   disableShield,
   DNSProfileStatus,
   enableShield,
+  enableShieldWithDuration,
+  disableShieldWithDuration,
   getDNSProfileStatus,
 } from "../utils/shieldManager";
 import BrowserBlockerSetup, { BROWSER_SETUP_KEY } from "../components/BrowserBlockerSetup";
-import { enableBlockerWithDuration, disableBlocker } from "../utils/familyControls";
 import { NativeModules } from "react-native";
 
 // ============================================================================
@@ -329,24 +330,19 @@ const BlockerScreen = (): React.ReactElement => {
         title: 'How long do you want to block?',
       },
       async (buttonIndex) => {
+        if (buttonIndex === 0) return;
+
         let days = 0;
-        if (buttonIndex === 0) return; // Cancel tapped — do nothing, keep toggle off
         if (buttonIndex === 1) days = 10;
         if (buttonIndex === 2) days = 30;
-        if (buttonIndex === 3) days = 0; // 0 = permanent
+        if (buttonIndex === 3) days = 0;
 
         try {
           setDnsLoading(true);
           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-          // Request FamilyControls authorization if not already granted
-          const { FamilyControlsBridge } = NativeModules;
-          await FamilyControlsBridge.requestAuthorization();
+          await enableShieldWithDuration(days);
 
-          // Enable filter with chosen duration
-          await enableBlockerWithDuration(days);
-
-          // Persist chosen duration for display purposes
           const unblockAt = days === 0
             ? null
             : new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
@@ -362,7 +358,6 @@ const BlockerScreen = (): React.ReactElement => {
           setDnsStatus('installed');
           await setBlockerEnabled(true);
         } catch {
-          // Revert toggle visually if something failed
           setDnsStatus('not_installed');
         } finally {
           setDnsLoading(false);
@@ -375,18 +370,33 @@ const BlockerScreen = (): React.ReactElement => {
     showDurationPicker();
   };
 
-  const handleDisableShield = async (): Promise<void> => {
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      await disableBlocker();
-      await AsyncStorage.removeItem(BLOCKER_DURATION_KEY);
-      await AsyncStorage.removeItem(BLOCKER_UNBLOCK_AT_KEY);
-      setBlockerDays(null);
-      setDnsStatus('not_installed');
-      await setBlockerEnabled(false);
-    } catch {
-      // Silently fail — UI reflects unchanged state
-    }
+  const handleDisableShield = (): void => {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ['Keep Protection On', 'Disable Anyway'],
+        cancelButtonIndex: 0,
+        destructiveButtonIndex: 1,
+        title: 'Disable your blocker?',
+        message: blockerDays === 0
+          ? 'You set this to lock forever. Are you sure you want to remove your protection?'
+          : `You chose to stay protected for ${blockerDays} days. Disabling now means giving up that commitment.`,
+      },
+      async (buttonIndex) => {
+        if (buttonIndex === 0) return;
+
+        try {
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          await disableShieldWithDuration();
+          await AsyncStorage.removeItem(BLOCKER_DURATION_KEY);
+          await AsyncStorage.removeItem(BLOCKER_UNBLOCK_AT_KEY);
+          setBlockerDays(null);
+          setDnsStatus('not_installed');
+          await setBlockerEnabled(false);
+        } catch {
+          // silently fail
+        }
+      }
+    );
   };
 
   // ── Derived values ─────────────────────────────────────────────────────────

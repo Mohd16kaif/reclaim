@@ -14,6 +14,7 @@ import { NativeModules, Platform } from "react-native";
 const { FamilyControlsBridge } = NativeModules;
 import {
   computeShieldScore,
+  
   DEFAULT_LAYER_STATUSES,
   ShieldLayerStatuses,
 } from "./shieldLayers";
@@ -334,4 +335,41 @@ export const getFullShieldStatus = async (): Promise<FullShieldStatus> => {
     shieldScore,
     lastVerifiedAt,
   };
+};
+
+/**
+ * Enables the adult content filter with a duration via FamilyControlsBridge.
+ * Replaces enableShield() for the duration-based blocker flow.
+ */
+export const enableShieldWithDuration = async (days: number): Promise<void> => {
+  try {
+    const statusResult = await FamilyControlsBridge.getAuthorizationStatus();
+    if (statusResult?.status !== "authorized") {
+      const authResult = await FamilyControlsBridge.requestAuthorization();
+      if (!authResult?.authorized) {
+        await setDNSProfileStatus("not_installed");
+        return;
+      }
+    }
+    await FamilyControlsBridge.enableBlockerWithDuration(days);
+    await setDNSProfileStatus("installed");
+    await AsyncStorage.setItem(KEYS.LAST_VERIFIED_AT, Date.now().toString());
+  } catch {
+    await setDNSProfileStatus("not_installed");
+    throw new Error("Failed to enable blocker");
+  }
+};
+
+/**
+ * Disables the adult content filter and clears all blocker state.
+ */
+export const disableShieldWithDuration = async (): Promise<void> => {
+  try {
+    await FamilyControlsBridge.disableBlocker();
+  } catch {
+    // still clear local state
+  }
+  await setDNSProfileStatus("not_installed");
+  await AsyncStorage.removeItem(KEYS.LAYER_STATUSES);
+  await AsyncStorage.removeItem(KEYS.LAST_VERIFIED_AT);
 };
