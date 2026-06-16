@@ -63,6 +63,7 @@ const PULSE_SCALE_MAX = 1.04;
 const PULSE_DURATION = 2000;
 const BLOCKER_DURATION_KEY = '@reclaim_blocker_duration_days';
 const BLOCKER_UNBLOCK_AT_KEY = '@reclaim_blocker_unblock_at';
+const BLOCKER_PENDING_DISABLE_KEY = '@reclaim_blocker_pending_disable_at';
 
 // ============================================================================
 // ICONS
@@ -199,6 +200,7 @@ const BlockerScreen = (): React.ReactElement => {
   // Shield state
   const [dnsStatus, setDnsStatus] = useState<DNSProfileStatus>("not_installed");
   const [blockerDays, setBlockerDays] = useState<number | null>(null);
+  const [pendingDisableAt, setPendingDisableAt] = useState<string | null>(null);
   const [dnsLoading, setDnsLoading] = useState(false);
   const [browserSetupDone, setBrowserSetupDone] = useState<boolean | null>(null);
   const appState = useRef(AppState.currentState);
@@ -216,6 +218,25 @@ const BlockerScreen = (): React.ReactElement => {
       if (saved !== null) setBlockerDays(Number(saved));
     };
     void loadSavedDuration();
+    const loadPendingDisable = async (): Promise<void> => {
+      const pending = await AsyncStorage.getItem(BLOCKER_PENDING_DISABLE_KEY);
+      setPendingDisableAt(pending);
+      if (pending) {
+        const pendingDate = new Date(pending);
+        if (new Date() >= pendingDate) {
+          // Delay has elapsed — actually disable now
+          await disableShieldWithDuration();
+          await AsyncStorage.removeItem(BLOCKER_DURATION_KEY);
+          await AsyncStorage.removeItem(BLOCKER_UNBLOCK_AT_KEY);
+          await AsyncStorage.removeItem(BLOCKER_PENDING_DISABLE_KEY);
+          setBlockerDays(null);
+          setPendingDisableAt(null);
+          setDnsStatus('not_installed');
+          await setBlockerEnabled(false);
+        }
+      }
+    };
+    void loadPendingDisable();
   }, []);
 
   const loadShieldStatus = async (): Promise<void> => {
@@ -371,27 +392,54 @@ const BlockerScreen = (): React.ReactElement => {
   };
 
   const handleDisableShield = (): void => {
+    // If a pending disable is already scheduled, show its status
+    if (pendingDisableAt) {
+      const pendingDate = new Date(pendingDisableAt);
+      const hoursLeft = Math.max(
+        0,
+        Math.ceil((pendingDate.getTime() - Date.now()) / (1000 * 60 * 60))
+      );
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Keep it scheduled', 'Cancel the disable request'],
+          cancelButtonIndex: 0,
+          title: 'Disable already scheduled',
+          message: `Your blocker will turn off in ${hoursLeft} hour${hoursLeft === 1 ? '' : 's'}. This delay gives you time to reconsider.`,
+        },
+        async (buttonIndex) => {
+          if (buttonIndex === 0) return;
+          // Cancel the pending disable
+          await AsyncStorage.removeItem(BLOCKER_PENDING_DISABLE_KEY);
+          setPendingDisableAt(null);
+          setDnsStatus('installed');
+        }
+      );
+      return;
+    }
+
     ActionSheetIOS.showActionSheetWithOptions(
       {
-        options: ['Keep Protection On', 'Disable Anyway'],
+        options: ['Keep Protection On', 'Request Disable in 24 Hours'],
         cancelButtonIndex: 0,
         destructiveButtonIndex: 1,
         title: 'Disable your blocker?',
         message: blockerDays === 0
-          ? 'You set this to lock forever. Are you sure you want to remove your protection?'
-          : `You chose to stay protected for ${blockerDays} days. Disabling now means giving up that commitment.`,
+          ? 'You set this to lock forever. Your blocker will turn off in 24 hours — this delay gives you time to reconsider.'
+          : `You chose to stay protected for ${blockerDays} days. Your blocker will turn off in 24 hours if you still want to disable it.`,
       },
       async (buttonIndex) => {
         if (buttonIndex === 0) return;
 
         try {
           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          await disableShieldWithDuration();
-          await AsyncStorage.removeItem(BLOCKER_DURATION_KEY);
-          await AsyncStorage.removeItem(BLOCKER_UNBLOCK_AT_KEY);
-          setBlockerDays(null);
-          setDnsStatus('not_installed');
-          await setBlockerEnabled(false);
+
+          // Schedule disable 24 hours from now — don't disable immediately
+          const disableAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+          await AsyncStorage.setItem(BLOCKER_PENDING_DISABLE_KEY, disableAt);
+          setPendingDisableAt(disableAt);
+
+          // Keep the actual filter ON — just update UI to show pending state
+          setDnsStatus('installed');
         } catch {
           // silently fail
         }
@@ -493,7 +541,11 @@ const BlockerScreen = (): React.ReactElement => {
                     </Text>
                     {shieldActive && blockerDays !== null && (
                       <Text style={styles.durationLabel}>
-                        {blockerDays === 0 ? 'Locked forever' : `${blockerDays} days`}
+                        {pendingDisableAt
+                          ? '⏳ Disable requested — check back in 24h'
+                          : blockerDays === 0
+                            ? 'Locked forever'
+                            : `${blockerDays} days`}
                       </Text>
                     )}
                   </View>
