@@ -83,33 +83,41 @@ const PanicShieldScreen: React.FC = () => {
 
   useEffect(() => {
     const initPanic = async () => {
+      const uninstallPreventionEnabled = await AsyncStorage.getItem(
+        '@reclaim_uninstall_prevention_enabled'
+      );
+
+      if (uninstallPreventionEnabled !== 'true') {
+        Alert.alert(
+          'Uninstall Prevention Required',
+          'Enable Uninstall Prevention in Settings to use Panic Mode. This protects you by shielding distracting apps during your session.',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+              onPress: () => navigation.goBack(),
+            },
+            {
+              text: 'Go to Settings',
+              onPress: () => {
+                navigation.goBack();
+                // @ts-ignore - parent navigator handles Settings route
+               navigation.navigate('Profile' as never);
+              },
+            },
+          ]
+        );
+        return;
+      }
+
       const authResult = await FamilyControlsBridge.getAuthorizationStatus();
       const isAuthorized = authResult?.status === 'authorized';
 
       if (!isAuthorized) {
         Alert.alert(
-          'Panic Protection Needs Permission',
-          'To block distracting apps during panic, Reclaim needs Screen Time access.',
-          [
-            {
-              text: 'Skip',
-              style: 'cancel',
-              onPress: () => proceedToPanic(false),
-            },
-            {
-              text: 'Set Up Now',
-              onPress: async () => {
-                try {
-                  const result = await FamilyControlsBridge.requestAuthorization();
-                  if (result?.authorized) {
-                    await FamilyControlsBridge.presentAppPicker();
-                    await AsyncStorage.setItem('panicAppsSelected', 'true');
-                  }
-                } catch {}
-                proceedToPanic(true);
-              },
-            },
-          ]
+          'Permission Lost',
+          'Screen Time access was revoked. Please re-enable Uninstall Prevention in Settings.',
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
         );
         return;
       }

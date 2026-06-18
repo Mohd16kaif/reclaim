@@ -28,6 +28,11 @@ import {
   cancelRiskWindowReminder,
   requestNotificationPermission,
 } from '../utils/notificationManager';
+import {
+  isUninstallPreventionEnabled,
+  enableUninstallPrevention,
+  disableUninstallPrevention,
+} from '../utils/uninstallPrevention';
 
 const NOTIF_PREFS_KEY = '@reclaim_notif_prefs';
 
@@ -347,6 +352,8 @@ const SettingsScreen: React.FC = () => {
   const [motivationReminder, setMotivationReminder] = useState(false);
   const [riskAlert, setRiskAlert] = useState(false);
   const [milestoneAlert, setMilestoneAlert] = useState(false);
+  const [uninstallPrevention, setUninstallPrevention] = useState(false);
+  const [uninstallPreventionLoading, setUninstallPreventionLoading] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -361,6 +368,11 @@ const SettingsScreen: React.FC = () => {
         setMilestoneAlert(prefs.milestoneAlert ?? false);
       };
       loadNotifPrefs();
+      const loadUninstallPrevention = async () => {
+        const enabled = await isUninstallPreventionEnabled();
+        if (mounted) setUninstallPrevention(enabled);
+      };
+      loadUninstallPrevention();
       return () => { mounted = false; };
     }, [])
   );
@@ -494,6 +506,38 @@ const SettingsScreen: React.FC = () => {
     }
   }, []);
 
+  const handleUninstallPreventionToggle = useCallback(async (val: boolean) => {
+    if (uninstallPreventionLoading) return;
+
+    if (!val) {
+      await disableUninstallPrevention();
+      setUninstallPrevention(false);
+      return;
+    }
+
+    setUninstallPreventionLoading(true);
+    try {
+      const result = await enableUninstallPrevention();
+      if (result.success) {
+        setUninstallPrevention(true);
+      } else if (result.reason === 'auth_denied') {
+        Alert.alert(
+          'Permission Needed',
+          'Reclaim needs Screen Time access to protect you during Panic Mode. Please allow it to enable Uninstall Prevention.'
+        );
+      } else if (result.reason === 'picker_cancelled') {
+        Alert.alert(
+          'Setup Incomplete',
+          'Select at least one app to shield during Panic Mode to finish enabling Uninstall Prevention.'
+        );
+      } else {
+        Alert.alert('Something Went Wrong', 'Please try again.');
+      }
+    } finally {
+      setUninstallPreventionLoading(false);
+    }
+  }, [uninstallPreventionLoading]);
+
   // ============================================================================
   // RENDER
   // ============================================================================
@@ -581,6 +625,14 @@ const SettingsScreen: React.FC = () => {
               title="Default Panic Duration"
               rightLabel={panicDurationLabel}
               onPress={() => navigation.navigate('DefaultPanicDuration')}
+            />
+            <InsetDivider />
+            <SettingsToggleRow
+              icon={<LockIcon color="#FFFFFF" />}
+              iconBackground="#000000"
+              title="Uninstall Prevention"
+              value={uninstallPrevention}
+              onValueChange={handleUninstallPreventionToggle}
             />
             <InsetDivider />
 
