@@ -56,6 +56,9 @@ class ReclaimDeviceActivityMonitor: DeviceActivityMonitor {
     private func removeShields() {
         store.shield.applications = nil
         store.shield.applicationCategories = nil
+        if #available(iOS 16.0, *) {
+            store.application.denyAppRemoval = false
+        }
         NSLog("ReclaimDeviceActivity: All panic shields removed")
     }
 

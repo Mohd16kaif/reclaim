@@ -83,14 +83,27 @@ const PanicShieldScreen: React.FC = () => {
 
   useEffect(() => {
     const initPanic = async () => {
-      const uninstallPreventionEnabled = await AsyncStorage.getItem(
-        '@reclaim_uninstall_prevention_enabled'
-      );
+      const [uninstallPreventionEnabled, panicAppSelectionEnabled] = await Promise.all([
+        AsyncStorage.getItem('@reclaim_uninstall_prevention_enabled'),
+        AsyncStorage.getItem('@reclaim_panic_app_selection_enabled'),
+      ]);
 
-      if (uninstallPreventionEnabled !== 'true') {
+      const uninstallOn = uninstallPreventionEnabled === 'true';
+      const appsOn = panicAppSelectionEnabled === 'true';
+
+      if (!uninstallOn || !appsOn) {
+        let message: string;
+        if (!uninstallOn && !appsOn) {
+          message = 'Turn on Uninstall Prevention and Block Apps During Panic in Settings to use Panic Mode.';
+        } else if (!uninstallOn) {
+          message = 'Turn on Uninstall Prevention in Settings to use Panic Mode.';
+        } else {
+          message = 'Turn on Block Apps During Panic in Settings to use Panic Mode.';
+        }
+
         Alert.alert(
-          'Uninstall Prevention Required',
-          'Enable Uninstall Prevention in Settings to use Panic Mode. This protects you by shielding distracting apps during your session.',
+          'Setup Required',
+          message,
           [
             {
               text: 'Cancel',
@@ -102,7 +115,7 @@ const PanicShieldScreen: React.FC = () => {
               onPress: () => {
                 navigation.goBack();
                 // @ts-ignore - parent navigator handles Settings route
-               navigation.navigate('Profile' as never);
+                navigation.navigate('Profile' as never);
               },
             },
           ]

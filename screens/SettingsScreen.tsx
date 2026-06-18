@@ -32,6 +32,9 @@ import {
   isUninstallPreventionEnabled,
   enableUninstallPrevention,
   disableUninstallPrevention,
+  isPanicAppSelectionEnabled,
+  enablePanicAppSelection,
+  disablePanicAppSelection,
 } from '../utils/uninstallPrevention';
 
 const NOTIF_PREFS_KEY = '@reclaim_notif_prefs';
@@ -307,18 +310,23 @@ const SettingsToggleRow = ({
   icon,
   iconBackground,
   title,
+  subtitle,
   value,
   onValueChange,
 }: {
   icon: React.ReactNode;
   iconBackground: string;
   title: string;
+  subtitle?: string;
   value: boolean;
   onValueChange: (val: boolean) => void;
 }) => (
   <View style={styles.settingsRow}>
     <View style={[styles.rowIconCircle, { backgroundColor: iconBackground }]}>{icon}</View>
-    <Text style={styles.rowTitle}>{title}</Text>
+    <View style={{ flex: 1 }}>
+      <Text style={styles.rowTitle}>{title}</Text>
+      {subtitle && <Text style={styles.rowSubtitle}>{subtitle}</Text>}
+    </View>
     <Switch
       value={value}
       onValueChange={(val) => {
@@ -352,8 +360,10 @@ const SettingsScreen: React.FC = () => {
   const [motivationReminder, setMotivationReminder] = useState(false);
   const [riskAlert, setRiskAlert] = useState(false);
   const [milestoneAlert, setMilestoneAlert] = useState(false);
-  const [uninstallPrevention, setUninstallPrevention] = useState(false);
-  const [uninstallPreventionLoading, setUninstallPreventionLoading] = useState(false);
+const [uninstallPrevention, setUninstallPrevention] = useState(false);
+const [uninstallPreventionLoading, setUninstallPreventionLoading] = useState(false);
+const [panicAppSelection, setPanicAppSelection] = useState(false);
+const [panicAppSelectionLoading, setPanicAppSelectionLoading] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -368,11 +378,16 @@ const SettingsScreen: React.FC = () => {
         setMilestoneAlert(prefs.milestoneAlert ?? false);
       };
       loadNotifPrefs();
-      const loadUninstallPrevention = async () => {
-        const enabled = await isUninstallPreventionEnabled();
-        if (mounted) setUninstallPrevention(enabled);
-      };
-      loadUninstallPrevention();
+    const loadUninstallPrevention = async () => {
+      const enabled = await isUninstallPreventionEnabled();
+      if (mounted) setUninstallPrevention(enabled);
+    };
+    loadUninstallPrevention();
+    const loadPanicAppSelection = async () => {
+      const enabled = await isPanicAppSelectionEnabled();
+      if (mounted) setPanicAppSelection(enabled);
+    };
+    loadPanicAppSelection();
       return () => { mounted = false; };
     }, [])
   );
@@ -525,11 +540,6 @@ const SettingsScreen: React.FC = () => {
           'Permission Needed',
           'Reclaim needs Screen Time access to protect you during Panic Mode. Please allow it to enable Uninstall Prevention.'
         );
-      } else if (result.reason === 'picker_cancelled') {
-        Alert.alert(
-          'Setup Incomplete',
-          'Select at least one app to shield during Panic Mode to finish enabling Uninstall Prevention.'
-        );
       } else {
         Alert.alert('Something Went Wrong', 'Please try again.');
       }
@@ -537,6 +547,38 @@ const SettingsScreen: React.FC = () => {
       setUninstallPreventionLoading(false);
     }
   }, [uninstallPreventionLoading]);
+
+  const handlePanicAppSelectionToggle = useCallback(async (val: boolean) => {
+    if (panicAppSelectionLoading) return;
+
+    if (!val) {
+      await disablePanicAppSelection();
+      setPanicAppSelection(false);
+      return;
+    }
+
+    setPanicAppSelectionLoading(true);
+    try {
+      const result = await enablePanicAppSelection();
+      if (result.success) {
+        setPanicAppSelection(true);
+      } else if (result.reason === 'auth_denied') {
+        Alert.alert(
+          'Permission Needed',
+          'Reclaim needs Screen Time access to protect you during Panic Mode. Please allow it to enable this setting.'
+        );
+      } else if (result.reason === 'picker_cancelled') {
+        Alert.alert(
+          'Setup Incomplete',
+          'Select at least one app to finish enabling this setting.'
+        );
+      } else {
+        Alert.alert('Something Went Wrong', 'Please try again.');
+      }
+    } finally {
+      setPanicAppSelectionLoading(false);
+    }
+  }, [panicAppSelectionLoading]);
 
   // ============================================================================
   // RENDER
@@ -618,23 +660,38 @@ const SettingsScreen: React.FC = () => {
             {/* ============================================================ */}
             {/* PANIC PROTECTION SECTION */}
             {/* ============================================================ */}
-            <SectionHeader title="PANIC PROTECTION" />
-            <SettingsRow
-              icon={<BoltIcon color="#000000" />}
-              iconBackground="#FFD60A"
-              title="Default Panic Duration"
-              rightLabel={panicDurationLabel}
-              onPress={() => navigation.navigate('DefaultPanicDuration')}
-            />
-            <InsetDivider />
-            <SettingsToggleRow
-              icon={<LockIcon color="#FFFFFF" />}
-              iconBackground="#000000"
-              title="Uninstall Prevention"
-              value={uninstallPrevention}
-              onValueChange={handleUninstallPreventionToggle}
-            />
-            <InsetDivider />
+        <SectionHeader title="PANIC PROTECTION" />
+        <SettingsRow
+          icon={<BoltIcon color="#000000" />}
+          iconBackground="#FFD60A"
+          title="Default Panic Duration"
+          rightLabel={panicDurationLabel}
+          onPress={() => navigation.navigate('DefaultPanicDuration')}
+        />
+        <InsetDivider />
+        <SettingsToggleRow
+          icon={<LockIcon color="#FFFFFF" />}
+          iconBackground="#000000"
+          title="Uninstall Prevention"
+          subtitle="Active only during Panic Mode"
+          value={uninstallPrevention}
+          onValueChange={handleUninstallPreventionToggle}
+        />
+        <InsetDivider />
+        <SettingsToggleRow
+          icon={<BoltIcon color="#FFFFFF" />}
+          iconBackground="#FF3B30"
+          title="Block Apps During Panic"
+          subtitle="Active only during Panic Mode"
+          value={panicAppSelection}
+          onValueChange={handlePanicAppSelectionToggle}
+        />
+        <InsetDivider />
+        {uninstallPrevention && panicAppSelection && (
+          <View style={styles.panicReadyBanner}>
+            <Text style={styles.panicReadyText}>You're all set — Panic Mode is ready to use</Text>
+          </View>
+        )}
 
             {/* ============================================================ */}
             {/* NOTIFICATIONS SECTION */}
@@ -886,6 +943,28 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#F2F2F7',
     marginLeft: 44,
+  },
+
+  // ---- TOGGLE SUBTITLE ----
+  rowSubtitle: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#8E8E93',
+    marginTop: 2,
+  },
+
+  // ---- PANIC READY BANNER ----
+  panicReadyBanner: {
+    backgroundColor: '#E8F8EE',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginTop: 12,
+  },
+  panicReadyText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1B873F',
   },
 });
 

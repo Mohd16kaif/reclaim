@@ -125,6 +125,12 @@ class FamilyControlsBridge: NSObject {
       store.shield.applications = tokens
     }
 
+    // Prevent Reclaim itself from being deleted during the panic session
+    // (best-effort — user can still revoke Screen Time access from iOS Settings directly)
+    if #available(iOS 16.0, *) {
+        store.application.denyAppRemoval = true
+    }
+
     // Save end time for reference
     let endTime = Date().addingTimeInterval(TimeInterval(durationSeconds))
     defaults?.set(endTime.timeIntervalSince1970, forKey: panicEndTimeKey)
@@ -159,6 +165,11 @@ class FamilyControlsBridge: NSObject {
     // Remove all shields
     store.shield.applications = nil
     store.shield.applicationCategories = nil
+
+    // Restore normal app removal behavior
+    if #available(iOS 16.0, *) {
+        store.application.denyAppRemoval = false
+    }
 
     // Clear end time
     let defaults = UserDefaults(suiteName: appGroupID)
