@@ -32,7 +32,7 @@ import {
   disableShieldWithDuration,
   getDNSProfileStatus,
 } from "../utils/shieldManager";
-import BrowserBlockerSetup, { BROWSER_SETUP_KEY } from "../components/BrowserBlockerSetup";
+
 import { NativeModules } from "react-native";
 
 // ============================================================================
@@ -202,17 +202,12 @@ const BlockerScreen = (): React.ReactElement => {
   const [blockerDays, setBlockerDays] = useState<number | null>(null);
   const [pendingDisableAt, setPendingDisableAt] = useState<string | null>(null);
   const [dnsLoading, setDnsLoading] = useState(false);
-  const [browserSetupDone, setBrowserSetupDone] = useState<boolean | null>(null);
+
   const appState = useRef(AppState.currentState);
 
   // Load shield status and browser setup status on mount
   useEffect(() => {
     loadShieldStatus();
-    const checkBrowserSetup = async (): Promise<void> => {
-      const done = await AsyncStorage.getItem(BROWSER_SETUP_KEY);
-      setBrowserSetupDone(done === "true");
-    };
-    void checkBrowserSetup();
     const loadSavedDuration = async (): Promise<void> => {
       const saved = await AsyncStorage.getItem(BLOCKER_DURATION_KEY);
       if (saved !== null) setBlockerDays(Number(saved));
@@ -454,20 +449,6 @@ const BlockerScreen = (): React.ReactElement => {
   // ============================================================================
   // RENDER
   // ============================================================================
-
-  // Show browser setup screen on first time before showing blocker
-  if (browserSetupDone === false) {
-    return (
-      <BrowserBlockerSetup
-        onSetupComplete={() => setBrowserSetupDone(true)}
-      />
-    );
-  }
-
-  // Still loading setup status — render nothing to avoid flash
-  if (browserSetupDone === null) {
-    return null;
-  }
 
   return (
     <View style={styles.container}>
