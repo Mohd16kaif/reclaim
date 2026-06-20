@@ -315,20 +315,17 @@ class FamilyControlsBridge: NSObject {
       sharedDefaults?.set(unblockAt, forKey: "blocker_unblock_at")
       sharedDefaults?.removeObject(forKey: "blocker_is_permanent")
 
-      // Schedule first chunk (max 7 days)
-      let chunkDays = min(daysInt, 7)
-      let chunkEnd = Calendar.current.date(byAdding: .day, value: chunkDays, to: Date())!
-
-      var startComponents = Calendar.current.dateComponents([.hour, .minute, .second], from: Date())
-      startComponents.second = 0
-
-      var endComponents = Calendar.current.dateComponents([.hour, .minute, .second], from: chunkEnd)
-      endComponents.second = 0
+      // Daily-repeating schedule (midnight to just-before-midnight, every day).
+      // The extension checks each day whether unblockAt has passed and clears
+      // the filter then — this avoids computing any multi-day interval directly,
+      // which is what caused the previous schedule to collapse to a near-zero window.
+      let startComponents = DateComponents(hour: 0, minute: 0, second: 0)
+      let endComponents = DateComponents(hour: 23, minute: 59, second: 59)
 
       let schedule = DeviceActivitySchedule(
           intervalStart: startComponents,
           intervalEnd: endComponents,
-          repeats: false
+          repeats: true
       )
 
       do {
@@ -336,7 +333,7 @@ class FamilyControlsBridge: NSObject {
               DeviceActivityName("reclaim.blocker.session"),
               during: schedule
           )
-          NSLog("FamilyControlsBridge: Blocker scheduled for \(daysInt) days, first chunk \(chunkDays) days")
+          NSLog("FamilyControlsBridge: Blocker scheduled for \(daysInt) days, unblock at \(unblockAt)")
           resolver(nil)
       } catch {
           // Filter is already on even if scheduling fails — don't reject

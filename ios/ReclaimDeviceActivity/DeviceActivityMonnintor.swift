@@ -21,9 +21,13 @@ class ReclaimDeviceActivityMonitor: DeviceActivityMonitor {
 
         if activity.rawValue == "reclaim.panic.session" {
             applyShields()
+        } else if activity.rawValue == "reclaim.blocker.session" {
+            // Daily check: with a repeating midnight-to-midnight schedule,
+            // intervalDidStart fires once per day. Check expiry here too,
+            // not just at intervalDidEnd, so a missed end-of-day event
+            // doesn't leave the filter on an extra full day.
+            checkBlockerExpiry()
         }
-        // Blocker filter is applied immediately in the main app on toggle ON
-        // Nothing to do here for reclaim.blocker.session
     }
 
     // MARK: - intervalDidEnd
@@ -37,7 +41,7 @@ class ReclaimDeviceActivityMonitor: DeviceActivityMonitor {
             sendSessionCompleteNotification()
 
         } else if activity.rawValue == "reclaim.blocker.session" {
-            handleBlockerChunkEnd()
+            checkBlockerExpiry()
         }
     }
 
@@ -84,57 +88,26 @@ class ReclaimDeviceActivityMonitor: DeviceActivityMonitor {
 
     // MARK: - Blocker Duration Logic
 
-    private func handleBlockerChunkEnd() {
+    private func checkBlockerExpiry() {
         guard let unblockAt = sharedDefaults?.object(forKey: "blocker_unblock_at") as? Date else {
-            // No unblock date saved — safety fallback, remove filter
-            NSLog("ReclaimDeviceActivity: No unblock date found — removing filter as safety fallback")
-            blockerStore.webContent.blockedByFilter = nil
+            // No unblock date saved at all — this only happens for a permanent
+            // block (blocker_is_permanent), which has no schedule running in
+            // the first place, so there's nothing to check here. Do nothing.
             return
         }
 
         if Date() >= unblockAt {
-            // Duration has fully elapsed — turn off the filter
+            // Duration has fully elapsed — turn off the filter and stop the
+            // repeating schedule for good.
             blockerStore.webContent.blockedByFilter = nil
             sharedDefaults?.removeObject(forKey: "blocker_unblock_at")
             sharedDefaults?.removeObject(forKey: "blocker_is_permanent")
-            NSLog("ReclaimDeviceActivity: Blocker duration elapsed — filter removed")
+            DeviceActivityCenter().stopMonitoring([DeviceActivityName("reclaim.blocker.session")])
+            NSLog("ReclaimDeviceActivity: Blocker duration elapsed — filter removed, monitoring stopped")
         } else {
-            // Duration not yet elapsed — re-arm for another 7-day chunk
-            NSLog("ReclaimDeviceActivity: Blocker still active — re-arming schedule")
-            rearmBlockerSchedule()
-        }
-    }
-
-    private func rearmBlockerSchedule() {
-        guard let unblockAt = sharedDefaults?.object(forKey: "blocker_unblock_at") as? Date else {
-            return
-        }
-
-        let now = Date()
-        let remaining = unblockAt.timeIntervalSince(now)
-        let chunkSeconds = min(remaining, 7 * 24 * 3600) // 7 days max per chunk
-        let chunkEnd = now.addingTimeInterval(chunkSeconds)
-
-        var startComponents = Calendar.current.dateComponents([.hour, .minute, .second], from: now)
-        startComponents.second = 0
-
-        var endComponents = Calendar.current.dateComponents([.hour, .minute, .second], from: chunkEnd)
-        endComponents.second = 0
-
-        let schedule = DeviceActivitySchedule(
-            intervalStart: startComponents,
-            intervalEnd: endComponents,
-            repeats: false
-        )
-
-        do {
-            try DeviceActivityCenter().startMonitoring(
-                DeviceActivityName("reclaim.blocker.session"),
-                during: schedule
-            )
-            NSLog("ReclaimDeviceActivity: Re-armed blocker schedule for \(chunkSeconds / 3600) hours")
-        } catch {
-            NSLog("ReclaimDeviceActivity: Failed to re-arm: \(error.localizedDescription)")
+            // Not yet expired — the repeating schedule will check again
+            // tomorrow on its own. Nothing to do.
+            NSLog("ReclaimDeviceActivity: Blocker still active — \(unblockAt) not yet reached")
         }
     }
 }
