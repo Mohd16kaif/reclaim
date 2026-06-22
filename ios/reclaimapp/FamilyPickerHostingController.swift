@@ -46,7 +46,11 @@ struct FamilyActivityPickerView: View {
 
   var body: some View {
     NavigationView {
-      FamilyActivityPicker(selection: $selection)
+      FamilyActivityPicker(
+          headerText: "Select apps to block during panic sessions",
+          footerText: "Only individual apps can be selected.",
+          selection: $selection
+      )
         .navigationTitle("Block During Panic")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -55,8 +59,11 @@ struct FamilyActivityPickerView: View {
           }
           ToolbarItem(placement: .navigationBarTrailing) {
             Button("Done") {
-              let tokens = selection.applicationTokens
-              let data = try? JSONEncoder().encode(tokens)
+              guard !selection.applicationTokens.isEmpty else {
+                onCancel()
+                return
+              }
+              let data = try? JSONEncoder().encode(selection.applicationTokens)
               onDone(data)
             }
             .fontWeight(.bold)
