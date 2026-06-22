@@ -45,4 +45,46 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
             primaryButtonBackgroundColor: UIColor(red: 0.2, green: 0.4, blue: 1.0, alpha: 1.0)
         )
     }
+
+    override func configuration(shielding webDomain: WebDomain) -> ShieldConfiguration {
+        return ShieldConfiguration(
+            backgroundBlurStyle: .systemUltraThinMaterialDark,
+            backgroundColor: UIColor(red: 0.05, green: 0.05, blue: 0.1, alpha: 0.95),
+            icon: UIImage(systemName: "shield.fill"),
+            title: ShieldConfiguration.Label(
+                text: "Content Blocked",
+                color: .white
+            ),
+            subtitle: ShieldConfiguration.Label(
+                text: "Reclaim is protecting you.",
+                color: UIColor(white: 0.8, alpha: 1.0)
+            ),
+            primaryButtonLabel: ShieldConfiguration.Label(
+                text: "Open Reclaim",
+                color: .white
+            ),
+            primaryButtonBackgroundColor: UIColor(red: 0.2, green: 0.4, blue: 1.0, alpha: 1.0)
+        )
+    }
+
+    override func configuration(shielding webDomain: WebDomain, in category: ActivityCategory) -> ShieldConfiguration {
+        return ShieldConfiguration(
+            backgroundBlurStyle: .systemUltraThinMaterialDark,
+            backgroundColor: UIColor(red: 0.05, green: 0.05, blue: 0.1, alpha: 0.95),
+            icon: UIImage(systemName: "shield.fill"),
+            title: ShieldConfiguration.Label(
+                text: "Content Blocked",
+                color: .white
+            ),
+            subtitle: ShieldConfiguration.Label(
+                text: "Reclaim is protecting you.",
+                color: UIColor(white: 0.8, alpha: 1.0)
+            ),
+            primaryButtonLabel: ShieldConfiguration.Label(
+                text: "Open Reclaim",
+                color: .white
+            ),
+            primaryButtonBackgroundColor: UIColor(red: 0.2, green: 0.4, blue: 1.0, alpha: 1.0)
+        )
+    }
 }
