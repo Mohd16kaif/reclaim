@@ -194,7 +194,7 @@ class FamilyControlsBridge: NSObject {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     // Layer 1: Block adult content in Safari
-    contentFilterStore.webContent.blockedByFilter = .auto([])
+    contentFilterStore.webContent.blockedByFilter = .auto()
 
     // Layer 2: Shield third-party browsers using tokens saved during setup
     let defaults = UserDefaults(suiteName: appGroupID)
@@ -268,37 +268,7 @@ class FamilyControlsBridge: NSObject {
       let sharedDefaults = UserDefaults(suiteName: "group.com.reclaim.recovery")
 
       // Apply the filter immediately — do not wait for schedule
-      let blockedDomains: Set<WebDomain> = [
-          WebDomain(domain: "xhamster.com"), WebDomain(domain: "xhamster.desi"),
-          WebDomain(domain: "xvideos.com"), WebDomain(domain: "xvideos.red"),
-          WebDomain(domain: "xnxx.com"), WebDomain(domain: "xnxx.net"),
-          WebDomain(domain: "pornhub.com"), WebDomain(domain: "pornhub.org"),
-          WebDomain(domain: "redtube.com"), WebDomain(domain: "youporn.com"),
-          WebDomain(domain: "tube8.com"), WebDomain(domain: "spankbang.com"),
-          WebDomain(domain: "eporner.com"), WebDomain(domain: "beeg.com"),
-          WebDomain(domain: "tnaflix.com"), WebDomain(domain: "drtuber.com"),
-          WebDomain(domain: "nuvid.com"), WebDomain(domain: "porntrex.com"),
-          WebDomain(domain: "faphouse.com"), WebDomain(domain: "nhentai.net"),
-          WebDomain(domain: "nhentai.to"), WebDomain(domain: "rule34.xxx"),
-          WebDomain(domain: "gelbooru.com"), WebDomain(domain: "motherless.com"),
-          WebDomain(domain: "thisvid.com"), WebDomain(domain: "porndig.com"),
-          WebDomain(domain: "4tube.com"), WebDomain(domain: "fuq.com"),
-          WebDomain(domain: "porngo.com"), WebDomain(domain: "hdporn.net"),
-          WebDomain(domain: "cliphunter.com"), WebDomain(domain: "pornhd.com"),
-          WebDomain(domain: "brazzers.com"), WebDomain(domain: "bangbros.com"),
-          WebDomain(domain: "realitykings.com"), WebDomain(domain: "mofos.com"),
-          WebDomain(domain: "naughtyamerica.com"), WebDomain(domain: "wankz.com"),
-          WebDomain(domain: "hclips.com"), WebDomain(domain: "pornrabbit.com"),
-          WebDomain(domain: "porndoe.com"), WebDomain(domain: "vporn.com"),
-          WebDomain(domain: "pornoxo.com"), WebDomain(domain: "babes.com"),
-          WebDomain(domain: "fapvid.com"), WebDomain(domain: "txxx.com"),
-          WebDomain(domain: "imagefap.com"), WebDomain(domain: "sex.com"),
-          WebDomain(domain: "eroprofile.com"), WebDomain(domain: "empflix.com"),
-          WebDomain(domain: "pornone.com"), WebDomain(domain: "zbporn.com"),
-          WebDomain(domain: "spankbang.party"), WebDomain(domain: "xhamster.one"),
-          WebDomain(domain: "xvideos.es"), WebDomain(domain: "redtube.com.br"),
-      ]
-      store.webContent.blockedByFilter = .auto(blockedDomains)
+      store.webContent.blockedByFilter = .auto()
       NSLog("FamilyControlsBridge: Adult content filter enabled")
 
       // Handle permanent block (days == 0 means forever)
