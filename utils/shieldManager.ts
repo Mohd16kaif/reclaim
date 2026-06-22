@@ -373,3 +373,39 @@ export const disableShieldWithDuration = async (): Promise<void> => {
   await AsyncStorage.removeItem(KEYS.LAYER_STATUSES);
   await AsyncStorage.removeItem(KEYS.LAST_VERIFIED_AT);
 };
+
+/**
+ * Re-applies the active blocker filter on app launch to clear any stale
+ * ManagedSettingsStore state left over from a previous build.
+ * Call this once from the app's root component on mount.
+ */
+export const reapplyBlockerIfActive = async (): Promise<void> => {
+  try {
+    const status = await AsyncStorage.getItem(KEYS.DNS_PROFILE_STATUS);
+    if (status !== 'installed') return;
+
+    const authResult = await FamilyControlsBridge.getAuthorizationStatus();
+    if (authResult?.status !== 'authorized') return;
+
+    // Re-apply the filter to overwrite any stale store state from a previous build
+    await FamilyControlsBridge.enableBlockerWithDuration(0);
+
+    // Restore the correct unblock date if it was a timed block (not permanent)
+    const isPermanent = await AsyncStorage.getItem('blocker_is_permanent');
+    const unblockAt = await AsyncStorage.getItem('@reclaim_blocker_unblock_at');
+    if (!isPermanent && unblockAt) {
+      const days = Math.ceil(
+        (new Date(unblockAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      );
+      if (days > 0) {
+        await FamilyControlsBridge.enableBlockerWithDuration(days);
+      } else {
+        // Duration already expired — disable cleanly
+        await FamilyControlsBridge.disableBlocker();
+        await AsyncStorage.setItem(KEYS.DNS_PROFILE_STATUS, 'not_installed');
+      }
+    }
+  } catch {
+    // Silently fail — stale state is a cosmetic issue, not a crash
+  }
+};
