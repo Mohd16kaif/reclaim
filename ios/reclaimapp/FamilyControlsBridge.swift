@@ -136,11 +136,13 @@ class FamilyControlsBridge: NSObject {
     defaults?.set(endTime.timeIntervalSince1970, forKey: panicEndTimeKey)
     defaults?.synchronize()
 
-    // Schedule DeviceActivity so the monitor extension auto-removes shields when timer ends
-    let now = Date()
+    // Use a schedule that starts 1 minute in the past so iOS treats it as
+    // already-started. intervalDidEnd fires at endTime reliably.
+    // This is the recommended pattern for one-shot DeviceActivity timers.
+    let startTime = Date().addingTimeInterval(-60)
     let schedule = DeviceActivitySchedule(
       intervalStart: Calendar.current.dateComponents(
-        [.year, .month, .day, .hour, .minute, .second], from: now
+        [.year, .month, .day, .hour, .minute, .second], from: startTime
       ),
       intervalEnd: Calendar.current.dateComponents(
         [.year, .month, .day, .hour, .minute, .second], from: endTime
@@ -150,9 +152,10 @@ class FamilyControlsBridge: NSObject {
 
     do {
       try activityCenter.startMonitoring(panicActivity, during: schedule)
+      NSLog("FamilyControlsBridge: Panic schedule set — ends at \(endTime)")
       resolve(["success": true])
     } catch {
-      // Monitoring failed but shields are already applied — still resolve success
+      NSLog("FamilyControlsBridge: Schedule failed — \(error.localizedDescription)")
       resolve(["success": true, "monitoringError": error.localizedDescription])
     }
   }
