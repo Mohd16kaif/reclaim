@@ -331,6 +331,19 @@ const PanicCoachScreen: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
+  // Sync remaining time from durable end timestamp on mount (survives force-quit)
+  useEffect(() => {
+    const syncFromEndTimestamp = async (): Promise<void> => {
+      const endTsRaw = await AsyncStorage.getItem("@reclaim_panic_end_timestamp");
+      if (endTsRaw) {
+        const endTs = parseInt(endTsRaw, 10);
+        const r = Math.max(0, Math.floor((endTs - Date.now()) / 1000));
+        setRemaining(r);
+      }
+    };
+    void syncFromEndTimestamp();
+  }, []);
+
   // Announce panic mode active for assistive tech users
   useEffect(() => {
     AccessibilityInfo.announceForAccessibility(

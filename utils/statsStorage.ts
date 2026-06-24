@@ -241,6 +241,8 @@ export const startPanicSession = async (panicDurationMinutes?: number): Promise<
     JSON.stringify(existing),
   );
   await AsyncStorage.setItem("@reclaim_active_panic_session_id", id);
+  const durationSeconds = durationMinutes * 60;
+  await AsyncStorage.setItem("@reclaim_panic_end_timestamp", String(Date.now() + durationSeconds * 1000));
 
   // Supabase sync — fire and forget
   syncEventToSupabase("panic_session", {

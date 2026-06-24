@@ -139,8 +139,12 @@ class FamilyControlsBridge: NSObject {
     // Schedule DeviceActivity so the monitor extension auto-removes shields when timer ends
     let now = Date()
     let schedule = DeviceActivitySchedule(
-      intervalStart: Calendar.current.dateComponents([.hour, .minute, .second], from: now),
-      intervalEnd: Calendar.current.dateComponents([.hour, .minute, .second], from: endTime),
+      intervalStart: Calendar.current.dateComponents(
+        [.year, .month, .day, .hour, .minute, .second], from: now
+      ),
+      intervalEnd: Calendar.current.dateComponents(
+        [.year, .month, .day, .hour, .minute, .second], from: endTime
+      ),
       repeats: false
     )
 

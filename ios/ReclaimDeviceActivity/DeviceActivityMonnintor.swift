@@ -20,7 +20,17 @@ class ReclaimDeviceActivityMonitor: DeviceActivityMonitor {
         NSLog("ReclaimDeviceActivity: intervalDidStart — \(activity.rawValue)")
 
         if activity.rawValue == "reclaim.panic.session" {
-            applyShields()
+            // Watchdog: if end time has already passed (e.g. app was force-quit
+            // and schedule misfired), remove shields immediately instead of reapplying
+            if let endTs = sharedDefaults?.double(forKey: "panic_end_time"),
+               endTs > 0,
+               Date().timeIntervalSince1970 >= endTs {
+                removeShields()
+                DeviceActivityCenter().stopMonitoring([DeviceActivityName("reclaim.panic.session")])
+                NSLog("ReclaimDeviceActivity: Panic already expired on intervalDidStart — shields removed")
+            } else {
+                applyShields()
+            }
         } else if activity.rawValue == "reclaim.blocker.session" {
             // Daily check: with a repeating midnight-to-midnight schedule,
             // intervalDidStart fires once per day. Check expiry here too,
@@ -63,6 +73,7 @@ class ReclaimDeviceActivityMonitor: DeviceActivityMonitor {
         if #available(iOS 16.0, *) {
             store.application.denyAppRemoval = false
         }
+        sharedDefaults?.removeObject(forKey: "panic_end_time")
         NSLog("ReclaimDeviceActivity: All panic shields removed")
     }
 

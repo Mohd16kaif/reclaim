@@ -120,8 +120,17 @@ const PanicActivatedScreen: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
     const loadDurationAndStart = async () => {
-      const saved = await AsyncStorage.getItem("defaultPanicDuration");
-      const durationSeconds = saved ? parseInt(saved, 10) : DEFAULT_DURATION_SECONDS;
+      // Use stored end timestamp if available (survives force-quit)
+      const endTsRaw = await AsyncStorage.getItem("@reclaim_panic_end_timestamp");
+      let durationSeconds: number;
+      if (endTsRaw) {
+        const endTs = parseInt(endTsRaw, 10);
+        const remaining = Math.max(0, Math.floor((endTs - Date.now()) / 1000));
+        durationSeconds = remaining;
+      } else {
+        const saved = await AsyncStorage.getItem("defaultPanicDuration");
+        durationSeconds = saved ? parseInt(saved, 10) : DEFAULT_DURATION_SECONDS;
+      }
       if (cancelled) return;
       setTotalSeconds(durationSeconds);
       setRemaining(durationSeconds);

@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { completePanicSessionWithGrace } from '../utils/statsStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { FamilyControlsBridge } = NativeModules;
 
@@ -128,6 +129,19 @@ const PanicLockScreen = (): React.ReactElement => {
       });
     }
   }, [remaining, initialRemaining, navigation]);
+
+  // Sync remaining time from durable end timestamp on mount (survives force-quit)
+  useEffect(() => {
+    const syncFromEndTimestamp = async (): Promise<void> => {
+      const endTsRaw = await AsyncStorage.getItem("@reclaim_panic_end_timestamp");
+      if (endTsRaw) {
+        const endTs = parseInt(endTsRaw, 10);
+        const r = Math.max(0, Math.floor((endTs - Date.now()) / 1000));
+        setRemaining(r);
+      }
+    };
+    void syncFromEndTimestamp();
+  }, []);
 
   // ── Disable hardware back button (Android) ────────────────────────────
   useFocusEffect(

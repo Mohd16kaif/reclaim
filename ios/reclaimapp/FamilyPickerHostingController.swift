@@ -40,35 +40,39 @@ class FamilyPickerHostingController: UIViewController {
 
 @available(iOS 16.0, *)
 struct FamilyActivityPickerView: View {
-  @State private var selection = FamilyActivitySelection()
-  let onDone: (Data?) -> Void
-  let onCancel: () -> Void
+    @State private var selection = FamilyActivitySelection()
+    let onDone: (Data?) -> Void
+    let onCancel: () -> Void
 
-  var body: some View {
-    NavigationView {
-      FamilyActivityPicker(
-          headerText: "Select apps to block during panic sessions",
-          footerText: "Only individual apps can be selected.",
-          selection: $selection
-      )
-        .navigationTitle("Block During Panic")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-          ToolbarItem(placement: .navigationBarLeading) {
-            Button("Cancel") { onCancel() }
-          }
-          ToolbarItem(placement: .navigationBarTrailing) {
-            Button("Done") {
-              guard !selection.applicationTokens.isEmpty else {
-                onCancel()
-                return
-              }
-              let data = try? JSONEncoder().encode(selection.applicationTokens)
-              onDone(data)
-            }
-            .fontWeight(.bold)
-          }
+    var body: some View {
+        NavigationView {
+            FamilyActivityPicker(selection: $selection)
+                .navigationTitle("Block During Panic")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Cancel") { onCancel() }
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Done") {
+                            guard !selection.applicationTokens.isEmpty else {
+                                onCancel()
+                                return
+                            }
+                            let data = try? JSONEncoder().encode(selection.applicationTokens)
+                            onDone(data)
+                        }
+                        .fontWeight(.bold)
+                    }
+                }
+                .onChange(of: selection) { newSelection in
+                    // Strip any category selections immediately —
+                    // user can expand categories to pick individual apps
+                    // but cannot select an entire category at once
+                    if !newSelection.categoryTokens.isEmpty {
+                        selection.categoryTokens = []
+                    }
+                }
         }
     }
-  }
 }
