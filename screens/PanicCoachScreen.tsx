@@ -30,12 +30,7 @@ import {
   COACH_PERSONAS,
   getCoachResponse,
 } from "../utils/coachApi";
-import {
-  firePanicSuccessful
-} from "../utils/notificationManager";
-import {
-  completePanicSessionWithGrace
-} from "../utils/statsStorage";
+
 
 // ============================================================================
 // PANIC-SPECIFIC SYSTEM PROMPTS
@@ -601,8 +596,6 @@ const PanicCoachScreen: React.FC = () => {
             activeOpacity={0.6}
             onPress={async () => {
               await saveSessionSummary();
-              await completePanicSessionWithGrace();
-              firePanicSuccessful().catch(console.error);
               navigation.replace("PanicLock", { remainingSeconds: remaining });
             }}
           >

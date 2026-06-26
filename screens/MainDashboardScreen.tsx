@@ -48,6 +48,7 @@ import {
   trackStreakMilestone,
 } from "../utils/analytics";
 import { getCheckInHistory, getPanicSessions, getRelapseHistory, recordCheckIn, recordRelapseEvent, resolvePendingVerdict, STATS_KEYS } from "../utils/statsStorage";
+import { stopPanicSession } from "../utils/familyControls";
 import {
   getChapterDisplayName,
   loadUserProgress,
@@ -450,6 +451,16 @@ const MainDashboardScreen: React.FC = () => {
             setIsPanicVerdictVisible(false);
           }
           return;
+        }
+
+        // Defense-in-depth: don't show verdict if the real timer hasn't
+        // elapsed yet (skip if end timestamp exists and is in the future)
+        const endTsRaw = await AsyncStorage.getItem("@reclaim_panic_end_timestamp");
+        if (endTsRaw) {
+          const endTs = parseInt(endTsRaw, 10);
+          if (Date.now() < endTs) {
+            return; // session hasn't actually ended; leave pending verdict in storage
+          }
         }
 
         // Already prompted for this session id — re-assert visible in
@@ -1772,7 +1783,10 @@ syncStreakToSupabase();
                 }}
                 activeOpacity={0.85}
                 onPress={async () => {
-                  await resolvePendingVerdict(true);
+                  await Promise.all([
+                    resolvePendingVerdict(true),
+                    stopPanicSession(),
+                  ]);
                   pendingVerdictPromptedForIdRef.current = null;
                   setIsPanicVerdictVisible(false);
                   // Small delay before refresh so Modal fully unmounts
@@ -1800,7 +1814,10 @@ syncStreakToSupabase();
                 activeOpacity={0.85}
                 onPress={async () => {
                   // Mark panic session as failed
-                  await resolvePendingVerdict(false);
+                  await Promise.all([
+                    resolvePendingVerdict(false),
+                    stopPanicSession(),
+                  ]);
 
                   // Record the relapse event and reset streak
                   const today = new Date().toISOString().split('T')[0];
