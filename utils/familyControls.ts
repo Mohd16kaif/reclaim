@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeModules, Platform } from 'react-native';
 
 const { FamilyControlsBridge } = NativeModules;
@@ -92,4 +93,25 @@ export const enableBlockerWithDuration = async (days: number): Promise<void> => 
  */
 export const disableBlocker = async (): Promise<void> => {
   await FamilyControlsBridge.disableBlocker();
+};
+
+/**
+ * Returns the remaining seconds of an active panic session, or null if
+ * no session is active (or it has already expired). Does NOT mutate any
+ * storage — pure read-only check, safe to call from anywhere.
+ */
+export const getActivePanicSessionRemaining = async (): Promise<number | null> => {
+  try {
+    const activeSessionId = await AsyncStorage.getItem('@reclaim_active_panic_session_id');
+    const endTsRaw = await AsyncStorage.getItem('@reclaim_panic_end_timestamp');
+    if (!activeSessionId || !endTsRaw) return null;
+
+    const endTs = parseInt(endTsRaw, 10);
+    const remainingMs = endTs - Date.now();
+    if (remainingMs <= 0) return null;
+
+    return Math.ceil(remainingMs / 1000);
+  } catch {
+    return null;
+  }
 };

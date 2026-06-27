@@ -5,11 +5,13 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import { AccessibilityInfo, Image, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { getActivePanicSessionRemaining } from "../utils/familyControls";
 
 type RootStackParamList = {
   Splash: undefined;
   Welcome: undefined;
   MainDashboard: undefined;
+  PanicLock: { remainingSeconds: number } | undefined;
 };
 
 type SplashScreenNavigationProp = StackNavigationProp<
@@ -39,6 +41,18 @@ export default function SplashScreen(): JSX.Element {
     const timeout = setTimeout(async () => {
       try {
         const completed = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
+
+        if (completed === "true") {
+          const remaining = await getActivePanicSessionRemaining();
+          if (remaining !== null) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "PanicLock", params: { remainingSeconds: remaining } } as never],
+            });
+            return;
+          }
+        }
+
         navigation.reset({
           index: 0,
           routes: [

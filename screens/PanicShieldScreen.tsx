@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fireBlockingActivated } from '../utils/notificationManager';
+import { getActivePanicSessionRemaining } from '../utils/familyControls';
 
 const { FamilyControlsBridge } = NativeModules;
 
@@ -83,6 +84,12 @@ const PanicShieldScreen: React.FC = () => {
 
   useEffect(() => {
     const initPanic = async () => {
+      const remaining = await getActivePanicSessionRemaining();
+      if (remaining !== null) {
+        navigation.replace("PanicLock" as never, { remainingSeconds: remaining } as never);
+        return;
+      }
+
       const [uninstallPreventionEnabled, panicAppSelectionEnabled] = await Promise.all([
         AsyncStorage.getItem('@reclaim_uninstall_prevention_enabled'),
         AsyncStorage.getItem('@reclaim_panic_app_selection_enabled'),
