@@ -47,7 +47,7 @@ import {
   trackRelapseRecorded,
   trackStreakMilestone,
 } from "../utils/analytics";
-import { getCheckInHistory, getPanicSessions, getRelapseHistory, recordCheckIn, recordRelapseEvent, resolvePendingVerdict, STATS_KEYS } from "../utils/statsStorage";
+import { completePanicSessionWithGrace, getCheckInHistory, getPanicSessions, getRelapseHistory, recordCheckIn, recordRelapseEvent, resolvePendingVerdict, STATS_KEYS } from "../utils/statsStorage";
 import { stopPanicSession } from "../utils/familyControls";
 import {
   getChapterDisplayName,
@@ -442,36 +442,57 @@ const MainDashboardScreen: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, 150));
         if (cancelled) return;
 
-        const pendingId = await AsyncStorage.getItem(STATS_KEYS.PANIC_PENDING_VERDICT);
+        // Step 1 — Check if a pending verdict already exists
+        let pendingId = await AsyncStorage.getItem(STATS_KEYS.PANIC_PENDING_VERDICT);
         if (cancelled) return;
 
+        // Step 2 — Self-heal: detect an expired panic session that the
+        // app was never alive to complete (e.g. after a kill + relaunch)
         if (!pendingId) {
-          // Only hide if no session was ever prompted this focus cycle
-          if (pendingVerdictPromptedForIdRef.current === null) {
-            setIsPanicVerdictVisible(false);
-          }
-          return;
-        }
+          const activeSessionId = await AsyncStorage.getItem("@reclaim_active_panic_session_id");
+          const endTsRaw = await AsyncStorage.getItem("@reclaim_panic_end_timestamp");
 
-        // Defense-in-depth: don't show verdict if the real timer hasn't
-        // elapsed yet (skip if end timestamp exists and is in the future)
-        const endTsRaw = await AsyncStorage.getItem("@reclaim_panic_end_timestamp");
-        if (endTsRaw) {
-          const endTs = parseInt(endTsRaw, 10);
-          if (Date.now() < endTs) {
-            return; // session hasn't actually ended; leave pending verdict in storage
+          if (activeSessionId && endTsRaw && Date.now() >= parseInt(endTsRaw, 10)) {
+            // Session expired while no screen was alive — transition it
+            await completePanicSessionWithGrace();
+            pendingId = await AsyncStorage.getItem(STATS_KEYS.PANIC_PENDING_VERDICT);
+          } else if (activeSessionId && endTsRaw && Date.now() < parseInt(endTsRaw, 10)) {
+            // Session is still legitimately running — do nothing
+            return;
+          } else {
+            // No active session at all — fall through to the hide check
           }
         }
 
-        // Already prompted for this session id — re-assert visible in
-        // case a re-render cleared it
-        if (pendingVerdictPromptedForIdRef.current === pendingId) {
+        // Step 3 — If we now have a pendingId, show the verdict modal
+        if (pendingId) {
+          // Defense-in-depth: don't show verdict if the real timer hasn't
+          // elapsed yet (skip if end timestamp exists and is in the future)
+          const endTsRaw = await AsyncStorage.getItem("@reclaim_panic_end_timestamp");
+          if (endTsRaw) {
+            const endTs = parseInt(endTsRaw, 10);
+            if (Date.now() < endTs) {
+              return; // session hasn't actually ended; leave pending verdict in storage
+            }
+          }
+
+          // Already prompted for this session id — re-assert visible in
+          // case a re-render cleared it
+          if (pendingVerdictPromptedForIdRef.current === pendingId) {
+            setIsPanicVerdictVisible(true);
+            return;
+          }
+
+          pendingVerdictPromptedForIdRef.current = pendingId;
           setIsPanicVerdictVisible(true);
           return;
         }
 
-        pendingVerdictPromptedForIdRef.current = pendingId;
-        setIsPanicVerdictVisible(true);
+        // Step 4 — No pendingId after all checks: only hide if no session
+        // was ever prompted this focus cycle
+        if (pendingVerdictPromptedForIdRef.current === null) {
+          setIsPanicVerdictVisible(false);
+        }
       };
       syncPendingVerdictModal();
       return () => {
@@ -1787,6 +1808,7 @@ syncStreakToSupabase();
                     resolvePendingVerdict(true),
                     stopPanicSession(),
                   ]);
+                  await AsyncStorage.removeItem('@reclaim_panic_end_timestamp');
                   pendingVerdictPromptedForIdRef.current = null;
                   setIsPanicVerdictVisible(false);
                   // Small delay before refresh so Modal fully unmounts
@@ -1818,6 +1840,7 @@ syncStreakToSupabase();
                     resolvePendingVerdict(false),
                     stopPanicSession(),
                   ]);
+                  await AsyncStorage.removeItem('@reclaim_panic_end_timestamp');
 
                   // Record the relapse event and reset streak
                   const today = new Date().toISOString().split('T')[0];
