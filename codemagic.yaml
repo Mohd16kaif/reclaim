@@ -10,6 +10,7 @@ workflows:
           - reclaim_app_store
           - reclaim_device_activity
           - reclaim_shield_config
+          - reclaim_panic_timer_widget
       vars:
         XCODE_WORKSPACE: "ios/reclaimapp.xcworkspace"
         XCODE_SCHEME: "reclaimapp"

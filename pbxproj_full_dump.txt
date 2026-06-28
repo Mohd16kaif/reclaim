@@ -1,4 +1,4 @@
-// !$*UTF8*$!
+﻿// !$*UTF8*$!
 {
 	archiveVersion = 1;
 	classes = {
@@ -15,12 +15,7 @@
 		81344F2A2F8F5B9C007001BE /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 81344F292F8F5B9C007001BE /* ManagedSettings.framework */; };
 		81344F2C2F8F5B9C007001BE /* ManagedSettingsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 81344F2B2F8F5B9C007001BE /* ManagedSettingsUI.framework */; };
 		81344F342F8F5B9C007001BE /* ReclaimShieldConfig.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 81344F282F8F5B9C007001BE /* ReclaimShieldConfig.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		82455A00ABCDEF0000000001 /* PanicTimerWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 82455A00ABCDEF0000000002 /* PanicTimerWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		82455A00ABCDEF0000000003 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 82455A00ABCDEF0000000004 /* WidgetKit.framework */; };
-		82455A00ABCDEF0000000005 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 82455A00ABCDEF0000000006 /* SwiftUI.framework */; };
-		82455A00ABCDEF0000000007 /* PanicTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82455A00ABCDEF0000000008 /* PanicTimerAttributes.swift */; };
-		82455A00ABCDEF0000000009 /* PanicTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82455A00ABCDEF0000000008 /* PanicTimerAttributes.swift */; };
-		82455A00ABCDEF000000000A /* PanicTimerWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82455A00ABCDEF000000000B /* PanicTimerWidgetBundle.swift */; };
+
 
 		AA000001000000000000BBB1 /* FamilyControlsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001000000000000BBB2 /* FamilyControlsBridge.swift */; };
 		A1B2C3D4E5F6A7B8C9D0E1F2 /* FamilyPickerHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F3 /* FamilyPickerHostingController.swift */; };
@@ -46,13 +41,6 @@
 			remoteGlobalIDString = 81344F272F8F5B9C007001BE;
 			remoteInfo = ReclaimShieldConfig;
 		};
-		82455A00ABCDEF000000000C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 82455A00ABCDEF000000000D;
-			remoteInfo = PanicTimerWidget;
-		};
 
 /* End PBXContainerItemProxy section */
 
@@ -65,7 +53,6 @@
 			files = (
 				81344F1F2F8F5B5B007001BE /* ReclaimDeviceActivity.appex in Embed Foundation Extensions */,
 				81344F342F8F5B9C007001BE /* ReclaimShieldConfig.appex in Embed Foundation Extensions */,
-				82455A00ABCDEF0000000001 /* PanicTimerWidget.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -83,12 +70,6 @@
 		81344F282F8F5B9C007001BE /* ReclaimShieldConfig.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ReclaimShieldConfig.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		81344F292F8F5B9C007001BE /* ManagedSettings.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettings.framework; path = System/Library/Frameworks/ManagedSettings.framework; sourceTree = SDKROOT; };
 		81344F2B2F8F5B9C007001BE /* ManagedSettingsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettingsUI.framework; path = System/Library/Frameworks/ManagedSettingsUI.framework; sourceTree = SDKROOT; };
-		82455A00ABCDEF0000000002 /* PanicTimerWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PanicTimerWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		82455A00ABCDEF0000000004 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
-		82455A00ABCDEF0000000006 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		82455A00ABCDEF0000000008 /* PanicTimerAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PanicTimerAttributes.swift; path = reclaimapp/PanicTimerAttributes.swift; sourceTree = "<group>"; };
-		82455A00ABCDEF000000000B /* PanicTimerWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PanicTimerWidgetBundle.swift; path = PanicTimerWidget/PanicTimerWidgetBundle.swift; sourceTree = "<group>"; };
-		82455A00ABCDEF000000000E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = PanicTimerWidget/Info.plist; sourceTree = "<group>"; };
 
 		8E043182416C5800B490F7EF /* Pods-reclaimapp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-reclaimapp.release.xcconfig"; path = "Target Support Files/Pods-reclaimapp/Pods-reclaimapp.release.xcconfig"; sourceTree = "<group>"; };
 		AA000001000000000000BBB2 /* FamilyControlsBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FamilyControlsBridge.swift; path = reclaimapp/FamilyControlsBridge.swift; sourceTree = "<group>"; };
@@ -175,15 +156,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		82455A00ABCDEF000000000F /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				82455A00ABCDEF0000000003 /* WidgetKit.framework in Frameworks */,
-				82455A00ABCDEF0000000005 /* SwiftUI.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 
 /* End PBXFrameworksBuildPhase section */
 
@@ -201,7 +173,6 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 				4B217FF9DB5DA327BF0D3D64 /* PrivacyInfo.xcprivacy */,
-				82455A00ABCDEF0000000008 /* PanicTimerAttributes.swift */,
 			);
 			name = reclaimapp;
 			sourceTree = "<group>";
@@ -257,7 +228,6 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				81344F182F8F5B5B007001BE /* ReclaimDeviceActivity */,
 				81344F2D2F8F5B9C007001BE /* ReclaimShieldConfig */,
-				82455A00ABCDEF0000000010 /* PanicTimerWidget */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				833A604BB50C085E055A1562 /* Pods */,
@@ -274,7 +244,6 @@
 				13B07F961A680F5B00A75B9A /* reclaimapp.app */,
 				81344F152F8F5B5B007001BE /* ReclaimDeviceActivity.appex */,
 				81344F282F8F5B9C007001BE /* ReclaimShieldConfig.appex */,
-				82455A00ABCDEF0000000002 /* PanicTimerWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -286,16 +255,6 @@
 			);
 			name = Supporting;
 			path = reclaimapp/Supporting;
-			sourceTree = "<group>";
-		};
-		82455A00ABCDEF0000000010 /* PanicTimerWidget */ = {
-			isa = PBXGroup;
-			children = (
-				82455A00ABCDEF000000000B /* PanicTimerWidgetBundle.swift */,
-				82455A00ABCDEF000000000E /* Info.plist */,
-			);
-			name = PanicTimerWidget;
-			path = PanicTimerWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -321,7 +280,6 @@
 			dependencies = (
 				81344F1E2F8F5B5B007001BE /* PBXTargetDependency */,
 				81344F332F8F5B9C007001BE /* PBXTargetDependency */,
-				82455A00ABCDEF0000000014 /* PBXTargetDependency */,
 			);
 			name = reclaimapp;
 			productName = reclaimapp;
@@ -368,23 +326,6 @@
 			productReference = 81344F282F8F5B9C007001BE /* ReclaimShieldConfig.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		82455A00ABCDEF000000000D /* PanicTimerWidget */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 82455A00ABCDEF0000000011 /* Build configuration list for PBXNativeTarget "PanicTimerWidget" */;
-			buildPhases = (
-				82455A00ABCDEF0000000012 /* Sources */,
-				82455A00ABCDEF000000000F /* Frameworks */,
-				82455A00ABCDEF0000000013 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = PanicTimerWidget;
-			productName = PanicTimerWidget;
-			productReference = 82455A00ABCDEF0000000002 /* PanicTimerWidget.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
 
 /* End PBXNativeTarget section */
 
@@ -403,9 +344,6 @@
 						LastSwiftMigration = 1620;
 					};
 					81344F272F8F5B9C007001BE = {
-						CreatedOnToolsVersion = 16.2;
-					};
-					82455A00ABCDEF000000000D = {
 						CreatedOnToolsVersion = 16.2;
 					};
 
@@ -427,7 +365,6 @@
 				13B07F861A680F5B00A75B9A /* reclaimapp */,
 				81344F142F8F5B5B007001BE /* ReclaimDeviceActivity */,
 				81344F272F8F5B9C007001BE /* ReclaimShieldConfig */,
-				82455A00ABCDEF000000000D /* PanicTimerWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -452,13 +389,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		81344F262F8F5B9C007001BE /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		82455A00ABCDEF0000000013 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -628,7 +558,6 @@
 				AA000001000000000000DDD1 /* FamilyControlsBridge.m in Sources */,
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
 				D88DBC3820A970C4E3DDFE08 /* ExpoModulesProvider.swift in Sources */,
-			82455A00ABCDEF0000000007 /* PanicTimerAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -646,15 +575,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		82455A00ABCDEF0000000012 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				82455A00ABCDEF0000000009 /* PanicTimerAttributes.swift in Sources */,
-				82455A00ABCDEF000000000A /* PanicTimerWidgetBundle.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 
 /* End PBXSourcesBuildPhase section */
 
@@ -668,11 +588,6 @@
 			isa = PBXTargetDependency;
 			target = 81344F272F8F5B9C007001BE /* ReclaimShieldConfig */;
 			targetProxy = 81344F322F8F5B9C007001BE /* PBXContainerItemProxy */;
-		};
-		82455A00ABCDEF0000000014 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 82455A00ABCDEF000000000D /* PanicTimerWidget */;
-			targetProxy = 82455A00ABCDEF000000000C /* PBXContainerItemProxy */;
 		};
 
 /* End PBXTargetDependency section */
@@ -913,7 +828,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER =YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = ReclaimShieldConfig/ReclaimShieldConfig.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
@@ -942,93 +857,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.reclaim.recovery.ReclaimShieldConfig;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]"= "";
-				SKIP_INSTALL = YES;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		82455A00ABCDEF0000000015 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_ENTITLEMENTS = PanicTimerWidget/PanicTimerWidget.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 39;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 6W846KW4B3;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = PanicTimerWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Panic Timer";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.reclaim.recovery.PanicTimerWidget;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]"= "";
-				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		82455A00ABCDEF0000000016 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_ENTITLEMENTS = PanicTimerWidget/PanicTimerWidget.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Automatic;
-				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 39;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 6W846KW4B3;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = PanicTimerWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Panic Timer";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.reclaim.recovery.PanicTimerWidget;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]"= "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1182,15 +1011,6 @@
 			buildConfigurations = (
 				81344F372F8F5B9C007001BE /* Debug */,
 				81344F382F8F5B9C007001BE /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		82455A00ABCDEF0000000011 /* Build configuration list for PBXNativeTarget "PanicTimerWidget" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				82455A00ABCDEF0000000015 /* Debug */,
-				82455A00ABCDEF0000000016 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
