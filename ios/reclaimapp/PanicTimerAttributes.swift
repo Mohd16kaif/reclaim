@@ -1,4 +1,5 @@
 import ActivityKit
+import Foundation
 
 struct PanicTimerAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
@@ -6,3 +7,4 @@ struct PanicTimerAttributes: ActivityAttributes {
     }
     var sessionId: String
 }
+
