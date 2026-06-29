@@ -33,12 +33,16 @@ workflows:
           xcode-project use-profiles
       - name: Build iOS
         script: |
+          set -o pipefail
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --verbose 2>&1 | tee build_ipa_verbose.log
+          echo "===== ERROR LINES ====="
+          grep -n -E "error:|BUILD FAILED|\*\* ARCHIVE FAILED \*\*|requires a provisioning profile|Signing for .* requires|Code Signing Error" build_ipa_verbose.log || echo "no matches found"
     artifacts:
       - build/ios/ipa/*.ipa
-      - xcodebuild_full.log
+      - build_ipa_verbose.log
     publishing:
       app_store_connect:
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY
