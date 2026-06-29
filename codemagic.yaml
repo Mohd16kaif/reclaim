@@ -43,7 +43,7 @@ workflows:
             DEVELOPMENT_TEAM=6W846KW4B3 \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             CODE_SIGN_STYLE=Manual \
-            2>&1 | grep -A5 "error:" | head -80
+            2>&1 | grep -E "error:|FAILED|fatal:|warning: (no rule|multiple)" | head -50
     artifacts:
       - build/ios/ipa/*.ipa
       - build_ipa_verbose.log
