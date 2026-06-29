@@ -87,7 +87,7 @@
 		82455A00ABCDEF0000000004 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		82455A00ABCDEF0000000006 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		82455A00ABCDEF0000000008 /* PanicTimerAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PanicTimerAttributes.swift; path = reclaimapp/PanicTimerAttributes.swift; sourceTree = "<group>"; };
-		82455A00ABCDEF000000000B /* PanicTimerWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PanicTimerWidgetBundle.swift; path = PanicTimerWidget/PanicTimerWidgetBundle.swift; sourceTree = "<group>"; };
+		82455A00ABCDEF000000000B /* PanicTimerWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PanicTimerWidgetBundle.swift; path = PanicTimerWidgetBundle.swift; sourceTree = "<group>"; };
 		82455A00ABCDEF000000000E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = PanicTimerWidget/Info.plist; sourceTree = "<group>"; };
 
 		8E043182416C5800B490F7EF /* Pods-reclaimapp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-reclaimapp.release.xcconfig"; path = "Target Support Files/Pods-reclaimapp/Pods-reclaimapp.release.xcconfig"; sourceTree = "<group>"; };
