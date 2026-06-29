@@ -4,6 +4,7 @@ import ManagedSettings
 import DeviceActivity
 import UIKit
 import SwiftUI
+import ActivityKit
 
 @objc(FamilyControlsBridge)
 class FamilyControlsBridge: NSObject {
@@ -153,6 +154,22 @@ class FamilyControlsBridge: NSObject {
     do {
       try activityCenter.startMonitoring(panicActivity, during: schedule)
       NSLog("FamilyControlsBridge: Panic schedule set — ends at \(endTime)")
+      // Start Live Activity for Dynamic Island / Lock Screen countdown
+      if #available(iOS 16.2, *) {
+        let attributes = PanicTimerAttributes(sessionId: UUID().uuidString)
+        let state = PanicTimerAttributes.ContentState(timerEnd: endTime)
+        let content = ActivityContent(state: state, staleDate: endTime)
+        do {
+          let _ = try Activity<PanicTimerAttributes>.request(
+            attributes: attributes,
+            content: content,
+            pushType: nil
+          )
+          NSLog("FamilyControlsBridge: Live Activity started")
+        } catch {
+          NSLog("FamilyControlsBridge: Live Activity failed to start: \(error.localizedDescription)")
+        }
+      }
       resolve(["success": true])
     } catch {
       NSLog("FamilyControlsBridge: Schedule failed — \(error.localizedDescription)")
@@ -182,6 +199,16 @@ class FamilyControlsBridge: NSObject {
     let defaults = UserDefaults(suiteName: appGroupID)
     defaults?.removeObject(forKey: panicEndTimeKey)
     defaults?.synchronize()
+
+    // End all Live Activities for this session
+    if #available(iOS 16.2, *) {
+      Task {
+        for activity in Activity<PanicTimerAttributes>.activities {
+          await activity.end(nil, dismissalPolicy: .immediate)
+        }
+        NSLog("FamilyControlsBridge: Live Activity ended")
+      }
+    }
 
     resolve(["success": true])
   }
