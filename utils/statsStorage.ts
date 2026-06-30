@@ -289,6 +289,9 @@ export const completePanicSessionWithGrace = async (): Promise<void> => {
   await AsyncStorage.setItem(STATS_KEYS.PANIC_PENDING_VERDICT, activeId);
   // Remove active session marker — session stays in list but is no longer "active"
   await AsyncStorage.removeItem("@reclaim_active_panic_session_id");
+  // Clear the stale end timestamp too — otherwise it lingers and could
+  // confuse any future resume/active-session check
+  await AsyncStorage.removeItem("@reclaim_panic_end_timestamp");
 };
 
 // Called when user answers "Did you stay strong?" modal

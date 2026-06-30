@@ -130,8 +130,24 @@ const PanicShieldScreen: React.FC = () => {
         return;
       }
 
-      const authResult = await FamilyControlsBridge.getAuthorizationStatus();
-      const isAuthorized = authResult?.status === 'authorized';
+      // Screen Time's authorization status can read stale immediately after
+      // a previous session's native shield/ManagedSettingsStore mutations
+      // (e.g. denyAppRemoval being toggled off in stopPanicSession). Retry
+      // briefly before concluding permission is genuinely lost.
+      let authResult = await FamilyControlsBridge.getAuthorizationStatus();
+      let isAuthorized = authResult?.status === 'authorized';
+
+      if (!isAuthorized) {
+        await new Promise((res) => setTimeout(res, 600));
+        authResult = await FamilyControlsBridge.getAuthorizationStatus();
+        isAuthorized = authResult?.status === 'authorized';
+      }
+
+      if (!isAuthorized) {
+        await new Promise((res) => setTimeout(res, 1000));
+        authResult = await FamilyControlsBridge.getAuthorizationStatus();
+        isAuthorized = authResult?.status === 'authorized';
+      }
 
       if (!isAuthorized) {
         Alert.alert(
