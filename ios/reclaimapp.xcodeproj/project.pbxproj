@@ -20,6 +20,7 @@
 		82455A00ABCDEF0000000005 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 82455A00ABCDEF0000000006 /* SwiftUI.framework */; };
 		82455A00ABCDEF0000000007 /* PanicTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82455A00ABCDEF0000000008 /* PanicTimerAttributes.swift */; };
 		82455A00ABCDEF0000000009 /* PanicTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82455A00ABCDEF0000000008 /* PanicTimerAttributes.swift */; };
+		82455A00ABCDEF0000000017 /* PanicTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82455A00ABCDEF0000000008 /* PanicTimerAttributes.swift */; };
 		82455A00ABCDEF000000000A /* PanicTimerWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82455A00ABCDEF000000000B /* PanicTimerWidgetBundle.swift */; };
 
 		AA000001000000000000BBB1 /* FamilyControlsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001000000000000BBB2 /* FamilyControlsBridge.swift */; };
@@ -636,6 +637,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				82455A00ABCDEF0000000017 /* PanicTimerAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
