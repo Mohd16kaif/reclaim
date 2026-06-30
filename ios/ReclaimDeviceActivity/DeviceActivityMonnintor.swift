@@ -2,6 +2,7 @@ import DeviceActivity
 import ManagedSettings
 import Foundation
 import UserNotifications
+import ActivityKit
 
 class ReclaimDeviceActivityMonitor: DeviceActivityMonitor {
 
@@ -74,7 +75,19 @@ class ReclaimDeviceActivityMonitor: DeviceActivityMonitor {
             store.application.denyAppRemoval = false
         }
         sharedDefaults?.removeObject(forKey: "panic_end_time")
+        endLiveActivity()
         NSLog("ReclaimDeviceActivity: All panic shields removed")
+    }
+
+    private func endLiveActivity() {
+        if #available(iOS 16.2, *) {
+            Task {
+                for activity in Activity<PanicTimerAttributes>.activities {
+                    await activity.end(nil, dismissalPolicy: .immediate)
+                }
+                NSLog("ReclaimDeviceActivity: Live Activity ended from extension")
+            }
+        }
     }
 
     private func sendSessionCompleteNotification() {
