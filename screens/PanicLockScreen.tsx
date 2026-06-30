@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Alert,
+  AppState,
   BackHandler,
   Image,
   NativeModules,
@@ -141,6 +142,30 @@ const PanicLockScreen = (): React.ReactElement => {
       }
     };
     void syncFromEndTimestamp();
+  }, []);
+
+  // Re-sync remaining time from the durable end timestamp whenever the app
+  // returns to the foreground, so backgrounding doesn't cause JS-timer drift
+  // relative to the OS-driven Live Activity countdown.
+  useEffect(() => {
+    const syncFromEndTimestamp = async (): Promise<void> => {
+      const endTsRaw = await AsyncStorage.getItem("@reclaim_panic_end_timestamp");
+      if (endTsRaw) {
+        const endTs = parseInt(endTsRaw, 10);
+        const r = Math.max(0, Math.floor((endTs - Date.now()) / 1000));
+        setRemaining(r);
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        void syncFromEndTimestamp();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   // ── Disable hardware back button (Android) ────────────────────────────
