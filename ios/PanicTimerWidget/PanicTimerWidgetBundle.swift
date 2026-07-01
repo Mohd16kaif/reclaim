@@ -14,16 +14,22 @@ struct PanicTimerLiveActivity: Widget {
         ActivityConfiguration(for: PanicTimerAttributes.self) { context in
             // Lock Screen / Banner UI
             HStack(spacing: 12) {
-                Image(systemName: "lock.shield.fill")
-                    .foregroundColor(.red)
+                Image(systemName: context.isStale ? "checkmark.shield.fill" : "lock.shield.fill")
+                    .foregroundColor(context.isStale ? .green : .red)
                     .font(.title2)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Apps Blocked")
+                    Text(context.isStale ? "Session Complete" : "Apps Blocked")
                         .font(.headline)
                         .foregroundColor(.white)
-                    Text(timerInterval: Date()...context.state.timerEnd, countsDown: true)
-                        .font(.subheadline.monospacedDigit())
-                        .foregroundColor(.white.opacity(0.8))
+                    if context.isStale {
+                        Text("You stayed aligned.")
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.8))
+                    } else {
+                        Text(timerInterval: Date()...context.state.timerEnd, countsDown: true)
+                            .font(.subheadline.monospacedDigit())
+                            .foregroundColor(.white.opacity(0.8))
+                    }
                 }
                 Spacer()
             }
@@ -33,32 +39,42 @@ struct PanicTimerLiveActivity: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Label("Blocked", systemImage: "lock.shield.fill")
-                        .foregroundColor(.red)
+                    Label(context.isStale ? "Complete" : "Blocked", systemImage: context.isStale ? "checkmark.shield.fill" : "lock.shield.fill")
+                        .foregroundColor(context.isStale ? .green : .red)
                         .font(.headline)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text(timerInterval: Date()...context.state.timerEnd, countsDown: true)
-                        .font(.headline.monospacedDigit())
-                        .foregroundColor(.white)
-                        .frame(maxWidth: 80)
+                    if context.isStale {
+                        Image(systemName: "checkmark")
+                            .foregroundColor(.green)
+                    } else {
+                        Text(timerInterval: Date()...context.state.timerEnd, countsDown: true)
+                            .font(.headline.monospacedDigit())
+                            .foregroundColor(.white)
+                            .frame(maxWidth: 80)
+                    }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text("Reclaim is protecting you")
+                    Text(context.isStale ? "You stayed aligned." : "Reclaim is protecting you")
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.7))
                 }
             } compactLeading: {
-                Image(systemName: "lock.shield.fill")
-                    .foregroundColor(.red)
+                Image(systemName: context.isStale ? "checkmark.shield.fill" : "lock.shield.fill")
+                    .foregroundColor(context.isStale ? .green : .red)
             } compactTrailing: {
-                Text(timerInterval: Date()...context.state.timerEnd, countsDown: true)
-                    .font(.caption.monospacedDigit())
-                    .foregroundColor(.white)
-                    .frame(maxWidth: 40)
+                if context.isStale {
+                    Image(systemName: "checkmark")
+                        .foregroundColor(.green)
+                } else {
+                    Text(timerInterval: Date()...context.state.timerEnd, countsDown: true)
+                        .font(.caption.monospacedDigit())
+                        .foregroundColor(.white)
+                        .frame(maxWidth: 40)
+                }
             } minimal: {
-                Image(systemName: "lock.shield.fill")
-                    .foregroundColor(.red)
+                Image(systemName: context.isStale ? "checkmark.shield.fill" : "lock.shield.fill")
+                    .foregroundColor(context.isStale ? .green : .red)
             }
         }
     }
