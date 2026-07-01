@@ -160,12 +160,18 @@ class FamilyControlsBridge: NSObject {
         let state = PanicTimerAttributes.ContentState(timerEnd: endTime)
         let content = ActivityContent(state: state, staleDate: endTime)
         do {
-          let _ = try Activity<PanicTimerAttributes>.request(
+          let newActivity = try Activity<PanicTimerAttributes>.request(
             attributes: attributes,
             content: content,
             pushType: nil
           )
-          NSLog("FamilyControlsBridge: Live Activity started")
+          // Persist the activity ID in the shared App Group so it can be
+          // ended reliably by ID from either this process or the
+          // DeviceActivity extension process, regardless of which one
+          // is alive when the session actually ends.
+          let sharedDefaults = UserDefaults(suiteName: "group.com.reclaim.recovery")
+          sharedDefaults?.set(newActivity.id, forKey: "panic_activity_id")
+          NSLog("FamilyControlsBridge: Live Activity started with id \(newActivity.id)")
         } catch {
           NSLog("FamilyControlsBridge: Live Activity failed to start: \(error.localizedDescription)")
         }
@@ -200,13 +206,25 @@ class FamilyControlsBridge: NSObject {
     defaults?.removeObject(forKey: panicEndTimeKey)
     defaults?.synchronize()
 
-    // End all Live Activities for this session
+    // End the Live Activity for this session, by stored ID first (reliable
+    // cross-process), then fall back to enumerating any others left behind.
     if #available(iOS 16.2, *) {
       Task {
+        let sharedDefaults = UserDefaults(suiteName: "group.com.reclaim.recovery")
+        let storedId = sharedDefaults?.string(forKey: "panic_activity_id")
+        var endedById = false
+        for activity in Activity<PanicTimerAttributes>.activities {
+          if activity.id == storedId {
+            await activity.end(nil, dismissalPolicy: .immediate)
+            endedById = true
+          }
+        }
+        // Safety net: end any remaining stray activities too
         for activity in Activity<PanicTimerAttributes>.activities {
           await activity.end(nil, dismissalPolicy: .immediate)
         }
-        NSLog("FamilyControlsBridge: Live Activity ended")
+        sharedDefaults?.removeObject(forKey: "panic_activity_id")
+        NSLog("FamilyControlsBridge: Live Activity ended (byId=\(endedById))")
       }
     }
 

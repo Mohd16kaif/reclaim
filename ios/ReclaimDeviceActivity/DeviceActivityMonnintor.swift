@@ -82,9 +82,17 @@ class ReclaimDeviceActivityMonitor: DeviceActivityMonitor {
     private func endLiveActivity() {
         if #available(iOS 16.2, *) {
             Task {
+                let storedId = sharedDefaults?.string(forKey: "panic_activity_id")
+                for activity in Activity<PanicTimerAttributes>.activities {
+                    if activity.id == storedId {
+                        await activity.end(nil, dismissalPolicy: .immediate)
+                    }
+                }
+                // Safety net: end any remaining stray activities too
                 for activity in Activity<PanicTimerAttributes>.activities {
                     await activity.end(nil, dismissalPolicy: .immediate)
                 }
+                sharedDefaults?.removeObject(forKey: "panic_activity_id")
                 NSLog("ReclaimDeviceActivity: Live Activity ended from extension")
             }
         }
