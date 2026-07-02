@@ -102,13 +102,29 @@ const PanicLockScreen = (): React.ReactElement => {
     }
 
     intervalRef.current = setInterval(() => {
-      setRemaining((prev) => {
-        if (prev <= 1) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          return 0;
+      void (async () => {
+        const endTsRaw = await AsyncStorage.getItem("@reclaim_panic_end_timestamp");
+        if (endTsRaw) {
+          // Always recompute from the durable end timestamp rather than
+          // decrementing a counter, so the displayed time can never drift
+          // from the OS-driven Live Activity countdown, regardless of any
+          // backgrounding/foregrounding timing quirks with JS timers.
+          const endTs = parseInt(endTsRaw, 10);
+          const r = Math.max(0, Math.floor((endTs - Date.now()) / 1000));
+          setRemaining(r);
+          if (r <= 0 && intervalRef.current) {
+            clearInterval(intervalRef.current);
+          }
+        } else {
+          setRemaining((prev) => {
+            if (prev <= 1) {
+              if (intervalRef.current) clearInterval(intervalRef.current);
+              return 0;
+            }
+            return prev - 1;
+          });
         }
-        return prev - 1;
-      });
+      })();
     }, TIMER_INTERVAL_MS);
 
     return () => {
