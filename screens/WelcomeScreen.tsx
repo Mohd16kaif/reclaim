@@ -11,6 +11,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useVideoPlayer, VideoView } from "expo-video";
 
 type RootStackParamList = {
   Splash: undefined;
@@ -31,6 +32,15 @@ const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation<WelcomeScreenNavigationProp>();
   const opacity = useRef(new Animated.Value(0)).current;
   const [reduceMotion, setReduceMotion] = useState(false);
+
+  const player = useVideoPlayer(
+    require("../assets/videos/onboarding_video_60fps_compressed.mp4"),
+    (player) => {
+      player.loop = true;
+      player.muted = true;
+      player.play();
+    }
+  );
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -60,7 +70,14 @@ const WelcomeScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.spacer} />
+          <View style={styles.spacer}>
+            <VideoView
+              style={styles.video}
+              player={player}
+              contentFit="cover"
+              nativeControls={false}
+            />
+          </View>
 
           <View style={styles.bottomContent}>
             <Text style={styles.heading}>Quit Porn{"\n"}Addiction Easily</Text>
@@ -95,6 +112,11 @@ const styles = StyleSheet.create({
   },
   spacer: {
     flex: 1,
+    overflow: "hidden",
+  },
+  video: {
+    width: "100%",
+    height: "100%",
   },
   bottomContent: {
     paddingHorizontal: 24,

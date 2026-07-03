@@ -52,7 +52,8 @@
           "project": "react-native",
           "organization": "reclaim-p0"
         }
-      ]
+      ],
+      "expo-video"
     ],
     "android": {
       "package": "com.reclaim.recovery"
