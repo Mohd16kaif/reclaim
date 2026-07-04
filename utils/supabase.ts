@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
 import * as Application from "expo-application";
+import * as AppleAuthentication from "expo-apple-authentication";
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
@@ -47,6 +48,71 @@ export const getOrCreateUserId = async (): Promise<string> => {
   } catch (e: any) {
     console.log("[Supabase] getOrCreateUserId error:", e.message);
     return await getDeviceId(); // Fallback to device ID
+  }
+};
+
+export type AppleSignInResult =
+  | { status: "linked"; isNewLink: true }
+  | { status: "signed_in_existing_account" }
+  | { status: "error"; message: string };
+
+export const signInWithApple = async (): Promise<AppleSignInResult> => {
+  try {
+    const credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+    });
+
+    if (!credential.identityToken) {
+      return { status: "error", message: "No identity token returned from Apple" };
+    }
+
+    // Attempt to link this Apple identity to the CURRENT anonymous session.
+    // If this user has never signed in with Apple before, this succeeds and
+    // preserves their existing anonymous auth.uid() — meaning all their existing
+    // streaks/stats/settings rows (keyed by that uid) remain valid with zero migration.
+    const { data: linkData, error: linkError } = await supabase.auth.linkIdentity({
+      provider: "apple",
+      // @ts-ignore - linkIdentity types may not include idToken directly in this SDK version, verify at runtime
+      token: credential.identityToken,
+    });
+
+    if (!linkError) {
+      console.log("[Supabase] Apple identity linked to existing anonymous session");
+      return { status: "linked", isNewLink: true };
+    }
+
+    // If linking failed because this Apple ID is ALREADY linked to a different
+    // (older) permanent account, that's expected for returning users after reinstall.
+    // Discard the current anonymous session's local cache and sign into the original account.
+    console.log("[Supabase] linkIdentity failed, attempting signInWithIdToken:", linkError.message);
+
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithIdToken({
+      provider: "apple",
+      token: credential.identityToken,
+    });
+
+    if (signInError) {
+      return { status: "error", message: signInError.message };
+    }
+
+    if (signInData?.user?.id) {
+      // Update the cached user id to the ORIGINAL account's uid, replacing
+      // whatever anonymous uid was cached before.
+      await AsyncStorage.setItem("@reclaim_user_id", signInData.user.id);
+      console.log("[Supabase] Signed into existing Apple-linked account:", signInData.user.id);
+      return { status: "signed_in_existing_account" };
+    }
+
+    return { status: "error", message: "Sign in succeeded but no user returned" };
+  } catch (e: any) {
+    if (e.code === "ERR_REQUEST_CANCELED") {
+      return { status: "error", message: "User canceled sign in" };
+    }
+    console.log("[Supabase] signInWithApple error:", e.message);
+    return { status: "error", message: e.message ?? "Unknown error" };
   }
 };
 

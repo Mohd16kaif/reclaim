@@ -57,10 +57,7 @@ const WelcomeScreen: React.FC = () => {
   }, [opacity, reduceMotion]);
 
   const handleGetStarted = () => {
-    navigation.navigate("OnboardingQuestion", {
-      questionNumber: 1,
-      totalQuestions: 23,
-    });
+    navigation.navigate("SignIn");
   };
 
   return (
