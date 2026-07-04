@@ -53,7 +53,8 @@
           "organization": "reclaim-p0"
         }
       ],
-      "expo-video"
+      "expo-video",
+      "expo-apple-authentication"
     ],
     "android": {
       "package": "com.reclaim.recovery"
