@@ -96,7 +96,15 @@ export const signInWithApple = async (): Promise<AppleSignInResult> => {
     });
 
     if (linkError) {
-      Sentry.captureMessage(JSON.stringify(linkError), "error");
+      if ((linkError as any).code === "identity_already_exists") {
+        Sentry.addBreadcrumb({
+          category: "apple_signin",
+          message: "linkIdentity failed - expected for returning users",
+          data: { code: (linkError as any).code, message: linkError.message },
+        });
+      } else {
+        Sentry.captureMessage(JSON.stringify(linkError), "error");
+      }
       Sentry.addBreadcrumb({
         category: "apple_signin",
         message: "linkIdentity failed",
