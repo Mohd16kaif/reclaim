@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
+import * as Sentry from "@sentry/react-native";
 import * as Application from "expo-application";
 import * as AppleAuthentication from "expo-apple-authentication";
 
@@ -65,9 +66,24 @@ export const signInWithApple = async (): Promise<AppleSignInResult> => {
       ],
     });
 
+    Sentry.addBreadcrumb({
+      category: "apple_signin",
+      message: "credential received",
+      data: { hasIdentityToken: !!credential.identityToken, tokenLength: credential.identityToken?.length ?? 0 },
+    });
+
+    console.log("[Supabase] Apple credential received:", {
+      ...credential,
+      identityToken: credential.identityToken ? `[length: ${credential.identityToken.length}]` : undefined,
+    });
+
     if (!credential.identityToken) {
       return { status: "error", message: "No identity token returned from Apple" };
     }
+
+    Sentry.addBreadcrumb({ category: "apple_signin", message: "attempting linkIdentity" });
+
+    console.log("[Supabase] Attempting linkIdentity");
 
     // Attempt to link this Apple identity to the CURRENT anonymous session.
     // If this user has never signed in with Apple before, this succeeds and
@@ -78,6 +94,18 @@ export const signInWithApple = async (): Promise<AppleSignInResult> => {
       // @ts-ignore - linkIdentity types may not include idToken directly in this SDK version, verify at runtime
       token: credential.identityToken,
     });
+
+    if (linkError) {
+      Sentry.captureMessage(JSON.stringify(linkError), "error");
+      Sentry.addBreadcrumb({
+        category: "apple_signin",
+        message: "linkIdentity failed",
+        data: { message: linkError.message, status: (linkError as any).status },
+      });
+      console.log("[Supabase] linkIdentity error:", JSON.stringify(linkError));
+    } else {
+      Sentry.addBreadcrumb({ category: "apple_signin", message: "linkIdentity succeeded" });
+    }
 
     if (!linkError) {
       console.log("[Supabase] Apple identity linked to existing anonymous session");
@@ -95,6 +123,18 @@ export const signInWithApple = async (): Promise<AppleSignInResult> => {
     });
 
     if (signInError) {
+      Sentry.captureMessage(JSON.stringify(signInError), "error");
+      Sentry.addBreadcrumb({
+        category: "apple_signin",
+        message: "signInWithIdToken failed",
+        data: { message: signInError.message, status: (signInError as any).status },
+      });
+      console.log("[Supabase] signInWithIdToken error:", JSON.stringify(signInError));
+    } else {
+      Sentry.addBreadcrumb({ category: "apple_signin", message: "signInWithIdToken succeeded" });
+    }
+
+    if (signInError) {
       return { status: "error", message: signInError.message };
     }
 
@@ -108,6 +148,7 @@ export const signInWithApple = async (): Promise<AppleSignInResult> => {
 
     return { status: "error", message: "Sign in succeeded but no user returned" };
   } catch (e: any) {
+    Sentry.captureException(e);
     if (e.code === "ERR_REQUEST_CANCELED") {
       return { status: "error", message: "User canceled sign in" };
     }
