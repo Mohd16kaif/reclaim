@@ -45,7 +45,7 @@ const WelcomeScreen: React.FC = () => {
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   const player = useVideoPlayer(
-    require("../assets/videos/onboarding_video_60fps_compressed.mp4"),
+    require("../assets/videos/onboarding_video_60fps_compressed.MOV"),
     (player) => {
       player.loop = true;
       player.muted = true;
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   },
   spacer: {
     flex: 1,
-    maxHeight: 320,
+    maxHeight: 420,
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
