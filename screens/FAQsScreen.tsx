@@ -28,7 +28,7 @@ const FAQ_ITEMS = [
   },
   {
     question: "Is my data private?",
-    answer: "All your personal progress data — streaks, chapter progress, check-ins, relapses — is stored locally on your device using AsyncStorage. It is never uploaded to a server or shared with anyone.",
+    answer: "Your personal progress data (streaks, chapter progress, check-ins, relapses) is stored locally on your device and synced to a secure backend so it can be restored if you reinstall the app or sign in on a new device. It is never shared with third parties.",
   },
   {
     question: "How does the content blocker work?",
@@ -39,12 +39,8 @@ const FAQ_ITEMS = [
     answer: "The daily check-in is a 2-step reflection that asks how your day went and what affected you most. It takes less than 30 seconds and helps you build self-awareness — a critical part of recovery.",
   },
   {
-    question: "Can I use RECLAIM without an internet connection?",
-    answer: "Yes — all core features (chapters, streaks, check-ins, panic button timer) work fully offline. The AI Coach requires an internet connection to generate responses.",
-  },
-  {
     question: "How do I contact support?",
-    answer: "Tap the 'Contact Us' button on the home screen or email us directly at support@reclaimapp.com. We typically respond within 24 hours.",
+    answer: "Tap the 'Contact Us' button on the home screen or email us directly at kaif64118@gmail.com. We typically respond within 24 hours.",
   },
 ];
 
@@ -109,7 +105,7 @@ const FAQsScreen: React.FC = () => {
           </Text>
           <TouchableOpacity
             style={styles.contactButton}
-            onPress={() => Linking.openURL('mailto:support@reclaimapp.com')}
+            onPress={() => Linking.openURL('mailto:kaif64118@gmail.com')}
             activeOpacity={0.8}
           >
             <Text style={styles.contactButtonText}>Contact Support</Text>

@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import React from 'react';
 import {
   ScrollView,
@@ -10,63 +9,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-
-const HELP_TOPICS = [
-  {
-    title: '🚀 Getting Started',
-    items: [
-      'How to set up your profile',
-      'Understanding your streak counter',
-      'How chapters work',
-      'Setting your risk time and preferences',
-    ],
-  },
-  {
-    title: '🆘 Panic Button',
-    items: [
-      'How to use the panic button',
-      'Changing panic duration',
-      'What happens during panic mode',
-      'Using the AI coach in crisis',
-    ],
-  },
-  {
-    title: '📊 Progress & Stats',
-    items: [
-      'Understanding your stability score',
-      'How the calendar tracks your days',
-      'What counts as a safe day',
-      'Resetting your streak after relapse',
-    ],
-  },
-  {
-    title: '🤖 AI Coach',
-    items: [
-      'Switching between coach modes',
-      'What the AI coach can and cannot do',
-      'Getting the most from your sessions',
-      'Privacy and AI conversations',
-    ],
-  },
-  {
-    title: '🔒 Blocker',
-    items: [
-      'Enabling and disabling the blocker',
-      'Understanding blocker limitations on iOS',
-      'Setting protection schedules',
-      'Tracking protection stats',
-    ],
-  },
-  {
-    title: '💳 Subscription',
-    items: [
-      'Free vs Premium features',
-      'How to upgrade to Premium',
-      'Cancelling your subscription',
-      'Restoring purchases after reinstall',
-    ],
-  },
-];
 
 const HelpCenterScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -119,28 +61,6 @@ const HelpCenterScreen: React.FC = () => {
             </TouchableOpacity>
           ))}
         </View>
-
-        {/* Help topics */}
-        <Text style={styles.sectionHeader}>HELP TOPICS</Text>
-
-        {HELP_TOPICS.map((topic, index) => (
-          <View key={index} style={styles.topicCard}>
-            <Text style={styles.topicCardTitle}>{topic.title}</Text>
-            {topic.items.map((item, itemIndex) => (
-              <View key={itemIndex}>
-                {itemIndex > 0 && <View style={styles.topicItemDivider} />}
-                <TouchableOpacity
-                  style={styles.topicItem}
-                  onPress={() => navigation.navigate('FAQs')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.topicItemText}>{item}</Text>
-                  <Ionicons name="chevron-forward" size={16} color="#AAAAAA" />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        ))}
 
         {/* Still need help */}
         <View style={styles.stillNeedHelpCard}>
@@ -241,37 +161,11 @@ const styles = StyleSheet.create({
     fontSize: 13, fontWeight: '600',
     color: '#000000', textAlign: 'center',
   },
-  topicCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginHorizontal: 16,
-    marginBottom: 10,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  topicCardTitle: {
-    fontSize: 14, fontWeight: '700', color: '#000000',
-    padding: 16, paddingBottom: 12,
-    borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
-  },
-  topicItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  topicItemText: { fontSize: 14, color: '#374151', flex: 1 },
-  topicItemDivider: { height: 1, backgroundColor: '#F9FAFB', marginHorizontal: 16 },
   stillNeedHelpCard: {
     backgroundColor: '#000000',
     borderRadius: 20,
     marginHorizontal: 16,
-    marginTop: 16,
+    marginTop: 24,
     padding: 24,
     alignItems: 'center',
   },

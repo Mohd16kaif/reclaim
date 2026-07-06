@@ -56,7 +56,7 @@ const ContactSupportScreen: React.FC = () => {
             <Ionicons name="mail-outline" size={20} color="#000000" />
             <View style={styles.infoTextGroup}>
               <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>support@reclaimapp.com</Text>
+              <Text style={styles.infoValue}>kaif64118@gmail.com</Text>
             </View>
           </View>
           <View style={styles.infoDivider} />
@@ -82,7 +82,7 @@ const ContactSupportScreen: React.FC = () => {
           <TouchableOpacity
             key={index}
             style={styles.topicRow}
-            onPress={() => Linking.openURL(`mailto:support@reclaimapp.com?subject=${encodeURIComponent(item.label)}`)}
+            onPress={() => Linking.openURL(`mailto:kaif64118@gmail.com?subject=${encodeURIComponent(item.label)}`)}
             activeOpacity={0.7}
           >
             <View style={styles.topicIconCircle}>
@@ -96,7 +96,7 @@ const ContactSupportScreen: React.FC = () => {
         {/* Main CTA button */}
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={() => Linking.openURL('mailto:support@reclaimapp.com')}
+          onPress={() => Linking.openURL('mailto:kaif64118@gmail.com')}
           activeOpacity={0.8}
         >
           <Ionicons name="mail" size={18} color="#FFFFFF" />

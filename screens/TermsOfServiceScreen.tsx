@@ -67,7 +67,7 @@ const SECTIONS = [
   },
   {
     title: '14. Contact Information',
-    body: 'Company Name: Reclaim\nEmail: support@reclaimapp.com',
+    body: 'Company Name: Reclaim\nEmail: kaif64118@gmail.com',
   },
 ];
 
@@ -115,7 +115,7 @@ const TermsOfServiceScreen: React.FC = () => {
           <Text style={styles.contactSubtitle}>We're happy to clarify anything.</Text>
           <TouchableOpacity
             style={styles.contactButton}
-            onPress={() => Linking.openURL('mailto:support@reclaimapp.com')}
+            onPress={() => Linking.openURL('mailto:kaif64118@gmail.com')}
             activeOpacity={0.8}
           >
             <Text style={styles.contactButtonText}>Contact Us</Text>

@@ -4,7 +4,7 @@
     "slug": "reclaim-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/Reclaim-main-icon.png",
     "scheme": "reclaim",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -14,7 +14,8 @@
       "infoPlist": {
         "NSContactsUsageDescription": "Reclaim needs access to your contacts to quickly reach your accountability partners during moments of struggle.",
         "NSUserNotificationsUsageDescription": "Reclaim sends you daily check-in reminders and celebrates your milestones to keep you motivated.",
-        "NSPhotoLibraryUsageDescription": "Reclaim needs access to your photo library to set your profile picture"
+        "NSPhotoLibraryUsageDescription": "Reclaim needs access to your photo library to set your profile picture",
+        "CFBundleDisplayName": "Reclaim"
       }
     },
     "web": {
