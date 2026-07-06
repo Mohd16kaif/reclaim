@@ -45,7 +45,7 @@ const WelcomeScreen: React.FC = () => {
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   const player = useVideoPlayer(
-    require("../assets/videos/onboarding_video_60fps_compressed.MOV"),
+    require("../assets/videos/first.mp4"),
     (player) => {
       player.loop = true;
       player.muted = true;
