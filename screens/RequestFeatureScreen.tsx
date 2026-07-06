@@ -33,7 +33,7 @@ const RequestFeatureScreen: React.FC = () => {
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Hero */}
         <View style={styles.heroSection}>
-          <Text style={styles.heroEmoji}>??</Text>
+          <View style={styles.heroDivider} />
           <Text style={styles.heroTitle}>Shape RECLAIM{"'"}s Future</Text>
           <Text style={styles.heroSubtitle}>
             Your ideas directly influence what we build next.
@@ -92,7 +92,13 @@ const styles = StyleSheet.create({
     paddingTop: 28,
     paddingBottom: 20,
   },
-  heroEmoji: { fontSize: 48, marginBottom: 12 },
+  heroDivider: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#000000',
+    marginBottom: 20,
+  },
   heroTitle: {
     fontSize: 20, fontWeight: '800', color: '#000000',
     textAlign: 'center', marginBottom: 8,

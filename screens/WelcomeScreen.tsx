@@ -49,6 +49,7 @@ const WelcomeScreen: React.FC = () => {
     (player) => {
       player.loop = true;
       player.muted = true;
+      player.currentTime = 0;
       player.play();
     }
   );
@@ -152,7 +153,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   spacer: {
-    flex: 1,
+    height: 380,
     overflow: "hidden",
   },
   video: {

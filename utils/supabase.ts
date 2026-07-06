@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import * as Sentry from "@sentry/react-native";
 import * as Application from "expo-application";
 import * as AppleAuthentication from "expo-apple-authentication";
+import { getUserName, getUserEmail, setUserName, setUserEmail } from "./profileStorage";
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
@@ -171,8 +172,8 @@ export const syncUserToSupabase = async (): Promise<void> => {
   try {
     const deviceId = await getOrCreateUserId();
     const [userName, userEmail, memberSince] = await Promise.all([
-      AsyncStorage.getItem("userName"),
-      AsyncStorage.getItem("userEmail"),
+      getUserName(),
+      getUserEmail(),
       AsyncStorage.getItem("memberSinceDate"),
     ]);
 
@@ -367,10 +368,22 @@ export const restoreFromSupabase = async (): Promise<void> => {
   try {
     const userId = await getOrCreateUserId();
 
-    const [streaksResult, statsResult] = await Promise.all([
+    const [streaksResult, statsResult, userResult] = await Promise.all([
       supabase.from("streaks").select("*").eq("device_id", userId).single(),
       supabase.from("stats").select("*").eq("device_id", userId).order("created_at", { ascending: true }),
+      supabase.from("users").select("user_name, user_email").eq("device_id", userId).single(),
     ]);
+
+    if (userResult.data) {
+      if (userResult.data.user_name) {
+        await setUserName(userResult.data.user_name);
+      }
+      if (userResult.data.user_email) {
+        await setUserEmail(userResult.data.user_email);
+      }
+    } else if (userResult.error) {
+      console.log("[Supabase] user restore error:", userResult.error.message);
+    }
 
     if (streaksResult.data) {
       const writes: Promise<void>[] = [];
