@@ -118,6 +118,19 @@ export const signInWithApple = async (): Promise<AppleSignInResult> => {
 
     if (!linkError) {
       console.log("[Supabase] Apple identity linked to existing anonymous session");
+
+      // Apple only provides fullName/email on the FIRST sign-in ever for this user.
+      // Capture and persist them now, since they won't be sent again on future sign-ins.
+      if (credential.email) {
+        await setUserEmail(credential.email);
+      }
+      if (credential.fullName?.givenName) {
+        const fullName = [credential.fullName.givenName, credential.fullName.familyName]
+          .filter(Boolean)
+          .join(" ");
+        await setUserName(fullName);
+      }
+
       return { status: "linked", isNewLink: true };
     }
 

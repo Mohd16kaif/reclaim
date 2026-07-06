@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { syncUserToSupabase } from "../utils/supabase";
 
 type RootStackParamList = {
   Splash: undefined;
@@ -70,6 +71,8 @@ const OnboardingQuestionScreen: React.FC = () => {
     if (!isNameValid) return;
 
     await AsyncStorage.setItem("userName", userName.trim());
+
+    syncUserToSupabase().catch((e) => console.error("syncUserToSupabase failed:", e));
 
     // Navigate to gender selection screen (question 2)
     navigation.navigate("GenderSelection", {

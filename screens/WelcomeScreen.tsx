@@ -16,6 +16,7 @@ import { useVideoPlayer, VideoView } from "expo-video";
 import {
   signInWithApple,
   restoreFromSupabase,
+  syncUserToSupabase,
   AppleSignInResult,
 } from "../utils/supabase";
 
@@ -50,7 +51,6 @@ const WelcomeScreen: React.FC = () => {
       player.loop = true;
       player.muted = true;
       player.currentTime = 0;
-      player.play();
     }
   );
 
@@ -77,6 +77,13 @@ const WelcomeScreen: React.FC = () => {
     }).start();
   }, [videoOpacity, reduceMotion]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      player.play();
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [player]);
+
   const handleGetStarted = async () => {
     if (isSigningIn) return;
     setIsSigningIn(true);
@@ -84,6 +91,7 @@ const WelcomeScreen: React.FC = () => {
     const result: AppleSignInResult = await signInWithApple();
 
     if (result.status === "linked") {
+      syncUserToSupabase().catch((e) => console.error("syncUserToSupabase failed:", e));
       navigation.replace("OnboardingQuestion", {
         questionNumber: 1,
         totalQuestions: 23,
@@ -148,10 +156,11 @@ const styles = StyleSheet.create({
   },
   spacer: {
     flex: 1,
-    maxHeight: 420,
+    maxHeight: 470,
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
+    paddingTop: 40,
   },
   video: {
     width: "100%",

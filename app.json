@@ -4,7 +4,7 @@
     "slug": "reclaim-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/Reclaim-main-icon.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "reclaim",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
