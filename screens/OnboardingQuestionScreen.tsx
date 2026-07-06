@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { setUserName as saveUserNameToProfile } from "../utils/profileStorage";
 import { syncUserToSupabase } from "../utils/supabase";
 
 type RootStackParamList = {
@@ -70,7 +71,7 @@ const OnboardingQuestionScreen: React.FC = () => {
     // Only proceed if name is valid
     if (!isNameValid) return;
 
-    await AsyncStorage.setItem("userName", userName.trim());
+    await saveUserNameToProfile(userName.trim());
 
     syncUserToSupabase().catch((e) => console.error("syncUserToSupabase failed:", e));
 

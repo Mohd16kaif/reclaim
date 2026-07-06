@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { syncSettingsToSupabase } from "../utils/supabase";
 
 type RootStackParamList = {
   Settings: undefined;
@@ -51,6 +52,7 @@ const DefaultPanicDurationScreen: React.FC = () => {
   const handleSelect = async (seconds: number) => {
     setSelectedDuration(seconds);
     await AsyncStorage.setItem('defaultPanicDuration', seconds.toString());
+    syncSettingsToSupabase().catch((e) => console.error("syncSettingsToSupabase failed:", e));
   };
 
   return (

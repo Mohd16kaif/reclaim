@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { syncSettingsToSupabase } from "../utils/supabase";
 
 type RootStackParamList = {
   Settings: undefined;
@@ -95,6 +96,7 @@ const AICoachModeScreen: React.FC = () => {
   const handleSave = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await AsyncStorage.setItem('aiCoachMode', selectedMode);
+    syncSettingsToSupabase().catch((e) => console.error("syncSettingsToSupabase failed:", e));
     Alert.alert('Saved', 'Your AI Coach mode has been updated.', [
       { text: 'OK', onPress: () => navigation.goBack() },
     ]);

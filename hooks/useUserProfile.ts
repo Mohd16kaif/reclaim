@@ -1,32 +1,34 @@
+import { useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import { getUserName, setUserName, getUserEmail, setUserEmail } from '../utils/profileStorage';
+import { syncUserToSupabase } from '../utils/supabase';
 
 export const useUserProfile = () => {
   const [userName, setUserNameState] = useState<string>('');
   const [userEmail, setUserEmailState] = useState<string>('');
   const [memberSinceDate, setMemberSinceDate] = useState<string>('');
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
   const loadProfile = async () => {
-    const name = await AsyncStorage.getItem('userName');
-    const email = await AsyncStorage.getItem('userEmail');
-    const since = await AsyncStorage.getItem('memberSinceDate');
+    const [name, email, since] = await Promise.all([
+      getUserName(),
+      getUserEmail(),
+      AsyncStorage.getItem('memberSinceDate'),
+    ]);
     if (name) setUserNameState(name);
     if (email) setUserEmailState(email);
     if (since) setMemberSinceDate(since);
   };
 
   const updateUserName = async (newName: string) => {
-    await AsyncStorage.setItem('userName', newName);
+    await setUserName(newName);
     setUserNameState(newName);
+    syncUserToSupabase().catch((e) => console.error("syncUserToSupabase failed:", e));
   };
 
   const updateUserEmail = async (newEmail: string) => {
-    await AsyncStorage.setItem('userEmail', newEmail);
+    await setUserEmail(newEmail);
     setUserEmailState(newEmail);
+    syncUserToSupabase().catch((e) => console.error("syncUserToSupabase failed:", e));
   };
 
   return {
@@ -38,4 +40,3 @@ export const useUserProfile = () => {
     loadProfile,
   };
 };
-

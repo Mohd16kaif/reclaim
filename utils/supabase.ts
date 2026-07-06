@@ -131,6 +131,11 @@ export const signInWithApple = async (): Promise<AppleSignInResult> => {
         await setUserName(fullName);
       }
 
+      // Eagerly push to Supabase right now, in case the user never reaches
+      // OnboardingQuestionScreen (app closed, crash, etc). This is a fire-and-forget
+      // call so it doesn't block navigation.
+      syncUserToSupabase().catch((e) => console.log("[Supabase] eager post-link sync failed:", e));
+
       return { status: "linked", isNewLink: true };
     }
 
@@ -328,7 +333,7 @@ export const syncSettingsToSupabase = async (): Promise<void> => {
     const [panicDuration, coachMode, dnsInstalled] = await Promise.all([
       AsyncStorage.getItem("defaultPanicDuration"),
       AsyncStorage.getItem("aiCoachMode"),
-      AsyncStorage.getItem("@reclaim_dns_profile_installed"),
+      AsyncStorage.getItem("@reclaim_dns_profile_status"),
     ]);
 
     const { error } = await supabase.from("settings").upsert(

@@ -156,11 +156,11 @@ const styles = StyleSheet.create({
   },
   spacer: {
     flex: 1,
-    maxHeight: 470,
+    maxHeight: 530,
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 40,
+    paddingTop: 95,
   },
   video: {
     width: "100%",
