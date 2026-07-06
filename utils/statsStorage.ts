@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { syncEventToSupabase, syncStreakToSupabase } from "./supabase";
+import { syncEventToSupabase, syncStreakToSupabase, updatePanicSessionInSupabase } from "./supabase";
 
 // ============================================================================
 // STORAGE KEYS — single source of truth
@@ -246,6 +246,7 @@ export const startPanicSession = async (panicDurationMinutes?: number): Promise<
 
   // Supabase sync — fire and forget
   syncEventToSupabase("panic_session", {
+    id: session.id,
     startTimestamp: session.startTimestamp,
   });
 
@@ -316,6 +317,17 @@ export const resolvePendingVerdict = async (wasSuccessful: boolean): Promise<voi
 
   await AsyncStorage.setItem(STATS_KEYS.PANIC_SESSIONS, JSON.stringify(sessions));
   await AsyncStorage.removeItem(STATS_KEYS.PANIC_PENDING_VERDICT);
+
+  // Supabase sync — fire and forget
+  updatePanicSessionInSupabase(pendingId, {
+    id: sessions[index].id,
+    startTimestamp: sessions[index].startTimestamp,
+    endTimestamp: sessions[index].endTimestamp,
+    durationSeconds: sessions[index].durationSeconds,
+    endedInRelapse: sessions[index].endedInRelapse,
+    wasSuccessful: sessions[index].wasSuccessful,
+    panicDurationMinutes: sessions[index].panicDurationMinutes,
+  });
 };
 
 export const hasPendingVerdict = async (): Promise<boolean> => {

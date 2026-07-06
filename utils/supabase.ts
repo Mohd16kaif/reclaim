@@ -285,6 +285,27 @@ export const syncEventToSupabase = async (
   }
 };
 
+// ── Sync: Panic Session Update ────────────────────────────────────────────
+// Call when a panic session verdict is resolved (completes the row inserted
+// by startPanicSession with endTimestamp, durationSeconds, wasSuccessful, etc.)
+export const updatePanicSessionInSupabase = async (
+  sessionId: string,
+  eventData: Record<string, any>,
+): Promise<void> => {
+  try {
+    const deviceId = await getOrCreateUserId();
+    const { error } = await supabase
+      .from("stats")
+      .update({ event_data: eventData })
+      .eq("device_id", deviceId)
+      .eq("event_type", "panic_session")
+      .eq("event_data->>id", sessionId);
+    if (error) console.log("[Supabase] panic session update error:", error.message);
+  } catch (e) {
+    console.log("[Supabase] panic session update skipped — offline or error");
+  }
+};
+
 // ── Sync: Settings ────────────────────────────────────────────────────────
 // Call when user changes panic duration, coach mode, or DNS shield status
 export const syncSettingsToSupabase = async (): Promise<void> => {
