@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import React, { useEffect, useRef, useState } from "react";
@@ -5,7 +6,6 @@ import {
     AccessibilityInfo,
     Alert,
     Animated,
-    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -90,6 +90,7 @@ const WelcomeScreen: React.FC = () => {
       });
     } else if (result.status === "signed_in_existing_account") {
       await restoreFromSupabase();
+      await AsyncStorage.setItem("@reclaim_onboarding_complete", "true");
       navigation.replace("MainDashboard");
     } else if (result.status === "error") {
       setIsSigningIn(false);
@@ -104,35 +105,30 @@ const WelcomeScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <Animated.View style={[styles.container, { opacity }]}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <Animated.View style={[styles.spacer, { opacity: videoOpacity }]}>
-            <VideoView
-              style={styles.video}
-              player={player}
-              contentFit="contain"
-              nativeControls={false}
-            />
-          </Animated.View>
+        <Animated.View style={[styles.spacer, { opacity: videoOpacity }]}>
+          <VideoView
+            style={styles.video}
+            player={player}
+            contentFit="contain"
+            nativeControls={false}
+          />
+        </Animated.View>
 
-          <View style={styles.bottomContent}>
-            <Text style={styles.heading}>Quit Porn{"\n"}Addiction Easily</Text>
+        <View style={styles.bottomContent}>
+          <Text style={styles.heading}>Quit Porn{"\n"}Addiction Easily</Text>
 
-            <TouchableOpacity
-              style={[
-                styles.primaryButton,
-                isSigningIn && styles.primaryButtonDisabled,
-              ]}
-              activeOpacity={0.8}
-              onPress={handleGetStarted}
-              disabled={isSigningIn}
-            >
-              <Text style={styles.primaryButtonText}>Get Started</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+          <TouchableOpacity
+            style={[
+              styles.primaryButton,
+              isSigningIn && styles.primaryButtonDisabled,
+            ]}
+            activeOpacity={0.8}
+            onPress={handleGetStarted}
+            disabled={isSigningIn}
+          >
+            <Text style={styles.primaryButtonText}>Get Started</Text>
+          </TouchableOpacity>
+        </View>
       </Animated.View>
     </SafeAreaView>
   );
@@ -148,13 +144,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
-  },
-  scrollContent: {
-    flexGrow: 1,
+    justifyContent: "space-between",
   },
   spacer: {
-    height: 380,
+    flex: 1,
+    maxHeight: 320,
     overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
   },
   video: {
     width: "100%",
