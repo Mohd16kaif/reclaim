@@ -3,6 +3,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import React, { useEffect, useRef, useState } from "react";
 import {
     AccessibilityInfo,
+    Alert,
     Animated,
     ScrollView,
     StyleSheet,
@@ -12,6 +13,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useVideoPlayer, VideoView } from "expo-video";
+import {
+  signInWithApple,
+  restoreFromSupabase,
+  AppleSignInResult,
+} from "../utils/supabase";
 
 type RootStackParamList = {
   Splash: undefined;
@@ -19,6 +25,7 @@ type RootStackParamList = {
   OnboardingQuestion: { questionNumber: number; totalQuestions: number };
   Home: undefined;
   SignIn: undefined;
+  MainDashboard: undefined;
 };
 
 type WelcomeScreenNavigationProp = StackNavigationProp<
@@ -27,11 +34,15 @@ type WelcomeScreenNavigationProp = StackNavigationProp<
 >;
 
 const ANIMATION_DURATION = 500;
+const VIDEO_FADE_DELAY = 1750;
+const VIDEO_FADE_DURATION = 350;
 
 const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation<WelcomeScreenNavigationProp>();
   const opacity = useRef(new Animated.Value(0)).current;
+  const videoOpacity = useRef(new Animated.Value(0)).current;
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   const player = useVideoPlayer(
     require("../assets/videos/onboarding_video_60fps_compressed.mp4"),
@@ -56,8 +67,37 @@ const WelcomeScreen: React.FC = () => {
     }).start();
   }, [opacity, reduceMotion]);
 
-  const handleGetStarted = () => {
-    navigation.navigate("SignIn");
+  useEffect(() => {
+    Animated.timing(videoOpacity, {
+      toValue: 1,
+      delay: reduceMotion ? 0 : VIDEO_FADE_DELAY,
+      duration: reduceMotion ? 0 : VIDEO_FADE_DURATION,
+      useNativeDriver: true,
+    }).start();
+  }, [videoOpacity, reduceMotion]);
+
+  const handleGetStarted = async () => {
+    if (isSigningIn) return;
+    setIsSigningIn(true);
+
+    const result: AppleSignInResult = await signInWithApple();
+
+    if (result.status === "linked") {
+      navigation.replace("OnboardingQuestion", {
+        questionNumber: 1,
+        totalQuestions: 23,
+      });
+    } else if (result.status === "signed_in_existing_account") {
+      await restoreFromSupabase();
+      navigation.replace("MainDashboard");
+    } else if (result.status === "error") {
+      setIsSigningIn(false);
+      const message =
+        result.message === "User canceled sign in"
+          ? "Sign in was canceled."
+          : result.message;
+      Alert.alert("Sign In", message);
+    }
   };
 
   return (
@@ -67,22 +107,26 @@ const WelcomeScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.spacer}>
+          <Animated.View style={[styles.spacer, { opacity: videoOpacity }]}>
             <VideoView
               style={styles.video}
               player={player}
-              contentFit="cover"
+              contentFit="contain"
               nativeControls={false}
             />
-          </View>
+          </Animated.View>
 
           <View style={styles.bottomContent}>
             <Text style={styles.heading}>Quit Porn{"\n"}Addiction Easily</Text>
 
             <TouchableOpacity
-              style={styles.primaryButton}
+              style={[
+                styles.primaryButton,
+                isSigningIn && styles.primaryButtonDisabled,
+              ]}
               activeOpacity={0.8}
               onPress={handleGetStarted}
+              disabled={isSigningIn}
             >
               <Text style={styles.primaryButtonText}>Get Started</Text>
             </TouchableOpacity>
@@ -133,6 +177,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.5,
   },
   primaryButtonText: {
     color: "#FFFFFF",
