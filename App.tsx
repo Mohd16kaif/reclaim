@@ -29,7 +29,6 @@ import {
   trackAppOpened,
   trackScreenViewed,
 } from "./utils/analytics";
-import { syncUserToSupabase, restoreFromSupabase, shouldRestore } from "./utils/supabase";
 import { loadUserProgress } from "./utils/userProgress";
 
 // ── Screen imports ──────────────────────────────────────────────────────────
@@ -500,23 +499,16 @@ export default Sentry.wrap(function App() {
       }
     })();
 
-    // ── Defer Supabase sync + restore until after first paint ─────────
+    // ── Defer local-only work until after first paint ─────────────────
+    // NOTE: syncUserToSupabase() and restoreFromSupabase() were intentionally
+    // removed from here. Calling them unconditionally on every app launch
+    // created a brand-new anonymous Supabase user before Apple Sign-In could
+    // ever run, which meant linkIdentity always "succeeded" as a fresh link
+    // instead of detecting a returning user — orphaning all real stats on
+    // reinstall. These calls now belong only in WelcomeScreen.tsx and
+    // SignInScreen.tsx, strictly after signInWithApple() resolves.
     const interactionHandle = InteractionManager.runAfterInteractions(() => {
       (async () => {
-        try {
-          await syncUserToSupabase();
-        } catch (e) {
-          console.error("syncUserToSupabase failed:", e);
-        }
-
-        try {
-          if (await shouldRestore()) {
-            await restoreFromSupabase();
-          }
-        } catch (e) {
-          console.error("restoreFromSupabase failed:", e);
-        }
-
         try {
           await loadUserProgress();
         } catch (e) {
