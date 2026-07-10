@@ -12,6 +12,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useEvent } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
 import {
   signInWithApple,
@@ -77,9 +78,16 @@ const WelcomeScreen: React.FC = () => {
     }).start();
   }, [videoOpacity, reduceMotion]);
 
+  const { status } = useEvent(player, "statusChange", { status: player.status });
+
   useEffect(() => {
-    player.play();
-  }, [player]);
+    // TEMP DEBUG
+    console.log("WelcomeScreen video status:", status, "time:", Date.now());
+    // TEMP DEBUG
+    if (status === "readyToPlay") {
+      player.play();
+    }
+  }, [status, player]);
 
   const handleGetStarted = async () => {
     if (isSigningIn) return;
