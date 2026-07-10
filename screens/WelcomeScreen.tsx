@@ -35,8 +35,8 @@ type WelcomeScreenNavigationProp = StackNavigationProp<
 >;
 
 const ANIMATION_DURATION = 500;
-const VIDEO_FADE_DELAY = 1750;
-const VIDEO_FADE_DURATION = 350;
+const VIDEO_FADE_DELAY = 0;
+const VIDEO_FADE_DURATION = 200;
 
 const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation<WelcomeScreenNavigationProp>();
@@ -78,10 +78,7 @@ const WelcomeScreen: React.FC = () => {
   }, [videoOpacity, reduceMotion]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      player.play();
-    }, 2000);
-    return () => clearTimeout(timer);
+    player.play();
   }, [player]);
 
   const handleGetStarted = async () => {
