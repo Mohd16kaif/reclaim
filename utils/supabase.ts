@@ -4,8 +4,6 @@ import * as Sentry from "@sentry/react-native";
 import * as Application from "expo-application";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { getUserName, getUserEmail, setUserName, setUserEmail } from "./profileStorage";
-import { Alert } from "react-native";
-
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -54,6 +52,24 @@ export const getOrCreateUserId = async (): Promise<string> => {
   }
 };
 
+// Ensures a minimal row exists in "users" for this device_id before any
+// other table (streaks, stats) tries to insert/upsert a row referencing it
+// via a foreign key. Safe to call frequently — does nothing if the row
+// already exists, and never overwrites existing user_name/user_email.
+export const ensureUserRowExists = async (deviceId: string): Promise<void> => {
+  try {
+    const { error } = await supabase.from("users").upsert(
+      { device_id: deviceId },
+      { onConflict: "device_id", ignoreDuplicates: true },
+    );
+    if (error) {
+      console.log("[Supabase] ensureUserRowExists error:", error.message);
+    }
+  } catch (e: any) {
+    console.log("[Supabase] ensureUserRowExists skipped — offline or error:", e?.message);
+  }
+};
+
 export type AppleSignInResult =
   | { status: "linked"; isNewLink: true }
   | { status: "signed_in_existing_account" }
@@ -97,10 +113,6 @@ export const signInWithApple = async (): Promise<AppleSignInResult> => {
       token: credential.identityToken,
     });
 
-    // TEMP DEBUG — remove after diagnosing sync issue
-    Alert.alert("SYNC-DEBUG linkIdentity", JSON.stringify({ linkError, userId: linkData?.user?.id }));
-    // END TEMP DEBUG
-
     if (linkError) {
       if ((linkError as any).code === "identity_already_exists") {
         Sentry.addBreadcrumb({
@@ -137,9 +149,8 @@ export const signInWithApple = async (): Promise<AppleSignInResult> => {
       }
 
       // Eagerly push to Supabase right now, in case the user never reaches
-      // OnboardingQuestionScreen (app closed, crash, etc). This is a fire-and-forget
-      // call so it doesn't block navigation.
-      syncUserToSupabase().catch((e) => console.log("[Supabase] eager post-link sync failed:", e));
+      // OnboardingQuestionScreen (app closed, crash, etc).
+      await syncUserToSupabase().catch((e) => console.log("[Supabase] eager post-link sync failed:", e));
 
       return { status: "linked", isNewLink: true };
     }
@@ -153,10 +164,6 @@ export const signInWithApple = async (): Promise<AppleSignInResult> => {
       provider: "apple",
       token: credential.identityToken,
     });
-
-    // TEMP DEBUG — remove after diagnosing sync issue
-    Alert.alert("SYNC-DEBUG signInWithIdToken", JSON.stringify({ signInError, userId: signInData?.user?.id }));
-    // END TEMP DEBUG
 
     if (signInError) {
       Sentry.captureMessage(JSON.stringify(signInError), "error");
@@ -198,18 +205,13 @@ export const signInWithApple = async (): Promise<AppleSignInResult> => {
 export const syncUserToSupabase = async (): Promise<void> => {
   try {
     const deviceId = await getOrCreateUserId();
-    // TEMP DEBUG — remove after diagnosing sync issue
-    console.log("[SYNC-DEBUG] syncUserToSupabase deviceId:", deviceId);
-    Alert.alert("SYNC-DEBUG", `syncUserToSupabase deviceId: ${deviceId}`);
-    // END TEMP DEBUG
-
     const [userName, userEmail, memberSince] = await Promise.all([
       getUserName(),
       getUserEmail(),
       AsyncStorage.getItem("memberSinceDate"),
     ]);
 
-    const { data, error, status, statusText } = await supabase.from("users").upsert(
+    const { error } = await supabase.from("users").upsert(
       {
         device_id: deviceId,
         user_name: userName ?? null,
@@ -225,15 +227,8 @@ export const syncUserToSupabase = async (): Promise<void> => {
       { onConflict: "device_id" },
     );
 
-    // TEMP DEBUG — remove after diagnosing sync issue
-    Alert.alert("SYNC-DEBUG result", JSON.stringify({ error, status, statusText }));
-    // END TEMP DEBUG
-
     if (error) console.log("[Supabase] user sync error:", error.message);
   } catch (e: any) {
-    // TEMP DEBUG — remove after diagnosing sync issue
-    Alert.alert("SYNC-DEBUG EXCEPTION", `syncUserToSupabase: ${e?.message ?? String(e)}`);
-    // END TEMP DEBUG
     console.log("[Supabase] user sync skipped — offline or error");
   }
 };
@@ -243,10 +238,7 @@ export const syncUserToSupabase = async (): Promise<void> => {
 export const syncStreakToSupabase = async (): Promise<void> => {
   try {
     const deviceId = await getOrCreateUserId();
-    // TEMP DEBUG — remove after diagnosing sync issue
-    console.log("[SYNC-DEBUG] syncStreakToSupabase deviceId:", deviceId);
-    Alert.alert("SYNC-DEBUG", `syncStreakToSupabase deviceId: ${deviceId}`);
-    // END TEMP DEBUG
+    await ensureUserRowExists(deviceId);
 
     const [streakStart, currentStreak, longestStreak] = await Promise.all([
       AsyncStorage.getItem("streakStartDate"),
@@ -289,7 +281,7 @@ export const syncStreakToSupabase = async (): Promise<void> => {
       }
     }
 
-    const { data, error, status, statusText } = await supabase.from("streaks").upsert(
+    const { error } = await supabase.from("streaks").upsert(
       {
         device_id: deviceId,
         streak_start_date: streakStart
@@ -302,15 +294,8 @@ export const syncStreakToSupabase = async (): Promise<void> => {
       { onConflict: "device_id" },
     );
 
-    // TEMP DEBUG — remove after diagnosing sync issue
-    Alert.alert("SYNC-DEBUG result", JSON.stringify({ error, status, statusText }));
-    // END TEMP DEBUG
-
     if (error) console.log("[Supabase] streak sync error:", error.message);
   } catch (e) {
-    // TEMP DEBUG — remove after diagnosing sync issue
-    Alert.alert("SYNC-DEBUG EXCEPTION", `syncStreakToSupabase: ${(e as any)?.message ?? String(e)}`);
-    // END TEMP DEBUG
     console.log("[Supabase] streak sync skipped — offline or error");
   }
 };
@@ -323,27 +308,17 @@ export const syncEventToSupabase = async (
 ): Promise<void> => {
   try {
     const deviceId = await getOrCreateUserId();
-    // TEMP DEBUG — remove after diagnosing sync issue
-    console.log("[SYNC-DEBUG] syncEventToSupabase deviceId:", deviceId);
-    Alert.alert("SYNC-DEBUG", `syncEventToSupabase deviceId: ${deviceId}`);
-    // END TEMP DEBUG
+    await ensureUserRowExists(deviceId);
 
-    const { data, error, status, statusText } = await supabase.from("stats").insert({
+    const { error } = await supabase.from("stats").insert({
       device_id: deviceId,
       event_type: eventType,
       event_data: eventData,
       created_at: new Date().toISOString(),
     });
 
-    // TEMP DEBUG — remove after diagnosing sync issue
-    Alert.alert("SYNC-DEBUG result", JSON.stringify({ error, status, statusText }));
-    // END TEMP DEBUG
-
     if (error) console.log("[Supabase] event sync error:", error.message);
   } catch (e) {
-    // TEMP DEBUG — remove after diagnosing sync issue
-    Alert.alert("SYNC-DEBUG EXCEPTION", `syncEventToSupabase: ${(e as any)?.message ?? String(e)}`);
-    // END TEMP DEBUG
     console.log("[Supabase] event sync skipped — offline or error");
   }
 };
@@ -357,6 +332,7 @@ export const updatePanicSessionInSupabase = async (
 ): Promise<void> => {
   try {
     const deviceId = await getOrCreateUserId();
+    await ensureUserRowExists(deviceId);
     const { error } = await supabase
       .from("stats")
       .update({ event_data: eventData })
@@ -429,24 +405,12 @@ export const fetchStreakPercentile = async (currentStreakDays: number): Promise<
 export const restoreFromSupabase = async (): Promise<void> => {
   try {
     const userId = await getOrCreateUserId();
-    // TEMP DEBUG — remove after diagnosing sync issue
-    console.log("[SYNC-DEBUG] restoreFromSupabase userId:", userId);
-    Alert.alert("SYNC-DEBUG", `restoreFromSupabase userId: ${userId}`);
-    // END TEMP DEBUG
 
     const [streaksResult, statsResult, userResult] = await Promise.all([
       supabase.from("streaks").select("*").eq("device_id", userId).single(),
       supabase.from("stats").select("*").eq("device_id", userId).order("created_at", { ascending: true }),
       supabase.from("users").select("user_name, user_email").eq("device_id", userId).single(),
     ]);
-
-    // TEMP DEBUG — remove after diagnosing sync issue
-    Alert.alert("SYNC-DEBUG restore results", JSON.stringify({
-      streaks: { error: streaksResult.error, status: (streaksResult as any).status, statusText: (streaksResult as any).statusText },
-      stats: { error: statsResult.error, status: (statsResult as any).status, statusText: (statsResult as any).statusText },
-      users: { error: userResult.error, status: (userResult as any).status, statusText: (userResult as any).statusText },
-    }));
-    // END TEMP DEBUG
 
     if (userResult.data) {
       if (userResult.data.user_name) {
@@ -520,9 +484,6 @@ export const restoreFromSupabase = async (): Promise<void> => {
       console.log("[Supabase] stats restore error:", statsResult.error.message);
     }
   } catch (e: any) {
-    // TEMP DEBUG — remove after diagnosing sync issue
-    Alert.alert("SYNC-DEBUG EXCEPTION", `restoreFromSupabase: ${e?.message ?? String(e)}`);
-    // END TEMP DEBUG
     console.log("[Supabase] restore skipped — offline or error");
   }
 };
