@@ -431,7 +431,6 @@ const [panicAppSelectionLoading, setPanicAppSelectionLoading] = useState(false);
         const saved = await AsyncStorage.getItem('defaultPanicDuration');
         const seconds = saved ? parseInt(saved, 10) : 1800;
         const labels: Record<number, string> = {
-          60: '1 min (Test)', // 🧪 TEST MODE
           900: '15 min',
           1800: '30 min',
           2700: '45 min',

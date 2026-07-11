@@ -24,7 +24,6 @@ interface DurationOption {
 }
 
 const DURATION_OPTIONS: DurationOption[] = [
-  { label: '1 Minute (Test Only)', seconds: 60 }, // 🧪 TEST MODE
   { label: '15 Minutes', seconds: 900 },
   { label: '30 Minutes', seconds: 1800 },
   { label: '45 Minutes', seconds: 2700 },
