@@ -1,0 +1,479 @@
+================================================================================
+  RECLAIM — APP PRIVACY AUDIT REPORT
+  Prepared for Apple App Store Connect "App Privacy" questionnaire
+================================================================================
+
+GENERAL NOTES
+  - This is an Expo-managed React Native app (SDK 54) with heavy native iOS
+    integrations: Family Controls (Screen Time), Network Extension (VPN/proxy),
+    Device Activity monitoring, Live Activities, and app extensions.
+  - No Android-specific features were reviewed beyond what exists in shared JS.
+  - Bundle ID: com.reclaim.recovery
+  - No custom server infrastructure beyond Supabase (DB + auth + storage +
+    Edge Functions) and PostHog (analytics). No Firebase, no Amplitude, no
+    Mixpanel, no AppsFlyer, no Adjust, no Branch.
+
+================================================================================
+1. PERMISSIONS REQUESTED
+================================================================================
+
+1.1 Information from Info.plist (ios/reclaimapp/Info.plist)
+
+  Permission key              | Usage description string                  | Code path confirms?
+  ----------------------------|-------------------------------------------|--------------------
+  NSContactsUsageDescription  | "to quickly reach your accountability…"   | NO — dead permission
+  NSCameraUsageDescription    | "Allow Reclaim to access your camera"     | NO — dead permission
+  NSMicrophoneUsageDescription| "Allow Reclaim to access your microphone" | NO — dead permission
+  NSFaceIDUsageDescription    | "Allow Reclaim to access your Face ID…"   | YES — by expo-secure-store
+  NSPhotoLibraryUsageDescription| "to set your profile picture"           | YES — ProfileView.tsx
+  NSUserNotificationsUsageDescription| "daily check-in reminders…"        | YES — notificationManager.ts / GrantPermissionsScreen.tsx
+  NSSupportsLiveActivities    | (no string — feature flag)                | YES — FamilyControlsBridge.swift:160
+
+  The Info.plist at ios/reclaimapp/Info.plist is the main app's plist. The
+  extension Info.plist files (ReclaimTunnel, ReclaimShieldConfig, etc.) do
+  NOT declare any NSXxxUsageDescription keys.
+
+  Note: NSFaceIDUsageDescription is not explicitly authored in app.json's
+  infoPlist — it's likely injected by the expo-secure-store plugin. The
+  underlying library uses Keychain, which may show the FaceID auth prompt.
+
+1.2 Runtime permission-request call sites (every actual user-facing dialog)
+
+  A) NOTIFICATIONS (NSUserNotificationsUsageDescription)
+     - utils/notificationManager.ts:41 — requestNotificationPermission()
+       calls Notifications.requestPermissionsAsync()
+     - screens/GrantPermissionsScreen.tsx:81 — same call
+     - screens/SettingsScreen.tsx:483 — calls requestNotificationPermission()
+
+  B) PHOTO LIBRARY (NSPhotoLibraryUsageDescription)
+     - screens/ProfileView.tsx:118,159 — ImagePicker.requestMediaLibraryPermissionsAsync()
+       Only uses .Images media type — no videos, no camera roll browsing beyond
+       avatar selection.
+
+  C) FACE ID (NSFaceIDUsageDescription)
+     - No direct JS call found. expo-secure-store (expo-secure-store) uses iOS
+       Keychain which may present biometric auth automatically on read/write of
+       sensitive keys (userEmail, userName, deviceId). The NSFaceIDUsageDescription
+       string is likely auto-injected by the expo-secure-store Expo plugin.
+
+  D) SCREEN TIME / FAMILY CONTROLS (requires entitlement, not a usage key)
+     - utils/familyControls.ts:11 — requestFamilyControlsAuth()
+     - utils/shieldManager.ts:110,348 — FamilyControlsBridge.requestAuthorization()
+     - utils/uninstallPrevention.ts:30,72 — same
+     - screens/GrantPermissionsScreen.tsx:222 — same
+     These all call the native Swift method in
+     ios/reclaimapp/FamilyControlsBridge.swift:27-50 which invokes
+     AuthorizationCenter.shared.requestAuthorization(for: .individual).
+     This triggers the iOS "Screen Time" permission dialog.
+
+  E) VPN / NETWORK EXTENSION (requires entitlement, not a usage key)
+     - No explicit JS-side permission request found for the tunnel. The
+       ReclaimTunnel NEPacketTunnelProvider extension is declared in
+       ios/ReclaimTunnel/Info.plist. The system shows a "VPN configuration"
+       permission dialog when the tunnel is first started. The
+       GrantPermissionsScreen.tsx:186-203 displays a "VPN Configuration"
+       card but routes to the Shield enable flow rather than requesting
+       directly here.
+
+  F) APPLE SIGN-IN
+     - utils/supabase.ts:80 — AppleAuthentication.signInAsync() which shows
+       the Apple ID permission sheet (name, email scopes). This is not a
+       traditional iOS permission dialog but does collect user identity data.
+
+  MISMATCH FLAGS — Dead permissions with no corresponding code path:
+
+    ⚠ NSCameraUsageDescription (Camera)
+       Present in Info.plist but NO code path in this codebase calls
+       ImagePicker.launchCameraAsync() or UIImagePickerController for camera.
+       The only reference to "camera" in ProfileView.tsx is an icon name
+       ("camera.fill") — cosmetic only. The actual picker uses
+       launchImageLibraryAsync (photo library), not camera.
+
+    ⚠ NSMicrophoneUsageDescription (Microphone)
+       Present in Info.plist but zero code references to any microphone API.
+       No expo-audio, no AVAudioSession, no recording calls anywhere.
+
+    ⚠ NSContactsUsageDescription (Contacts)
+       Present in Info.plist. The expo-contacts package IS in
+       package.json:28, but a codebase-wide search found ZERO import or use
+       of expo-contacts' API anywhere in the screens/ directory. The
+       description string says "reach accountability partners" but no such
+       feature exists in the code. This is a dead permission entirely.
+
+================================================================================
+2. DATA SENT TO SUPABASE
+================================================================================
+
+  Supabase client initialized at utils/supabase.ts:10 with EXPO_PUBLIC
+  variables. All sync functions are fire-and-forget (no await on the caller).
+
+  Table: "users" (via supabase.from("users"))
+    Column                 | Sent by function          | Notes
+    -----------------------|---------------------------|-------------------------------
+    device_id              | syncUserToSupabase():216  | PK, from getOrCreateUserId()
+    user_name              | syncUserToSupabase():217  | From SecureStore (Apple name)
+    user_email             | syncUserToSupabase():218  | From SecureStore (Apple email)
+    member_since_date      | syncUserToSupabase():219  | ISO date string
+    (device_id only)       | ensureUserRowExists():62  | Minimal upsert, no other cols
+
+  Table: "streaks" (via supabase.from("streaks"))
+    Column                 | Sent by function          | Notes
+    -----------------------|---------------------------|-------------------------------
+    device_id              | syncStreakToSupabase():286| PK
+    streak_start_date      | syncStreakToSupabase():287| ISO string
+    current_streak_days    | syncStreakToSupabase():290| Integer
+    longest_streak_days    | syncStreakToSupabase():291| Integer
+    updated_at             | syncStreakToSupabase():292| ISO string
+
+  Table: "stats" (via supabase.from("stats"))
+    Column                 | Sent by function          | Notes
+    -----------------------|---------------------------|-------------------------------
+    device_id              | syncEventToSupabase():314 | PK
+    event_type             | syncEventToSupabase():315 | "panic_session" | "relapse" | "check_in"
+    event_data             | syncEventToSupabase():316 | JSON blob (details below)
+    created_at             | syncEventToSupabase():317 | ISO string
+
+    event_data contents per event_type:
+      check_in:   { mood, trigger, date, timestamp }
+                  Sent from statsStorage.ts:163 (recordCheckIn)
+      relapse:    { reason, date, timestamp }
+                  Sent from statsStorage.ts:202 (recordRelapseEvent)
+      panic_session (initial):
+                  { id, startTimestamp }
+                  Sent from statsStorage.ts:248 (startPanicSession)
+      panic_session (update):
+                  { id, startTimestamp, endTimestamp, durationSeconds,
+                    endedInRelapse, wasSuccessful, panicDurationMinutes }
+                  Sent from statsStorage.ts:322-330 (resolvePendingVerdict via
+                  updatePanicSessionInSupabase)
+
+  Table: "settings" (via supabase.from("settings"))
+    Column                 | Sent by function          | Notes
+    -----------------------|---------------------------|-------------------------------
+    device_id              | syncSettingsToSupabase():361| PK
+    panic_duration_minutes | syncSettingsToSupabase():362| Integer (parsed from AsyncStorage)
+    coach_mode             | syncSettingsToSupabase():363| String "calm"/"strict"/"distractor"
+    dns_shield_installed   | syncSettingsToSupabase():364| Boolean
+    updated_at             | syncSettingsToSupabase():365| ISO string
+
+  Storage bucket: "avatars" (via supabase.storage)
+    Function uploadAvatar():508 — uploads a JPEG blob keyed by userId + ".jpg"
+    Function getAvatarUrl():531 — retrieves public URL for that key
+    These are stored in Supabase Storage, not in a DB table, but are still
+    sent to Supabase's infrastructure.
+
+================================================================================
+3. DATA SENT TO THIRD-PARTY SERVICES
+================================================================================
+
+  3.1 PostHog (posthog-react-native)
+      - Init: utils/analytics.ts:9-13
+        Host: https://us.i.posthog.com
+        Identifies device via: identifyUser(deviceId, traits) at line 52
+        Traits sent: deviceId as distinct_id, plus optional traits:
+          $name, $email, member_since, gender, age_group, quitting_reason,
+          coach_mode, platform="ios", app="reclaim"
+        Events captured (all in analytics.ts):
+          app_opened         (current_streak, checked_in_today, shield_active)
+          app_backgrounded   (no properties)
+          onboarding_started, onboarding_step_completed, onboarding_completed,
+          onboarding_abandoned
+          screen_viewed      (screen name + optional properties)
+          check_in_opened, check_in_completed (mood, trigger), check_in_skipped
+          streak_milestone_reached (streak_days, milestone)
+          streak_reset       (previous_streak_days, reason)
+          relapse_modal_opened, relapse_denied, relapse_recorded
+          panic_button_pressed, panic_completed, panic_abandoned
+          shield_enabled, shield_disabled, shield_install_started,
+          shield_install_confirmed
+          coach_session_started, coach_message_sent, coach_mode_changed
+          stats_viewed, stats_time_range_changed
+          settings_opened, panic_duration_changed, notifications_toggled,
+          profile_updated
+          paywall_shown, paywall_dismissed, subscription_started,
+          subscription_cancelled, free_trial_started
+
+      PostHog is purely first-party in-app analytics. No advertising
+      identifier (IDFA/IDFV) is passed. The device_id used is the app's
+      own generated/ vendor identifier from expo-application. No cross-app
+      tracking, no attribution, no ads.
+
+  3.2 Sentry (sentry/react-native)
+      - Init: App.tsx:109-131
+        DSN: sentry.io (org: o4511331120447488, project: 4511331122413568)
+        sendDefaultPii: false
+        enableLogs: false
+        beforeSend filter strips breadcrumbs from sensitive screens.
+      - No Sentry.setUser() calls found anywhere.
+      - Sentry usage (all in utils/supabase.ts):
+        Sentry.addBreadcrumb() — during Apple sign-in flow only
+        Sentry.captureMessage() — on Apple sign-in errors
+        Sentry.captureException() — on Apple sign-in errors
+      - App.tsx:370 — Sentry.captureException in error boundary (component stack)
+      - No performance/tracing configuration. Only default error tracking.
+
+  3.3 Groq (via Supabase Edge Function proxy)
+      - utils/coachApi.ts:86 — fetch() to SUPABASE_URL/functions/v1/groq-proxy
+        Sends: message history (role, content) + system prompt
+        The call goes to Supabase first, which proxies to Groq (an AI provider).
+        Supabase sees the request/response. Groq receives plaintext chat messages.
+        NO user name, email, device_id, or any identifier is sent in the request
+        body — only the conversation text and system prompt.
+
+  3.4 Apple Authentication (expo-apple-authentication)
+      - utils/supabase.ts:80 — sends credential to Apple's servers via native
+        iOS framework. This is standard Sign In with Apple.
+      - Credential identityToken is then sent to Supabase auth (linkIdentity at
+        line 110 and signInWithIdToken at line 163) — both to Supabase's auth
+        endpoints, not directly to Apple.
+
+  3.5 No other third-party SDKs found
+      - No Firebase, no Amplitude, no Mixpanel, no AppsFlyer, no Adjust,
+        no Braze, no Segment, no Facebook SDK.
+
+================================================================================
+4. LOCAL-ONLY DATA (AsyncStorage / SecureStore — NEVER sent to any external service)
+================================================================================
+
+  These keys exist in AsyncStorage or SecureStore but are NEVER read by any
+  sync/analytics/API function — they remain purely on-device.
+
+  Key                                         | File (stored/read by)
+  --------------------------------------------|------------------------------
+  @reclaim_profile_image                      | ProfileView.tsx:137
+  userProfile (JSON blob)                     | blockerStorage.ts:202 (onboarding profile)
+  @reclaim_checkin_history                    | statsStorage.ts, supabase.ts (restore only)
+  @reclaim_relapse_history                    | statsStorage.ts, supabase.ts (restore only)
+  @reclaim_panic_sessions                     | statsStorage.ts, supabase.ts (restore only)
+  @reclaim_active_panic_session_id            | statsStorage.ts, familyControls.ts
+  @reclaim_panic_end_timestamp                | statsStorage.ts, familyControls.ts
+  @reclaim_panic_grace_end                    | statsStorage.ts (key defined)
+  @reclaim_panic_grace_start                  | statsStorage.ts (key defined)
+  @reclaim_grace_session_id                   | statsStorage.ts (key defined)
+  @reclaim_panic_pending_verdict              | statsStorage.ts
+  @reclaim_dns_profile_status                 | shieldManager.ts
+  @reclaim_os_level_enabled                   | shieldManager.ts
+  @reclaim_self_heal_pending                  | shieldManager.ts
+  @reclaim_layer_statuses                     | shieldManager.ts
+  @reclaim_last_verified_at                   | shieldManager.ts
+  @reclaim_blocker_enabled                    | blockerStorage.ts
+  @reclaim_blocker_schedule_mode              | blockerStorage.ts
+  @reclaim_blocker_custom_start_hour          | blockerStorage.ts
+  @reclaim_blocker_custom_end_hour            | blockerStorage.ts
+  @reclaim_blocker_categories                 | blockerStorage.ts
+  @reclaim_blocker_event_log                  | blockerStorage.ts
+  @reclaim_uninstall_prevention_enabled       | uninstallPrevention.ts
+  @reclaim_panic_app_selection_enabled        | uninstallPrevention.ts
+  @reclaim_watchdog_last_alert                | watchdog.ts
+  @reclaim_watchdog_last_score                | watchdog.ts
+  @reclaim_watchdog_enabled                   | watchdog.ts
+  @reclaim_notif_* (6 keys)                   | notificationManager.ts
+  @reclaim_user_id                            | supabase.ts: (cache of auth uid)
+  currentChapterIndex, currentChapterDay,     | userProgress.ts
+    chapterProgress, totalRelapseCount,
+    lastCheckInDate, lastRelapseDate,
+    lastProgressDate, memberSinceDate,
+    riskHour, aiCoachMode, defaultPanicDuration,
+    appNotifications, currentStreak, longestStreak
+  selectedGender, selectedAge,                | App.tsx:469 (onboarding)
+    quittingReason, selectedCoach             | App.tsx (onboarding)
+  streakStartDate                             | statsStorage.ts, userProgress.ts
+  @reclaim_panic_sessions (full list)         | statsStorage.ts (read/write only)
+  blocker_is_permanent, @reclaim_blocker_unblock_at | shieldManager.ts:394-395
+  panic_selected_apps, panicAppsSelected      | GrantPermissionsScreen.tsx:236
+  @reclaim_current_streak_start,              | profileStorage.ts
+    @reclaim_signup_date, userAvatarImageData | profileStorage.ts
+
+  IMPORTANT DISTINCTION:
+  Some of these keys (checkin/relapse/panic history) ARE synced to Supabase
+  stats table at write time, BUT they are also read back from Supabase during
+  restore (supabase.ts:restoreFromSupabase). The "restore" function reads from
+  Supabase and writes BACK to AsyncStorage. So while these are stored locally,
+  they are ALSO sent to Supabase at write time and re-downloaded at restore time.
+
+  The truly local-only keys (never uploaded to any server) are:
+    - @reclaim_blocker_* keys (blocker configuration)
+    - @reclaim_notif_* keys (notification schedule tracking)
+    - @reclaim_watchdog_* keys (watchdog state)
+    - @reclaim_dns_profile_status, @reclaim_os_level_enabled
+    - @reclaim_self_heal_pending, @reclaim_layer_statuses, @reclaim_last_verified_at
+    - @reclaim_uninstall_prevention_enabled, @reclaim_panic_app_selection_enabled
+    - @reclaim_active_panic_session_id, @reclaim_panic_end_timestamp
+    - @reclaim_panic_grace_*, @reclaim_grace_session_id, @reclaim_panic_pending_verdict
+    - @reclaim_profile_image
+    - userProfile (onboarding JSON blob)
+    - blocker_is_permanent, @reclaim_blocker_unblock_at
+
+================================================================================
+5. IDENTIFIERS
+================================================================================
+
+  5.1 Auth UID (from Supabase anonymous or Apple-linked auth)
+      - Created by: supabase.ts:36 (signInAnonymously) or linked via Apple
+      - Stored in: AsyncStorage key "@reclaim_user_id" (supabase.ts:43)
+      - Used as: "device_id" in all Supabase table writes (users, streaks,
+        stats, settings). Also used as the filename for avatar uploads.
+
+  5.2 Device ID (iOS identifierForVendor)
+      - Created by: supabase.ts:21-28 — getDeviceId()
+        Calls Application.getIosIdForVendorAsync(), falls back to
+        `device_${Date.now()}`
+      - Stored in: AsyncStorage key "@reclaim_device_id"
+      - This is distinct from the auth UID.
+      - Used as: fallback user ID when anonymous auth fails (supabase.ts:39,47,51)
+      - NOTE: App.tsx:466 reads AsyncStorage key "deviceId" (no @reclaim prefix)
+        which is a DIFFERENT key from the one set in supabase.ts. This may be an
+        orphan from an older onboarding flow.
+
+  5.3 PostHog distinct_id
+      - analytics.ts:52 — client.identify(deviceId, traits)
+      - Uses the device_id passed from App.tsx:477, which reads from
+        AsyncStorage key "deviceId" (see note above — may be stale/orphaned).
+      - Not a true advertising identifier. This is the app's own generated ID
+        or the iOS identifierForVendor. Not IDFA.
+
+  5.4 No advertising identifiers (IDFA)
+      - expo-ads, expo-tracking-transparency, or any ad-related library is
+        NOT in package.json. No references to ASIdentifierManager or
+        advertisingIdentifier found.
+
+  5.5 Apple Identity Token
+      - Used at runtime during sign-in (supabase.ts:110,163) but not persisted
+        beyond the sign-in flow. Not stored in AsyncStorage or SecureStore.
+
+================================================================================
+6. PHOTO/MEDIA ACCESS
+================================================================================
+
+  Photo library access is used SOLELY for avatar/profile picture selection.
+
+  File: screens/ProfileView.tsx:115-184
+  Function: handlePickAvatar()
+  - Calls ImagePicker.requestMediaLibraryPermissionsAsync() at line 118,159
+  - Calls ImagePicker.launchImageLibraryAsync() at line 121,161
+  - mediaTypes: ImagePicker.MediaTypeOptions.Images only
+  - allowsEditing: true (square crop)
+  - The selected image is base64-encoded and:
+    a) Stored locally in AsyncStorage key "@reclaim_profile_image" (line 137)
+       and "userAvatarImageData" (profileStorage.ts)
+    b) Uploaded to Supabase Storage bucket "avatars" via uploadAvatar()
+       (profileStorage.ts:57 → supabase.ts:502-526)
+
+  NO video access, NO camera roll browsing beyond the single image picker,
+  NO camera capture functionality found.
+
+================================================================================
+7. HEALTH/FITNESS APIs
+================================================================================
+
+  NOT USED. Zero references found to:
+  - HealthKit / HKHealthStore
+  - CMMotionActivity / CMPedometer
+  - expo-health / expo-sensors (not in package.json)
+  - Any motion or fitness framework
+
+================================================================================
+8. CONTACTS
+================================================================================
+
+  NOT USED despite NSContactsUsageDescription being present in Info.plist.
+
+  The expo-contacts package IS in package.json (line 28) but a thorough search
+  of all .ts/.tsx files in the screens/ directory found ZERO imports or calls
+  to expo-contacts' API. The Info.plist string claims "reach accountability
+  partners" but no accountability partner feature exists in the codebase.
+
+  This is a DEAD permission — remove both the expo-contacts dependency and
+  the NSContactsUsageDescription key from Info.plist before submission.
+
+================================================================================
+9. LOCATION
+================================================================================
+
+  NOT USED. Zero references found to:
+  - CoreLocation / CLLocationManager
+  - expo-location (not in package.json)
+  - Any geolocation API
+  - NSLocationWhenInUseUsageDescription or any location plist key
+
+================================================================================
+10. ANALYTICS/TRACKING
+================================================================================
+
+  SDK: PostHog (self-hosted on us.i.posthog.com)
+  Init file: utils/analytics.ts:6-20
+
+  Tracking model:
+  - First-party only. No cross-app tracking.
+  - No advertising identifier (IDFA/IDFV) is passed to PostHog.
+  - Identification uses the app's own device_id (from AsyncStorage key
+    "deviceId", which may equal iOS identifierForVendor or a generated ID).
+    See section 5.2 for the discrepancy between storage keys.
+  - No setPersonProperties for anything beyond the traits listed in section 3.1
+
+  Events tracked: ~30 events covering app lifecycle, onboarding, check-in,
+  streak, relapse, panic button, shield, AI coach, settings, and paywall.
+  (Full list in section 3.1 above.)
+
+  PostHog configuration:
+  - flushInterval: 10 seconds
+  - flushAt: 20 events
+  - No custom capture endpoint, no proxy
+
+  Data sent with each event: event name, timestamp, and the properties
+  documented in section 3.1. The device_id is the distinct_id.
+
+  RESET function available: analytics.ts:55 — client.reset() for user logout.
+
+================================================================================
+11. CRASH/DIAGNOSTIC DATA (Sentry)
+================================================================================
+
+  SDK: @sentry/react-native ^8.10.0
+  Init: App.tsx:109-131
+
+  Configuration:
+    dsn: https://65ec470b0a740d1f87e6167dad540946@o4511331120447488.ingest.us.sentry.io/4511331122413568
+    sendDefaultPii: false        ← PII explicitly disabled
+    enableLogs: false            ← Console logs not sent
+    beforeSend: strips breadcrumbs from sensitive screens (matching regex
+      SENSITIVE_SCREEN_RE = /Masturbation|SexualFantasy|UrgeIntensity|
+      RelationshipImpact|Relapse|Panic/)
+
+  What Sentry captures:
+  - Unhandled JS errors (automatically)
+  - Native crashes (automatically via react-native bridge)
+  - Sentry.captureException(e) — called from supabase.ts:194 (Apple sign-in)
+    and App.tsx:370 (error boundary)
+  - Sentry.captureMessage(msg, "error") — called from supabase.ts:124,169
+    (Apple sign-in error conditions)
+  - Sentry.addBreadcrumb() — called from supabase.ts during Apple sign-in flow
+    (lines 87, 102, 118, 126, 133, 170, 177)
+
+  What Sentry does NOT capture (confirmed by code search):
+  - NO Sentry.setUser() — no user email, name, or ID is set as Sentry user context
+  - NO performance/tracing — no sentry/tracing import, no BrowserTracing, no
+    startTransaction, no configureScope for performance
+  - NO custom tags or contexts beyond what's in breadcrumbs
+
+  Summary: Sentry operates in minimal configuration — crashes only, no PII,
+  no performance traces, no user identity attached.
+
+================================================================================
+APPENDIX: Entitlements (ios/reclaimapp/reclaimapp.entitlements)
+================================================================================
+  Key                                         | Purpose
+  --------------------------------------------|------------------------------
+  aps-environment (production)                | Push notifications (remote, though
+                                               | notifications appear to be scheduled
+                                               | locally via expo-notifications, not
+                                               | remote push. This may be vestigial or
+                                               | required by expo-notifications.)
+  com.apple.developer.applesignin (Default)   | Sign In with Apple
+  com.apple.developer.family-controls (true)  | Screen Time / Family Controls API
+  com.apple.security.application-groups       | App Group for shared UserDefaults
+    (group.com.reclaim.recovery)               | between main app + extensions
+
+================================================================================
+END OF REPORT
+================================================================================

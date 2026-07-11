@@ -12,7 +12,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.reclaim.recovery",
       "infoPlist": {
-        "NSContactsUsageDescription": "Reclaim needs access to your contacts to quickly reach your accountability partners during moments of struggle.",
+        "ITSAppUsesNonExemptEncryption": false,
         "NSUserNotificationsUsageDescription": "Reclaim sends you daily check-in reminders and celebrates your milestones to keep you motivated.",
         "NSPhotoLibraryUsageDescription": "Reclaim needs access to your photo library to set your profile picture",
         "CFBundleDisplayName": "Reclaim"
