@@ -527,8 +527,8 @@ export default Sentry.wrap(function App() {
   }, []);
 
   return (
-    <SuperwallProvider apiKeys={{ ios: process.env.EXPO_PUBLIC_SUPERWALL_API_KEY_IOS }}>
     <ErrorBoundary>
+    <SuperwallProvider apiKeys={{ ios: process.env.EXPO_PUBLIC_SUPERWALL_API_KEY_IOS ?? "" }}>
     <BlockerProvider>
       <NavigationIndependentTree>
         <NavigationContainer
@@ -664,8 +664,8 @@ export default Sentry.wrap(function App() {
         </NavigationContainer>
       </NavigationIndependentTree>
     </BlockerProvider>
-    </ErrorBoundary>
     </SuperwallProvider>
+    </ErrorBoundary>
   );
 });
 
