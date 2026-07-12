@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { usePlacement } from "expo-superwall";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type RootStackParamList = {
@@ -122,6 +123,9 @@ const OnboardingResultScreen: React.FC = () => {
   const [userName, setUserName] = useState<string>("");
   const freedomDateLabel = getFreedomDateLabel();
   const floatAnim = useRef(new Animated.Value(0)).current;
+  const { registerPlacement } = usePlacement({
+    onError: (err) => console.error("Superwall placement error:", err),
+  });
 
   useEffect(() => {
     const loadUserName = async () => {
@@ -158,11 +162,15 @@ const OnboardingResultScreen: React.FC = () => {
 
   const displayName = userName.trim() || "Friend";
 
-  const handleContinue = () => {
-    // TODO: SUPERWALL — trigger paywall here before navigating
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "MainDashboard" as never }],
+  const handleContinue = async () => {
+    await registerPlacement({
+      placement: "onboarding_complete",
+      feature: () => {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "MainDashboard" as never }],
+        });
+      },
     });
   };
 

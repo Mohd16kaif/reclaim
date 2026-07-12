@@ -102,6 +102,7 @@ import UrgeIntensityScreen from "./screens/UrgeIntensityScreen";
 import UrgeLoopScreen from "./screens/UrgeLoopScreen";
 import UrgeResponseScreen from "./screens/UrgeResponseScreen";
 import WelcomeScreen from "./screens/WelcomeScreen";
+import SuperwallProvider from "expo-superwall";
 import * as Sentry from '@sentry/react-native';
 
 const SENSITIVE_SCREEN_RE = /Masturbation|SexualFantasy|UrgeIntensity|RelationshipImpact|Relapse|Panic/;
@@ -526,6 +527,7 @@ export default Sentry.wrap(function App() {
   }, []);
 
   return (
+    <SuperwallProvider apiKeys={{ ios: process.env.EXPO_PUBLIC_SUPERWALL_API_KEY_IOS }}>
     <ErrorBoundary>
     <BlockerProvider>
       <NavigationIndependentTree>
@@ -663,6 +665,7 @@ export default Sentry.wrap(function App() {
       </NavigationIndependentTree>
     </BlockerProvider>
     </ErrorBoundary>
+    </SuperwallProvider>
   );
 });
 
