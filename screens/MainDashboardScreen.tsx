@@ -589,37 +589,39 @@ syncStreakToSupabase();
         sunday.setHours(23, 59, 59, 999);
 
         const [
-          panicHistoryStr,
           totalRelapseStr,
           blockEventLogStr,
           defaultPanicDurationStr,
           blockerEnabledStr,
         ] = await Promise.all([
-          AsyncStorage.getItem("@reclaim_panic_history"),
-          AsyncStorage.getItem("@reclaim_total_relapse_count"),
+          AsyncStorage.getItem("totalRelapseCount"),
           AsyncStorage.getItem("@reclaim_blocker_event_log"),
           AsyncStorage.getItem("defaultPanicDuration"),
           AsyncStorage.getItem("@reclaim_blocker_enabled"),
         ]);
 
-        const panicHistory = panicHistoryStr
-          ? JSON.parse(panicHistoryStr).map((p: any) => p.timestamp || p)
-          : [];
-        const blockEventLog = blockEventLogStr
-          ? JSON.parse(blockEventLogStr)
-          : [];
+        let blockEventLog = [];
+        if (blockEventLogStr) {
+          try {
+            blockEventLog = JSON.parse(blockEventLogStr);
+          } catch (e) {
+            console.warn("[loadSummaryStats] Failed to parse blockEventLog:", e);
+            blockEventLog = [];
+          }
+        }
 
         const defaultPanicDurationSec = defaultPanicDurationStr
           ? parseInt(defaultPanicDurationStr, 10)
-          : 15 * 60;
+          : 30 * 60;
 
         const totalRelapseCount = totalRelapseStr
           ? parseInt(totalRelapseStr, 10)
           : 0;
         const blockerEnabled = blockerEnabledStr !== "false";
 
-        const panicThisWeek = panicHistory.filter((ts: number) => {
-          const d = new Date(ts);
+        const allPanicSessions = await getPanicSessions();
+        const panicThisWeek = allPanicSessions.filter((s) => {
+          const d = new Date(s.startTimestamp);
           return d >= monday && d <= sunday;
         });
 
@@ -840,8 +842,13 @@ syncStreakToSupabase();
       const loadUnreadCount = async () => {
         const stored = await AsyncStorage.getItem("appNotifications");
         if (stored) {
-          const notifs = JSON.parse(stored);
-          setUnreadCount(notifs.filter((n: { read: boolean }) => !n.read).length);
+          try {
+            const notifs = JSON.parse(stored);
+            setUnreadCount(notifs.filter((n: { read: boolean }) => !n.read).length);
+          } catch (e) {
+            console.warn("[loadUnreadCount] Failed to parse appNotifications:", e);
+            setUnreadCount(0);
+          }
         }
       };
       await loadUnreadCount();

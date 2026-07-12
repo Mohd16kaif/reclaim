@@ -11,7 +11,7 @@ const PROFILE_KEYS = {
 
 // Used elsewhere in the app already (dashboard/stats).
 const DASHBOARD_KEYS = {
-  CURRENT_STREAK_START: '@reclaim_current_streak_start', // ISO string
+  CURRENT_STREAK_START: 'streakStartDate', // ISO string
   SIGNUP_DATE: '@reclaim_signup_date', // ISO string
 } as const;
 

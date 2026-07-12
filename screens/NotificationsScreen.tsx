@@ -97,10 +97,18 @@ const NotificationsScreen: React.FC = () => {
 
     // Load existing notifications to avoid duplicates
     const stored = await AsyncStorage.getItem('appNotifications');
-    const existing: AppNotification[] = stored ? JSON.parse(stored) : [];
+    let existing: AppNotification[] = [];
+    if (stored) {
+      try {
+        existing = JSON.parse(stored);
+      } catch (e) {
+        console.warn("[generateNotifications] Failed to parse appNotifications:", e);
+        existing = [];
+      }
+    }
 
     // Type 1: Streak Milestone
-    const currentStreakStr = await AsyncStorage.getItem('@reclaim_current_streak_start');
+    const currentStreakStr = await AsyncStorage.getItem('streakStartDate');
     const lastStreakNotifiedStr = await AsyncStorage.getItem('@reclaim_last_streak_notified');
     const lastStreakNotified = lastStreakNotifiedStr ? parseInt(lastStreakNotifiedStr, 10) : 0;
 
@@ -153,7 +161,7 @@ const NotificationsScreen: React.FC = () => {
     }
 
     // Type 3: Risk Time Alert
-    const riskHourStr = await AsyncStorage.getItem('@reclaim_risk_hour');
+    const riskHourStr = await AsyncStorage.getItem('@reclaim_notif_risk_hour');
     const currentHour = new Date().getHours();
     const alreadyHasRiskNotif = existing.some(
       (n) => n.type === 'risk' && isToday(n.timestamp)
@@ -188,11 +196,17 @@ const NotificationsScreen: React.FC = () => {
     }
 
     // Type 5: Chapter Milestone
-    const chapterProgressStr = await AsyncStorage.getItem('@reclaim_chapter_progress');
+    const chapterProgressStr = await AsyncStorage.getItem('chapterProgress');
     const lastChapterNotified = await AsyncStorage.getItem('@reclaim_last_chapter_notified');
 
     if (chapterProgressStr) {
-      const progress = JSON.parse(chapterProgressStr);
+      let progress: any[] = [];
+      try {
+        progress = JSON.parse(chapterProgressStr);
+      } catch (e) {
+        console.warn("[generateNotifications] Failed to parse chapterProgress:", e);
+        progress = [];
+      }
       const completedChapter = progress.find(
         (p: { status: string; chapter: number }) => p.status === 'completed'
       );
@@ -218,8 +232,8 @@ const NotificationsScreen: React.FC = () => {
       : 999;
 
     if (daysSinceInsight >= 7) {
-      const riskHour = await AsyncStorage.getItem('@reclaim_risk_hour');
-      const totalRelapseCount = await AsyncStorage.getItem('@reclaim_total_relapse_count');
+      const riskHour = await AsyncStorage.getItem('@reclaim_notif_risk_hour');
+      const totalRelapseCount = await AsyncStorage.getItem('totalRelapseCount');
 
       let subtitle = 'Your recovery data has updated.';
       if (riskHour) {

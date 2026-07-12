@@ -359,7 +359,7 @@ export const syncSettingsToSupabase = async (): Promise<void> => {
     const { error } = await supabase.from("settings").upsert(
       {
         device_id: deviceId,
-        panic_duration_minutes: parseInt(panicDuration ?? "15", 10),
+        panic_duration_minutes: parseInt(panicDuration ?? "30", 10),
         coach_mode: coachMode ?? "calm",
         dns_shield_installed: dnsInstalled === "installed",
         updated_at: new Date().toISOString(),

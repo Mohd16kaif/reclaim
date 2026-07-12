@@ -52,7 +52,7 @@ export type StatsTimeRange = "Day" | "Week" | "Month";
 
 export const getUserPanicDuration = async (): Promise<number> => {
   const raw = await AsyncStorage.getItem("defaultPanicDuration");
-  if (!raw) return 15; // default 15 minutes
+  if (!raw) return 30; // default 30 minutes (matches app-wide default)
   const value = parseInt(raw, 10);
   // defaultPanicDuration is stored in SECONDS (e.g. 900 = 15 min, 1800 = 30 min)
   // Convert to minutes for all stats calculations

@@ -371,7 +371,13 @@ const [panicAppSelectionLoading, setPanicAppSelectionLoading] = useState(false);
       const loadNotifPrefs = async () => {
         const saved = await AsyncStorage.getItem(NOTIF_PREFS_KEY);
         if (!saved || !mounted) return;
-        const prefs = JSON.parse(saved);
+        let prefs: any = {};
+        try {
+          prefs = JSON.parse(saved);
+        } catch (e) {
+          console.warn("[loadNotifPrefs] Failed to parse notif prefs:", e);
+          prefs = {};
+        }
         setDailyCheckIn(prefs.dailyCheckIn ?? false);
         setMotivationReminder(prefs.motivationReminder ?? false);
         setRiskAlert(prefs.riskAlert ?? false);
@@ -499,7 +505,15 @@ const [panicAppSelectionLoading, setPanicAppSelectionLoading] = useState(false);
     setters[key](val);
 
     const saved = await AsyncStorage.getItem(NOTIF_PREFS_KEY);
-    const prefs = saved ? JSON.parse(saved) : {};
+    let prefs: any = {};
+    if (saved) {
+      try {
+        prefs = JSON.parse(saved);
+      } catch (e) {
+        console.warn("[handleNotifToggle] Failed to parse notif prefs:", e);
+        prefs = {};
+      }
+    }
     prefs[key] = val;
     await AsyncStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(prefs));
 
