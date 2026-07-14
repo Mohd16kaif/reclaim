@@ -182,9 +182,43 @@ export const signInWithApple = async (): Promise<AppleSignInResult> => {
     }
 
     if (signInData?.user?.id) {
-      // Update the cached user id to the ORIGINAL account's uid, replacing
+      // Update the cached user id to the account's uid, replacing
       // whatever anonymous uid was cached before.
       await AsyncStorage.setItem("@reclaim_user_id", signInData.user.id);
+
+      // signInWithIdToken creates a brand-new user if Supabase has never
+      // seen this Apple identity before — it does NOT guarantee this is a
+      // returning user. Detect a genuinely fresh signup by comparing
+      // created_at and last_sign_in_at: for a new user these are set
+      // within milliseconds of each other in the same request; for a
+      // real returning user, last_sign_in_at will be meaningfully later
+      // than created_at (the original account creation time).
+      const createdAt = signInData.user.created_at
+        ? new Date(signInData.user.created_at).getTime()
+        : 0;
+      const lastSignInAt = signInData.user.last_sign_in_at
+        ? new Date(signInData.user.last_sign_in_at).getTime()
+        : 0;
+      const isFreshSignup = Math.abs(lastSignInAt - createdAt) < 5000; // 5s tolerance
+
+      if (isFreshSignup) {
+        console.log("[Supabase] signInWithIdToken created a NEW user (not actually returning):", signInData.user.id);
+
+        if (credential.email) {
+          await setUserEmail(credential.email);
+        }
+        if (credential.fullName?.givenName) {
+          const fullName = [credential.fullName.givenName, credential.fullName.familyName]
+            .filter(Boolean)
+            .join(" ");
+          await setUserName(fullName);
+        }
+
+        await syncUserToSupabase().catch((e) => console.log("[Supabase] eager post-signup sync failed:", e));
+
+        return { status: "linked", isNewLink: true };
+      }
+
       console.log("[Supabase] Signed into existing Apple-linked account:", signInData.user.id);
       return { status: "signed_in_existing_account" };
     }
