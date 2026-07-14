@@ -4,6 +4,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Animated,
   Image,
@@ -313,6 +314,7 @@ const SettingsToggleRow = ({
   subtitle,
   value,
   onValueChange,
+  loading,
 }: {
   icon: React.ReactNode;
   iconBackground: string;
@@ -320,6 +322,7 @@ const SettingsToggleRow = ({
   subtitle?: string;
   value: boolean;
   onValueChange: (val: boolean) => void;
+  loading?: boolean;
 }) => (
   <View style={styles.settingsRow}>
     <View style={[styles.rowIconCircle, { backgroundColor: iconBackground }]}>{icon}</View>
@@ -327,17 +330,23 @@ const SettingsToggleRow = ({
       <Text style={styles.rowTitle}>{title}</Text>
       {subtitle && <Text style={styles.rowSubtitle}>{subtitle}</Text>}
     </View>
-    <Switch
-      value={value}
-      onValueChange={(val) => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onValueChange(val);
-      }}
-      trackColor={{ false: '#E5E5EA', true: '#000000' }}
-      thumbColor="#FFFFFF"
-      ios_backgroundColor="#E5E5EA"
-      style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }] } : {}}
-    />
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      {loading && <ActivityIndicator size="small" color="#8E8E93" />}
+      <View style={{ opacity: loading ? 0.5 : 1 }}>
+        <Switch
+          value={value}
+          disabled={loading}
+          onValueChange={(val) => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onValueChange(val);
+          }}
+          trackColor={{ false: '#E5E5EA', true: '#000000' }}
+          thumbColor="#FFFFFF"
+          ios_backgroundColor="#E5E5EA"
+          style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }] } : {}}
+        />
+      </View>
+    </View>
   </View>
 );
 
@@ -689,6 +698,7 @@ const [panicAppSelectionLoading, setPanicAppSelectionLoading] = useState(false);
           subtitle="Active only during Panic Mode"
           value={uninstallPrevention}
           onValueChange={handleUninstallPreventionToggle}
+          loading={uninstallPreventionLoading}
         />
         <InsetDivider />
         <SettingsToggleRow
@@ -698,6 +708,7 @@ const [panicAppSelectionLoading, setPanicAppSelectionLoading] = useState(false);
           subtitle="Active only during Panic Mode"
           value={panicAppSelection}
           onValueChange={handlePanicAppSelectionToggle}
+          loading={panicAppSelectionLoading}
         />
         <InsetDivider />
         {uninstallPrevention && panicAppSelection && (

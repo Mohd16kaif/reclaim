@@ -25,6 +25,16 @@ import { getAvatarBase64Jpeg, setAvatarBase64Jpeg } from '../utils/profileStorag
 import { useUserProfile } from '../hooks/useUserProfile';
 import { loadUserProgress } from '../utils/userProgress';
 
+const formatMemberSince = (dateString: string): string => {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
 type RootStackParamList = {
   ProfileView: undefined;
 };
@@ -245,7 +255,7 @@ const ProfileView: React.FC = () => {
 
             <Text style={styles.userName}>{userName || '—'}</Text>
             <Text style={styles.memberSince}>
-              {memberSinceDate ? `Member since ${memberSinceDate}` : ''}
+              {memberSinceDate ? `Member since ${formatMemberSince(memberSinceDate)}` : ''}
             </Text>
           </View>
 
