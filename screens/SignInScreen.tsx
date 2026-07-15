@@ -10,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import {
+  getOrCreateUserId,
   signInWithApple,
   restoreFromSupabase,
   AppleSignInResult,
@@ -37,6 +38,10 @@ const SignInScreen: React.FC = () => {
   const runSignIn = async () => {
     setIsLoading(true);
     setErrorMessage(null);
+
+    // Ensure an anonymous session exists before linking Apple identity —
+    // linkIdentity requires an active session's JWT to attach to.
+    await getOrCreateUserId();
 
     const result: AppleSignInResult = await signInWithApple();
 

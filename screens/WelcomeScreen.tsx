@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useEvent } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
 import {
+  getOrCreateUserId,
   signInWithApple,
   restoreFromSupabase,
   syncUserToSupabase,
@@ -92,6 +93,10 @@ const WelcomeScreen: React.FC = () => {
   const handleGetStarted = async () => {
     if (isSigningIn) return;
     setIsSigningIn(true);
+
+    // Ensure an anonymous session exists before linking Apple identity —
+    // linkIdentity requires an active session's JWT to attach to.
+    await getOrCreateUserId();
 
     const result: AppleSignInResult = await signInWithApple();
 
