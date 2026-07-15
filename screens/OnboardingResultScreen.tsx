@@ -125,6 +125,21 @@ const OnboardingResultScreen: React.FC = () => {
   const floatAnim = useRef(new Animated.Value(0)).current;
   const { registerPlacement } = usePlacement({
     onError: (err) => console.error("Superwall placement error:", err),
+    onDismiss: (info, result) => {
+      if (result.type === "declined") {
+        registerPlacement({
+          placement: "discount_paywall_trigger",
+          feature: () => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "MainDashboard" as never }],
+            });
+          },
+        }).catch((err) => {
+          console.error("Discount placement error:", err);
+        });
+      }
+    },
   });
 
   useEffect(() => {
