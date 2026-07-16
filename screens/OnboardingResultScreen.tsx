@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { usePlacement } from "expo-superwall";
+import * as Sentry from "@sentry/react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type RootStackParamList = {
@@ -123,20 +124,26 @@ const OnboardingResultScreen: React.FC = () => {
   const [userName, setUserName] = useState<string>("");
   const freedomDateLabel = getFreedomDateLabel();
   const floatAnim = useRef(new Animated.Value(0)).current;
+  // TEMP DEBUG - remove after diagnosing paywall issue
   const { registerPlacement } = usePlacement({
-    onError: (err) => console.error("Superwall placement error:", err),
+    onError: (err) => {
+      Sentry.captureMessage("SUPERWALL_DEBUG onError fired: " + JSON.stringify(err), "error");
+    },
     onDismiss: (info, result) => {
+      Sentry.captureMessage("SUPERWALL_DEBUG onDismiss fired, result.type=" + result.type, "info");
       if (result.type === "declined") {
+        Sentry.captureMessage("SUPERWALL_DEBUG declined - registering discount placement", "info");
         registerPlacement({
           placement: "discount_paywall_trigger",
           feature: () => {
+            Sentry.captureMessage("SUPERWALL_DEBUG discount feature() fired", "info");
             navigation.reset({
               index: 0,
               routes: [{ name: "MainDashboard" as never }],
             });
           },
         }).catch((err) => {
-          console.error("Discount placement error:", err);
+          Sentry.captureMessage("SUPERWALL_DEBUG discount placement error: " + JSON.stringify(err), "error");
         });
       }
     },
@@ -178,15 +185,22 @@ const OnboardingResultScreen: React.FC = () => {
   const displayName = userName.trim() || "Friend";
 
   const handleContinue = async () => {
-    await registerPlacement({
-      placement: "onboarding_complete",
-      feature: () => {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "MainDashboard" as never }],
-        });
-      },
-    });
+    Sentry.captureMessage("SUPERWALL_DEBUG CTA tapped - calling registerPlacement", "info");
+    try {
+      await registerPlacement({
+        placement: "onboarding_complete",
+        feature: () => {
+          Sentry.captureMessage("SUPERWALL_DEBUG main feature() fired - user has access", "info");
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "MainDashboard" as never }],
+          });
+        },
+      });
+      Sentry.captureMessage("SUPERWALL_DEBUG registerPlacement call completed (awaited)", "info");
+    } catch (err) {
+      Sentry.captureMessage("SUPERWALL_DEBUG registerPlacement THREW: " + JSON.stringify(err), "error");
+    }
   };
 
   return (
