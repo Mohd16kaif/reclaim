@@ -122,6 +122,7 @@ const FiveStarsRow: React.FC = () => (
 const OnboardingResultScreen: React.FC = () => {
   const navigation = useNavigation<ScreenNavigationProp>();
   const [userName, setUserName] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(false);
   const freedomDateLabel = getFreedomDateLabel();
   const floatAnim = useRef(new Animated.Value(0)).current;
   // TEMP DEBUG - remove after diagnosing paywall issue
@@ -132,6 +133,8 @@ const OnboardingResultScreen: React.FC = () => {
     onDismiss: (info, result) => {
       Sentry.captureMessage("SUPERWALL_DEBUG onDismiss fired, result.type=" + result.type, "info");
       if (result.type === "declined") {
+        if (isProcessing) return;
+        setIsProcessing(true);
         Sentry.captureMessage("SUPERWALL_DEBUG declined - registering discount placement", "info");
         registerPlacement({
           placement: "discount_paywall_trigger",
@@ -144,6 +147,8 @@ const OnboardingResultScreen: React.FC = () => {
           },
         }).catch((err) => {
           Sentry.captureMessage("SUPERWALL_DEBUG discount placement error: " + JSON.stringify(err), "error");
+        }).finally(() => {
+          setIsProcessing(false);
         });
       }
     },
@@ -185,6 +190,8 @@ const OnboardingResultScreen: React.FC = () => {
   const displayName = userName.trim() || "Friend";
 
   const handleContinue = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
     Sentry.captureMessage("SUPERWALL_DEBUG CTA tapped - calling registerPlacement", "info");
     try {
       await registerPlacement({
@@ -200,6 +207,8 @@ const OnboardingResultScreen: React.FC = () => {
       Sentry.captureMessage("SUPERWALL_DEBUG registerPlacement call completed (awaited)", "info");
     } catch (err) {
       Sentry.captureMessage("SUPERWALL_DEBUG registerPlacement THREW: " + JSON.stringify(err), "error");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -459,7 +468,8 @@ const OnboardingResultScreen: React.FC = () => {
 
           <View style={styles.footer}>
             <TouchableOpacity
-              style={styles.cta}
+              disabled={isProcessing}
+              style={[styles.cta, isProcessing && { opacity: 0.6 }]}
               onPress={handleContinue}
               activeOpacity={0.85}
             >
