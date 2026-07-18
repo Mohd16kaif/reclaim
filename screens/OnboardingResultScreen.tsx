@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { usePlacement } from "expo-superwall";
+import { usePlacement, useSuperwall } from "expo-superwall";
 import * as Sentry from "@sentry/react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -121,6 +121,7 @@ const FiveStarsRow: React.FC = () => (
 
 const OnboardingResultScreen: React.FC = () => {
   const navigation = useNavigation<ScreenNavigationProp>();
+  const superwall = useSuperwall();
   const [userName, setUserName] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
   const freedomDateLabel = getFreedomDateLabel();
@@ -129,6 +130,18 @@ const OnboardingResultScreen: React.FC = () => {
   const { registerPlacement } = usePlacement({
     onError: (err) => {
       Sentry.captureMessage("SUPERWALL_DEBUG onError fired: " + JSON.stringify(err), "error");
+    },
+    onPaywallSkip: (params) => {
+      Sentry.captureMessage(
+        "SUPERWALL_DEBUG onPaywallSkip fired: " + JSON.stringify(params),
+        "error"
+      );
+    },
+    subscriptionStatusDidChange: (params) => {
+      Sentry.captureMessage(
+        "SUPERWALL_DEBUG subscriptionStatusDidChange fired: from=" + JSON.stringify(params.from) + " to=" + JSON.stringify(params.to),
+        "error"
+      );
     },
     onDismiss: (info, result) => {
       Sentry.captureMessage("SUPERWALL_DEBUG onDismiss fired, result.type=" + result.type, "info");
@@ -186,6 +199,27 @@ const OnboardingResultScreen: React.FC = () => {
     loop.start();
     return () => loop.stop();
   }, [floatAnim]);
+
+  useEffect(() => {
+    Sentry.captureMessage(
+      "SUPERWALL_DEBUG screen mounted, subscriptionStatus=" + JSON.stringify(superwall.subscriptionStatus),
+      "info"
+    );
+
+    superwall.getEntitlements()
+      .then((entitlements) => {
+        Sentry.captureMessage(
+          "SUPERWALL_DEBUG getEntitlements() on mount: " + JSON.stringify(entitlements),
+          "info"
+        );
+      })
+      .catch((err) => {
+        Sentry.captureMessage(
+          "SUPERWALL_DEBUG getEntitlements() FAILED on mount: " + JSON.stringify(err),
+          "error"
+        );
+      });
+  }, []);
 
   const displayName = userName.trim() || "Friend";
 
