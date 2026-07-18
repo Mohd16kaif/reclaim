@@ -190,14 +190,6 @@ const TrophyIcon = ({ color = '#FFFFFF' }: { color?: string }) => (
   </Svg>
 );
 
-// --- Credit Card icon (Subscription) ---
-const CreditCardIcon = ({ color = '#FFFFFF' }: { color?: string }) => (
-  <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-    <Rect x={1} y={4} width={22} height={16} rx={2} stroke={color} strokeWidth={2} />
-    <Path d="M1 10h22" stroke={color} strokeWidth={2} />
-  </Svg>
-);
-
 // --- Envelope icon (Contact Support) ---
 const EnvelopeIcon = ({ color = '#FFFFFF' }: { color?: string }) => (
   <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
@@ -484,12 +476,6 @@ const [panicAppSelectionLoading, setPanicAppSelectionLoading] = useState(false);
     }, [])
   );
 
-  // Stub action
-  const stubAction = useCallback((label: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Alert.alert(label, 'Coming soon in production build!');
-  }, []);
-
   const handleNotifToggle = useCallback(async (
     key: 'dailyCheckIn' | 'motivationReminder' | 'riskAlert' | 'milestoneAlert',
     val: boolean
@@ -751,18 +737,6 @@ const [panicAppSelectionLoading, setPanicAppSelectionLoading] = useState(false);
               title="Milestone Alert"
               value={milestoneAlert}
               onValueChange={(val) => handleNotifToggle('milestoneAlert', val)}
-            />
-            <InsetDivider />
-
-            {/* ============================================================ */}
-            {/* SUBSCRIPTION SECTION */}
-            {/* ============================================================ */}
-            <SectionHeader title="SUBSCRIPTION" />
-            <SettingsRow
-              icon={<CreditCardIcon color="#FFFFFF" />}
-              iconBackground="#30D158"
-              title="Manage Subscription"
-              onPress={() => stubAction('Manage Subscription')}
             />
             <InsetDivider />
 
