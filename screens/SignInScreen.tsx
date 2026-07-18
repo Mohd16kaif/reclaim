@@ -20,6 +20,7 @@ type RootStackParamList = {
   Splash: undefined;
   Welcome: undefined;
   OnboardingQuestion: { questionNumber: number; totalQuestions: number };
+  OnboardingResult: undefined;
   Home: undefined;
   SignIn: undefined;
   MainDashboard: undefined;
@@ -52,7 +53,7 @@ const SignInScreen: React.FC = () => {
       });
     } else if (result.status === "signed_in_existing_account") {
       await restoreFromSupabase();
-      navigation.replace("MainDashboard");
+      navigation.replace("OnboardingResult");
     } else if (result.status === "error") {
       setIsLoading(false);
       if (result.message === "User canceled sign in") {
