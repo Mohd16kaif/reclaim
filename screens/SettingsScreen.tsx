@@ -37,6 +37,7 @@ import {
   enablePanicAppSelection,
   disablePanicAppSelection,
 } from '../utils/uninstallPrevention';
+import { deleteAccount } from '../utils/supabase';
 
 const NOTIF_PREFS_KEY = '@reclaim_notif_prefs';
 
@@ -365,6 +366,7 @@ const [uninstallPrevention, setUninstallPrevention] = useState(false);
 const [uninstallPreventionLoading, setUninstallPreventionLoading] = useState(false);
 const [panicAppSelection, setPanicAppSelection] = useState(false);
 const [panicAppSelectionLoading, setPanicAppSelectionLoading] = useState(false);
+const [deletingAccount, setDeletingAccount] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -588,6 +590,38 @@ const [panicAppSelectionLoading, setPanicAppSelectionLoading] = useState(false);
     }
   }, [panicAppSelectionLoading]);
 
+  const handleDeleteAccount = useCallback(async () => {
+    if (deletingAccount) return;
+
+    Alert.alert(
+      'Delete Account',
+      'This action is permanent. Your streaks, stats, and settings will be erased and cannot be recovered.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setDeletingAccount(true);
+            const result = await deleteAccount();
+            setDeletingAccount(false);
+
+            if (result.success) {
+              Alert.alert('Account Deleted', 'Your account and all associated data have been removed.', [
+                {
+                  text: 'OK',
+                  onPress: () => navigation.reset({ index: 0, routes: [{ name: 'Splash' as never }] }),
+                },
+              ]);
+            } else {
+              Alert.alert('Something Went Wrong', result.error ?? 'Please try again.');
+            }
+          },
+        },
+      ],
+    );
+  }, [deletingAccount, navigation]);
+
   // ============================================================================
   // RENDER
   // ============================================================================
@@ -788,6 +822,14 @@ const [panicAppSelectionLoading, setPanicAppSelectionLoading] = useState(false);
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   navigation.navigate('TermsOfService');
 }}
+            />
+            <InsetDivider />
+            <SettingsRow
+              icon={<DocIcon color="#FF3B30" />}
+              iconBackground="#FFE5E5"
+              title={deletingAccount ? 'Deleting...' : 'Delete Account'}
+              hasChevron={!deletingAccount}
+              onPress={deletingAccount ? () => {} : handleDeleteAccount}
             />
 
             {/* Bottom spacing */}

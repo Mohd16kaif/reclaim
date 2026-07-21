@@ -570,3 +570,32 @@ export const getAvatarUrl = async (): Promise<string | null> => {
   }
 };
 
+export const deleteAccount = async (): Promise<
+  { success: true } | { success: false; error: string }
+> => {
+  try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      return { success: false, error: "No active session found." };
+    }
+
+    const { data, error } = await supabase.functions.invoke("delete-account", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+
+    if (error || !data?.success) {
+      console.log("[Supabase] deleteAccount invoke error:", error?.message ?? data?.error);
+      return { success: false, error: data?.error ?? error?.message ?? "Failed to delete account." };
+    }
+
+    await supabase.auth.signOut();
+    await AsyncStorage.multiRemove(["@reclaim_user_id", "@reclaim_device_id"]);
+
+    console.log("[Supabase] Account deleted successfully");
+    return { success: true };
+  } catch (e: any) {
+    console.log("[Supabase] deleteAccount error:", e.message);
+    return { success: false, error: e.message ?? "Unknown error" };
+  }
+};
+
