@@ -610,7 +610,10 @@ const [deletingAccount, setDeletingAccount] = useState(false);
               Alert.alert('Account Deleted', 'Your account and all associated data have been removed.', [
                 {
                   text: 'OK',
-                  onPress: () => navigation.reset({ index: 0, routes: [{ name: 'Splash' as never }] }),
+                  // Navigate to Welcome rather than Splash — SplashScreen reads AsyncStorage for the
+                  // onboarding-complete flag, which is redundant now that AsyncStorage is fully cleared,
+                  // and risks a race if that read happens before the clear has fully propagated.
+                  onPress: () => navigation.reset({ index: 0, routes: [{ name: 'Welcome' as never }] }),
                 },
               ]);
             } else {

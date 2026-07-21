@@ -589,7 +589,8 @@ export const deleteAccount = async (): Promise<
     }
 
     await supabase.auth.signOut();
-    await AsyncStorage.multiRemove(["@reclaim_user_id", "@reclaim_device_id"]);
+    // Fully wipe local cache (onboarding-complete flag, streaks, user id) so the app doesn't fall back to stale data and appear as if the account still exists
+    await AsyncStorage.clear();
 
     console.log("[Supabase] Account deleted successfully");
     return { success: true };
