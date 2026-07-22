@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -124,45 +124,71 @@ const OnboardingResultScreen: React.FC = () => {
   const superwall = useSuperwall();
   const [userName, setUserName] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const isProcessingRef = useRef(false);
   const freedomDateLabel = getFreedomDateLabel();
   const floatAnim = useRef(new Animated.Value(0)).current;
+
+  const resetProcessingState = useCallback(() => {
+    isProcessingRef.current = false;
+    setIsProcessing(false);
+  }, []);
+
+  const checkEntitlementAndNavigate = useCallback(async (): Promise<boolean> => {
+    try {
+      const entitlements = await superwall.getEntitlements();
+      const proActive = entitlements.active.some((e) => e.id === "pro");
+      if (proActive) {
+        Sentry.captureMessage("SUPERWALL_DEBUG entitlement confirmed — navigating to MainDashboard", "info");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "MainDashboard" as never }],
+        });
+        return true;
+      }
+      Sentry.captureMessage("SUPERWALL_DEBUG entitlement check failed — not navigating", "info");
+      return false;
+    } catch (err) {
+      Sentry.captureMessage("SUPERWALL_DEBUG getEntitlements() threw: " + JSON.stringify(err), "error");
+      return false;
+    }
+  }, [superwall, navigation]);
+
   // TEMP DEBUG - remove after diagnosing paywall issue
   const { registerPlacement } = usePlacement({
-    onError: (err) => {
-      Sentry.captureMessage("SUPERWALL_DEBUG onError fired: " + JSON.stringify(err), "error");
+    onError: (error) => {
+      Sentry.captureMessage("SUPERWALL_DEBUG onError fired: " + error, "error");
     },
-    onPaywallSkip: (params) => {
+    onSkip: (reason) => {
       Sentry.captureMessage(
-        "SUPERWALL_DEBUG onPaywallSkip fired: " + JSON.stringify(params),
-        "error"
-      );
-    },
-    subscriptionStatusDidChange: (params) => {
-      Sentry.captureMessage(
-        "SUPERWALL_DEBUG subscriptionStatusDidChange fired: from=" + JSON.stringify(params.from) + " to=" + JSON.stringify(params.to),
+        "SUPERWALL_DEBUG onSkip fired: " + JSON.stringify(reason),
         "error"
       );
     },
     onDismiss: (info, result) => {
       Sentry.captureMessage("SUPERWALL_DEBUG onDismiss fired, result.type=" + result.type, "info");
+      if (isProcessingRef.current) {
+        Sentry.captureMessage("SUPERWALL_DEBUG onDismiss skipped — already processing", "info");
+        return;
+      }
+      isProcessingRef.current = true;
+      setIsProcessing(true);
       if (result.type === "declined") {
-        if (isProcessing) return;
-        setIsProcessing(true);
         Sentry.captureMessage("SUPERWALL_DEBUG declined - registering discount placement", "info");
         registerPlacement({
           placement: "discount_paywall_trigger",
           feature: () => {
-            Sentry.captureMessage("SUPERWALL_DEBUG discount feature() fired", "info");
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "MainDashboard" as never }],
-            });
+            Sentry.captureMessage("SUPERWALL_DEBUG discount feature() fired — verifying entitlement", "info");
+            checkEntitlementAndNavigate();
           },
         }).catch((err) => {
           Sentry.captureMessage("SUPERWALL_DEBUG discount placement error: " + JSON.stringify(err), "error");
         }).finally(() => {
-          setIsProcessing(false);
+          Sentry.captureMessage("SUPERWALL_DEBUG discount placement finished — resetting state", "info");
+          resetProcessingState();
         });
+      } else {
+        Sentry.captureMessage("SUPERWALL_DEBUG onDismiss result.type=" + result.type + " — not navigating, resetting state", "info");
+        resetProcessingState();
       }
     },
   });
@@ -224,25 +250,26 @@ const OnboardingResultScreen: React.FC = () => {
   const displayName = userName.trim() || "Friend";
 
   const handleContinue = async () => {
-    if (isProcessing) return;
+    if (isProcessingRef.current) {
+      Sentry.captureMessage("SUPERWALL_DEBUG CTA tapped — already processing (ref guard)", "info");
+      return;
+    }
+    isProcessingRef.current = true;
     setIsProcessing(true);
     Sentry.captureMessage("SUPERWALL_DEBUG CTA tapped - calling registerPlacement", "info");
     try {
       await registerPlacement({
         placement: "onboarding_complete",
         feature: () => {
-          Sentry.captureMessage("SUPERWALL_DEBUG main feature() fired - user has access", "info");
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "MainDashboard" as never }],
-          });
+          Sentry.captureMessage("SUPERWALL_DEBUG main feature() fired — verifying entitlement", "info");
+          checkEntitlementAndNavigate();
         },
       });
       Sentry.captureMessage("SUPERWALL_DEBUG registerPlacement call completed (awaited)", "info");
     } catch (err) {
       Sentry.captureMessage("SUPERWALL_DEBUG registerPlacement THREW: " + JSON.stringify(err), "error");
     } finally {
-      setIsProcessing(false);
+      resetProcessingState();
     }
   };
 

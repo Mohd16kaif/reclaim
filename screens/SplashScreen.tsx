@@ -1,7 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { useSuperwall } from "expo-superwall";
 import { StatusBar } from "expo-status-bar";
+import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useState } from "react";
 import { AccessibilityInfo, Image, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -24,9 +26,10 @@ const ONBOARDING_COMPLETE_KEY = "@reclaim_onboarding_complete";
 
 const logoImage = require("../assets/images/reclaim-logo-app.png");
 
-export default function SplashScreen(): JSX.Element {
+export default function SplashScreen() {
   const navigation = useNavigation<SplashScreenNavigationProp>();
   const [reduceMotion, setReduceMotion] = useState(false);
+  const superwall = useSuperwall();
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -39,6 +42,21 @@ export default function SplashScreen(): JSX.Element {
 
   useEffect(() => {
     const timeout = setTimeout(async () => {
+      try {
+        const entitlements = await superwall.getEntitlements();
+        const proActive = entitlements.active.some((e) => e.id === "pro");
+        if (proActive) {
+          Sentry.captureMessage("SUPERWALL_DEBUG SplashScreen — returning subscriber detected, routing to MainDashboard", "info");
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "MainDashboard" }],
+          });
+          return;
+        }
+      } catch (err) {
+        Sentry.captureMessage("SUPERWALL_DEBUG SplashScreen — entitlement check failed: " + JSON.stringify(err), "error");
+      }
+
       try {
         const completed = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
 
@@ -69,7 +87,7 @@ export default function SplashScreen(): JSX.Element {
     }, reduceMotion ? 0 : SPLASH_DURATION_MS);
 
     return () => clearTimeout(timeout);
-  }, [navigation, reduceMotion]);
+  }, [navigation, reduceMotion, superwall]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
