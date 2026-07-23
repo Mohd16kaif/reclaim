@@ -45,6 +45,7 @@ export default function SplashScreen() {
       try {
         const entitlements = await superwall.getEntitlements();
         const proActive = entitlements.active.some((e) => e.id === "pro");
+        console.log("SPLASH_ENTITLEMENTS_DEBUG:", JSON.stringify(entitlements, null, 2));
         if (proActive) {
           Sentry.captureMessage("SUPERWALL_DEBUG SplashScreen — returning subscriber detected, routing to MainDashboard", "info");
           navigation.reset({
