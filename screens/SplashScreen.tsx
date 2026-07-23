@@ -13,6 +13,7 @@ type RootStackParamList = {
   Splash: undefined;
   Welcome: undefined;
   MainDashboard: undefined;
+  OnboardingResult: undefined;
   PanicLock: { remainingSeconds: number } | undefined;
 };
 
@@ -75,7 +76,7 @@ export default function SplashScreen() {
         navigation.reset({
           index: 0,
           routes: [
-            { name: completed === "true" ? "MainDashboard" : "Welcome" },
+            { name: completed === "true" ? "OnboardingResult" : "Welcome" },
           ],
         });
       } catch {
