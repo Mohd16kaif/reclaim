@@ -30,7 +30,6 @@ workflows:
       - name: Install CocoaPods
         script: |
           cd ios
-          pod update lottie-ios Sentry --no-repo-update
           pod install
       - name: Set Xcode project to manual signing
         script: |
