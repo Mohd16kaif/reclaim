@@ -1,0 +1,2051 @@
+﻿import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  NavigationContainer,
+  NavigationIndependentTree,
+  useNavigationContainerRef,
+} from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import { BlurView } from "expo-blur";
+import * as Haptics from "expo-haptics";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  AccessibilityInfo,
+  Animated,
+  Image,
+  InteractionManager,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import "react-native-gesture-handler";
+import { BlockerProvider } from "./context/BlockerContext";
+import {
+  getTimeOfDay,
+  identifyUser,
+  initAnalytics,
+  trackAppOpened,
+  trackScreenViewed,
+} from "./utils/analytics";
+import { loadUserProgress } from "./utils/userProgress";
+
+// â”€â”€ Screen imports â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+import AICoachModeScreen from "./screens/AICoachModeScreen";
+import AlwaysOnBlockingScreen from "./screens/AlwaysOnBlockingScreen";
+import BlockerScreen from "./screens/BlockerScreen";
+import BoredomFrequencyScreen from "./screens/BoredomFrequencyScreen";
+import BuiltForConsistencyScreen from "./screens/BuiltForConsistencyScreen";
+import ChapterDetailScreen from "./screens/ChapterDetailScreen";
+import ChaptersScreen from "./screens/ChaptersScreen";
+import CoachScreen from "./screens/CoachScreen";
+import CompanionScreen from "./screens/CompanionScreen";
+import ContactSupportScreen from "./screens/ContactSupportScreen";
+import ContentEscalationScreen from "./screens/ContentEscalationScreen";
+import DateOfBirthPickerScreen from "./screens/DateOfBirthPickerScreen";
+import DefaultPanicDurationScreen from "./screens/DefaultPanicDurationScreen";
+import EducationScreen1 from "./screens/EducationScreen1";
+import EducationScreen2 from "./screens/EducationScreen2";
+import EducationScreen3 from "./screens/EducationScreen3";
+import EducationScreen4 from "./screens/EducationScreen4";
+import EducationScreen5 from "./screens/EducationScreen5";
+import FAQsScreen from "./screens/FAQsScreen";
+import FirstExposureAgeScreen from "./screens/FirstExposureAgeScreen";
+import GenderSelectionScreen from "./screens/GenderSelectionScreen";
+import GrantPermissionsScreen from "./screens/GrantPermissionsScreen";
+import HelpCenterScreen from "./screens/HelpCenterScreen";
+import HomeScreen from "./screens/HomeScreen";
+import InstantUrgeProtectionScreen from "./screens/InstantUrgeProtectionScreen";
+import LeaveRatingScreen from "./screens/LeaveRatingScreen";
+import LifeStatusScreen from "./screens/LifeStatusScreen";
+import MainDashboardScreen from "./screens/MainDashboardScreen";
+import MasturbationRelationshipScreen from "./screens/MasturbationRelationshipScreen";
+import MentalImpactInfoScreen from "./screens/MentalImpactInfoScreen";
+import NotificationsScreen from "./screens/NotificationsScreen";
+import OnboardingCarouselScreen from "./screens/OnboardingCarouselScreen";
+import OnboardingQuestionScreen from "./screens/OnboardingQuestionScreen";
+import OnboardingResultScreen from "./screens/OnboardingResultScreen";
+import PanicActivatedScreen from "./screens/PanicActivatedScreen";
+import PanicButtonInfoScreen from "./screens/PanicButtonInfoScreen";
+import PanicCoachScreen from "./screens/PanicCoachScreen";
+import PanicLockScreen from "./screens/PanicLockScreen";
+import PanicShieldScreen from "./screens/PanicShieldScreen";
+import PersonalizedPlanScreen from "./screens/PersonalizedPlanScreen";
+import PreviousAttemptScreen from "./screens/PreviousAttemptScreen";
+import PrivacyPolicyScreen from "./screens/PrivacyPolicyScreen";
+import ProfileView from "./screens/ProfileView";
+import QuittingReasonScreen from "./screens/QuittingReasonScreen";
+import ReclaimResultsInfoScreen from "./screens/ReclaimResultsInfoScreen";
+import ReducedContentExposureScreen from "./screens/ReducedContentExposureScreen";
+import ReferralSourceScreen from "./screens/ReferralSourceScreen";
+import RelationshipBenefitsInfoScreen from "./screens/RelationshipBenefitsInfoScreen";
+import RelationshipImpactScreen from "./screens/RelationshipImpactScreen";
+import RequestFeatureScreen from "./screens/RequestFeatureScreen";
+import ResultsAnalysisScreen from "./screens/ResultsAnalysisScreen";
+import SelfHealScreen from "./screens/SelfHealScreen";
+import SessionDurationScreen from "./screens/SessionDurationScreen";
+import SettingsScreen from "./screens/SettingsScreen";
+import SetupCompleteScreen from "./screens/SetupCompleteScreen";
+import SexualFantasyScreen from "./screens/SexualFantasyScreen";
+import ShieldStatusScreen from "./screens/ShieldStatusScreen";
+import SignInScreen from "./screens/SignInScreen";
+import SocialMediaTriggerScreen from "./screens/SocialMediaTriggerScreen";
+import SplashScreen from "./screens/SplashScreen";
+import StatsScreen from "./screens/StatsScreen";
+import StressFrequencyScreen from "./screens/StressFrequencyScreen";
+import SuggestiveImagesFilterScreen from "./screens/SuggestiveImagesFilterScreen";
+import SupportWhenNeededScreen from "./screens/SupportWhenNeededScreen";
+import TemptingAppsScreen from "./screens/TemptingAppsScreen";
+import TermsOfServiceScreen from "./screens/TermsOfServiceScreen";
+import UrgeIntensityScreen from "./screens/UrgeIntensityScreen";
+import UrgeLoopScreen from "./screens/UrgeLoopScreen";
+import UrgeResponseScreen from "./screens/UrgeResponseScreen";
+import WelcomeScreen from "./screens/WelcomeScreen";
+import { SuperwallProvider } from "expo-superwall";
+import * as Sentry from '@sentry/react-native';
+
+const SENSITIVE_SCREEN_RE = /Masturbation|SexualFantasy|UrgeIntensity|RelationshipImpact|Relapse|Panic/;
+
+Sentry.init({
+  dsn: 'https://65ec470b0a740d1f87e6167dad540946@o4511331120447488.ingest.us.sentry.io/4511331122413568',
+
+  // Hardened: do not send PII or verbose logs from a sensitive-domain app.
+  sendDefaultPii: false,
+  enableLogs: false,
+
+  beforeSend(event) {
+    if (event.breadcrumbs) {
+      event.breadcrumbs = event.breadcrumbs.filter((b: any) => {
+        const screen = b?.data?.screen;
+        if (typeof screen === 'string' && SENSITIVE_SCREEN_RE.test(screen)) {
+          return false;
+        }
+        return true;
+      });
+    }
+    return event;
+  },
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
+
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+type TabName = "Home" | "Stats" | "Blocker" | "AICoach" | "Profile";
+
+interface NavbarProps {
+  activeTab: TabName;
+  onTabChange: (tab: TabName) => void;
+  navigation: any;
+}
+
+// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const Stack = createStackNavigator();
+
+const TABS: TabName[] = ["Home", "Stats", "Blocker", "AICoach", "Profile"];
+
+const NAVBAR_VISIBLE_SCREENS = [
+  "MainDashboard",
+  "Stats",
+  "Blocker",
+  "AICoach",
+  "Profile",
+];
+
+const SKIP_TRACKING_SCREENS = ["Splash"];
+
+// â”€â”€ Transition â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const liquidGlassTransition = {
+  cardStyleInterpolator: ({ current }: any) => ({
+    cardStyle: {
+      opacity: current.progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 1],
+      }),
+    },
+  }),
+  transitionSpec: {
+    open: {
+      animation: 'timing' as const,
+      config: { duration: 250 },
+    },
+    close: {
+      animation: 'timing' as const,
+      config: { duration: 200 },
+    },
+  },
+};
+
+// â”€â”€ Navbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const LiquidGlassNavbar: React.FC<NavbarProps> = ({
+  activeTab,
+  onTabChange,
+  navigation,
+}) => {
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadAvatar = async () => {
+      const avatar = await AsyncStorage.getItem("userAvatarImageData");
+      if (avatar) setProfileAvatar(avatar);
+    };
+    loadAvatar();
+  }, []);
+
+  const scaleAnims = useRef(
+    TABS.reduce(
+      (acc, tab) => {
+        acc[tab] = new Animated.Value(1);
+        return acc;
+      },
+      {} as Record<TabName, Animated.Value>,
+    ),
+  ).current;
+
+  const handleTabPress = (tab: TabName) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Animated.sequence([
+      Animated.spring(scaleAnims[tab], {
+        toValue: 0.82,
+        useNativeDriver: true,
+        speed: 60,
+        bounciness: 8,
+      }),
+      Animated.spring(scaleAnims[tab], {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 20,
+        bounciness: 18,
+      }),
+    ]).start();
+    onTabChange(tab);
+    const routeMap: Record<TabName, string> = {
+      Home: "MainDashboard",
+      Stats: "Stats",
+      Blocker: "Blocker",
+      AICoach: "AICoach",
+      Profile: "Profile",
+    };
+    navigation.navigate(routeMap[tab] as never);
+  };
+
+  const getIconName = (tab: TabName, isActive: boolean): any => {
+    switch (tab) {
+      case "Home":
+        return isActive ? "home" : "home-outline";
+      case "Stats":
+        return isActive ? "bar-chart" : "bar-chart-outline";
+      case "Blocker":
+        return isActive ? "ban" : "ban-outline";
+      case "AICoach":
+        return isActive ? "chatbubble" : "chatbubble-outline";
+      case "Profile":
+        return "person";
+      default:
+        return "home-outline";
+    }
+  };
+
+  const PillBackground: React.FC<{ children: React.ReactNode }> = ({ children }) =>
+    Platform.OS === "ios" ? (
+      <BlurView intensity={80} tint="light" style={navStyles.blurPill}>
+        {children}
+      </BlurView>
+    ) : (
+      <View style={[navStyles.blurPill, { backgroundColor: "rgba(245,245,245,0.96)" }]}>
+        {children}
+      </View>
+    );
+
+  return (
+    <View style={navStyles.outerWrapper}>
+      <View style={navStyles.pillShadow}>
+        <PillBackground>
+          <View style={navStyles.warmTint} />
+          <View style={navStyles.specularHighlight} />
+          <View style={navStyles.innerBorder} />
+
+          <View style={navStyles.tabRow}>
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab;
+              const isProfile = tab === "Profile";
+              const a11yLabel = isProfile
+                ? "Profile"
+                : tab === "AICoach"
+                  ? "AI Coach"
+                  : tab;
+
+              return (
+                <TouchableOpacity
+                  key={tab}
+                  style={navStyles.tabItem}
+                  onPress={() => handleTabPress(tab)}
+                  activeOpacity={1}
+                  accessibilityRole="tab"
+                  accessibilityLabel={a11yLabel}
+                  accessibilityState={{ selected: isActive }}
+                >
+                  <Animated.View
+                    style={[
+                      navStyles.tabInner,
+                      { transform: [{ scale: scaleAnims[tab] }] },
+                    ]}
+                  >
+                    {isActive && <View style={navStyles.activeCircle} />}
+
+                    {isProfile ? (
+                      <View
+                        style={[
+                          navStyles.profileCircle,
+                          isActive && navStyles.profileCircleActive,
+                        ]}
+                      >
+                        {profileAvatar ? (
+                          <Image
+                            source={{
+                              uri: `data:image/jpeg;base64,${profileAvatar}`,
+                            }}
+                            style={navStyles.profileCircleImage}
+                          />
+                        ) : (
+                          <Ionicons name="person" size={22} color="#FFFFFF" />
+                        )}
+                      </View>
+                    ) : (
+                      <>
+                        <Ionicons
+                          name={getIconName(tab, isActive)}
+                          size={26}
+                          color={isActive ? "#000000" : "rgba(0,0,0,0.6)"}
+                        />
+                        <Text
+                          style={[
+                            navStyles.tabLabel,
+                            isActive && navStyles.tabLabelActive,
+                          ]}
+                        >
+                          {tab === "AICoach" ? "AI Coach" : tab}
+                        </Text>
+                      </>
+                    )}
+                  </Animated.View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </PillBackground>
+      </View>
+    </View>
+  );
+};
+
+// â”€â”€ App â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const appLayoutStyles = StyleSheet.create({
+  root: { flex: 1 },
+  /** Bottom anchor only â€” do NOT use absoluteFill (full-screen overlay blocks touches after modal stack transitions). */
+  navbarOverlaySlot: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    pointerEvents: "box-none" as const,
+  },
+});
+
+
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {error: Error | null}> {
+  constructor(props: {children: React.ReactNode}) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    try {
+      Sentry.captureException(error, { extra: { componentStack: info.componentStack } as any });
+    } catch {
+      // swallow â€” never let the reporter itself crash the boundary
+    }
+  }
+  reset = () => this.setState({ error: null });
+  render() {
+    if (this.state.error) {
+      if (__DEV__) {
+        return (
+          <View style={{flex:1,backgroundColor:'red',padding:40,justifyContent:'center'}}>
+            <Text style={{color:'white',fontSize:18,fontWeight:'bold',marginTop:60}}>CRASH CAUGHT</Text>
+            <Text style={{color:'white',fontSize:14,marginTop:20}}>{this.state.error.toString()}</Text>
+            <Text style={{color:'white',fontSize:12,marginTop:20}}>{this.state.error.stack}</Text>
+            <TouchableOpacity
+              onPress={this.reset}
+              style={{marginTop:24,backgroundColor:'white',paddingVertical:12,paddingHorizontal:20,borderRadius:8,alignSelf:'flex-start'}}
+              accessibilityRole="button"
+              accessibilityLabel="Try again"
+            >
+              <Text style={{color:'red',fontWeight:'600'}}>Try Again</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      }
+      return (
+        <View style={{flex:1,backgroundColor:'#FFFFFF',padding:32,justifyContent:'center',alignItems:'center'}}>
+          <Text style={{color:'#111',fontSize:20,fontWeight:'700',textAlign:'center'}}>Something went wrong</Text>
+          <Text style={{color:'#555',fontSize:15,marginTop:12,textAlign:'center',lineHeight:22}}>
+            We hit an unexpected problem. Your progress is safe â€” please try again.
+          </Text>
+          <TouchableOpacity
+            onPress={this.reset}
+            style={{marginTop:28,backgroundColor:'#111',paddingVertical:14,paddingHorizontal:28,borderRadius:999}}
+            accessibilityRole="button"
+            accessibilityLabel="Try again"
+          >
+            <Text style={{color:'#FFF',fontWeight:'600',fontSize:16}}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default Sentry.wrap(function App() {
+  const navigationRef = useNavigationContainerRef();
+  const [activeTab, setActiveTab] = useState<TabName>("Home");
+  const [currentRoute, setCurrentRoute] = useState<string>("Splash");
+  const screenTrackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (screenTrackTimeoutRef.current) {
+        clearTimeout(screenTrackTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const showNavbar = NAVBAR_VISIBLE_SCREENS.includes(currentRoute);
+
+  useEffect(() => {
+    const routeToTab: Record<string, TabName> = {
+      MainDashboard: "Home",
+      Stats: "Stats",
+      Blocker: "Blocker",
+      AICoach: "AICoach",
+      Profile: "Profile",
+    };
+    const mapped = routeToTab[currentRoute];
+    if (mapped) setActiveTab(mapped);
+  }, [currentRoute]);
+
+  useEffect(() => {
+    // â”€â”€ Sync, foreground-critical work â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    try {
+      initAnalytics();
+    } catch (e) {
+      console.error("initAnalytics failed:", e);
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+
+    // Parallelize the foreground AsyncStorage reads (including the trailing two).
+    (async () => {
+      try {
+        const [
+          deviceId,
+          userName,
+          memberSinceDate,
+          gender,
+          coachMode,
+          currentStreakRaw,
+          lastCheckIn,
+        ] = await Promise.all([
+          AsyncStorage.getItem("deviceId"),
+          AsyncStorage.getItem("userName"),
+          AsyncStorage.getItem("memberSinceDate"),
+          AsyncStorage.getItem("selectedGender"),
+          AsyncStorage.getItem("aiCoachMode"),
+          AsyncStorage.getItem("currentStreak"),
+          AsyncStorage.getItem("lastCheckInDate"),
+        ]);
+
+        if (deviceId) {
+          try {
+            identifyUser(deviceId, {
+              name: userName ?? undefined,
+              memberSinceDate: memberSinceDate ?? undefined,
+              gender: gender ?? undefined,
+              coachMode: coachMode ?? undefined,
+            });
+          } catch (e) {
+            console.error("identifyUser failed:", e);
+          }
+        }
+
+        try {
+          const currentStreak = parseInt(currentStreakRaw ?? "0", 10);
+          trackAppOpened({
+            currentStreak,
+            hasCheckedInToday: lastCheckIn === today,
+          });
+        } catch (e) {
+          console.error("trackAppOpened failed:", e);
+        }
+      } catch (e) {
+        console.error("AsyncStorage foreground reads failed:", e);
+      }
+    })();
+
+    // â”€â”€ Defer local-only work until after first paint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // NOTE: syncUserToSupabase() and restoreFromSupabase() were intentionally
+    // removed from here. Calling them unconditionally on every app launch
+    // created a brand-new anonymous Supabase user before Apple Sign-In could
+    // ever run, which meant linkIdentity always "succeeded" as a fresh link
+    // instead of detecting a returning user â€” orphaning all real stats on
+    // reinstall. These calls now belong only in WelcomeScreen.tsx and
+    // SignInScreen.tsx, strictly after signInWithApple() resolves.
+    const interactionHandle = InteractionManager.runAfterInteractions(() => {
+      (async () => {
+        try {
+          await loadUserProgress();
+        } catch (e) {
+          console.error("loadUserProgress failed:", e);
+        }
+      })();
+    });
+
+    return () => {
+      // Best-effort cancel of the deferred work if the component unmounts.
+      if (interactionHandle && typeof (interactionHandle as any).cancel === "function") {
+        (interactionHandle as any).cancel();
+      }
+    };
+  }, []);
+
+  return (
+    <ErrorBoundary>
+    <SuperwallProvider apiKeys={{ ios: process.env.EXPO_PUBLIC_SUPERWALL_API_KEY_IOS ?? "" }}>
+    <BlockerProvider>
+      <NavigationIndependentTree>
+        <NavigationContainer
+          ref={navigationRef}
+          onStateChange={(state) => {
+            const route = state?.routes[state?.index];
+            if (route?.name) {
+              setCurrentRoute(route.name);
+              if (!SKIP_TRACKING_SCREENS.includes(route.name)) {
+                try {
+                  AccessibilityInfo.announceForAccessibility(route.name);
+                } catch {
+                  // best-effort: announceForAccessibility is platform-flaky
+                }
+                if (screenTrackTimeoutRef.current) {
+                  clearTimeout(screenTrackTimeoutRef.current);
+                }
+                const name = route.name;
+                screenTrackTimeoutRef.current = setTimeout(() => {
+                  trackScreenViewed(name, {
+                    time_of_day: getTimeOfDay(),
+                  });
+                }, 300);
+              }
+            }
+          }}
+        >
+          <View style={appLayoutStyles.root}>
+          <Stack.Navigator
+            initialRouteName="Splash"
+            detachInactiveScreens={true}
+            screenOptions={{
+              headerShown: false,
+              cardStyle: { backgroundColor: '#FFFFFF' },
+              ...liquidGlassTransition,
+            }}
+          >
+            <Stack.Screen name="Splash" component={SplashScreen} />
+            <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="OnboardingQuestion" component={OnboardingQuestionScreen} />
+            <Stack.Screen name="GenderSelection" component={GenderSelectionScreen} />
+            <Stack.Screen name="DateOfBirthPicker" component={DateOfBirthPickerScreen} />
+            <Stack.Screen name="ReferralSource" component={ReferralSourceScreen} />
+            <Stack.Screen name="LifeStatus" component={LifeStatusScreen} />
+            <Stack.Screen name="QuittingReason" component={QuittingReasonScreen} />
+            <Stack.Screen name="PreviousAttempt" component={PreviousAttemptScreen} />
+            <Stack.Screen name="FirstExposureAge" component={FirstExposureAgeScreen} />
+            <Stack.Screen name="BoredomFrequency" component={BoredomFrequencyScreen} />
+            <Stack.Screen name="StressFrequency" component={StressFrequencyScreen} />
+            <Stack.Screen name="SessionDuration" component={SessionDurationScreen} />
+            <Stack.Screen name="ReclaimResultsInfo" component={ReclaimResultsInfoScreen} />
+            <Stack.Screen name="ContentEscalation" component={ContentEscalationScreen} />
+            <Stack.Screen name="SexualFantasy" component={SexualFantasyScreen} />
+            <Stack.Screen name="RelationshipImpact" component={RelationshipImpactScreen} />
+            <Stack.Screen name="RelationshipBenefitsInfo" component={RelationshipBenefitsInfoScreen} />
+            <Stack.Screen name="MentalImpactInfo" component={MentalImpactInfoScreen} />
+            <Stack.Screen name="UrgeResponse" component={UrgeResponseScreen} />
+            <Stack.Screen name="UrgeIntensity" component={UrgeIntensityScreen} />
+            <Stack.Screen name="UrgeLoop" component={UrgeLoopScreen} />
+            <Stack.Screen name="PanicButtonInfo" component={PanicButtonInfoScreen} />
+            <Stack.Screen name="SocialMediaTrigger" component={SocialMediaTriggerScreen} />
+            <Stack.Screen name="TemptingApps" component={TemptingAppsScreen} />
+            <Stack.Screen name="SuggestiveImagesFilter" component={SuggestiveImagesFilterScreen} />
+            <Stack.Screen name="MasturbationRelationship" component={MasturbationRelationshipScreen} />
+            <Stack.Screen name="ResultsAnalysis" component={ResultsAnalysisScreen} />
+            <Stack.Screen name="PersonalizedPlan" component={PersonalizedPlanScreen} />
+            <Stack.Screen name="EducationScreen1" component={EducationScreen1} />
+            <Stack.Screen name="EducationScreen2" component={EducationScreen2} />
+            <Stack.Screen name="EducationScreen3" component={EducationScreen3} />
+            <Stack.Screen name="EducationScreen4" component={EducationScreen4} />
+            <Stack.Screen name="EducationScreen5" component={EducationScreen5} />
+            <Stack.Screen name="CompanionScreen" component={CompanionScreen} />
+            <Stack.Screen name="AlwaysOnBlocking" component={AlwaysOnBlockingScreen} />
+            <Stack.Screen name="ReducedContentExposure" component={ReducedContentExposureScreen} />
+            <Stack.Screen name="InstantUrgeProtection" component={InstantUrgeProtectionScreen} />
+            <Stack.Screen name="LeaveRating" component={LeaveRatingScreen} />
+            <Stack.Screen name="GrantPermissions" component={GrantPermissionsScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="SetupComplete" component={SetupCompleteScreen} />
+            <Stack.Screen name="OnboardingResult" component={OnboardingResultScreen} />
+            <Stack.Screen name="MainDashboard" component={MainDashboardScreen} options={{ headerShown: false, animation: "none" }} />
+            <Stack.Screen name="ChaptersScreen" component={ChaptersScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="ChapterDetail" component={ChapterDetailScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Stats" component={StatsScreen} />
+            <Stack.Screen name="Blocker" component={BlockerScreen} />
+            <Stack.Screen name="AICoach" component={CoachScreen} />
+            <Stack.Screen name="AICoachMode" component={AICoachModeScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="FAQs" component={FAQsScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="ContactSupport" component={ContactSupportScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="RequestFeature" component={RequestFeatureScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="HelpCenter" component={HelpCenterScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Profile" component={SettingsScreen} />
+            <Stack.Screen name="DefaultPanicDuration" component={DefaultPanicDurationScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="ProfileView" component={ProfileView} />
+            <Stack.Screen name="PanicActivated" component={PanicActivatedScreen} options={{ gestureEnabled: false }} />
+            <Stack.Screen name="PanicShield" component={PanicShieldScreen} options={{ headerShown: false, gestureEnabled: false }} />
+            <Stack.Screen name="PanicCoach" component={PanicCoachScreen} options={{ gestureEnabled: false }} />
+            <Stack.Screen name="PanicLock" component={PanicLockScreen} options={{ gestureEnabled: false, headerShown: false }} />
+            <Stack.Screen name="SupportWhenNeeded" component={SupportWhenNeededScreen} />
+            <Stack.Screen name="BuiltForConsistency" component={BuiltForConsistencyScreen} />
+            <Stack.Screen name="OnboardingCarousel" component={OnboardingCarouselScreen} />
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="SignIn" component={SignInScreen} />
+
+            {/* â”€â”€ NEW SCREENS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            <Stack.Screen
+              name="ShieldStatus"
+              component={ShieldStatusScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="SelfHeal"
+              component={SelfHealScreen}
+              options={{ headerShown: false }}
+            />
+          </Stack.Navigator>
+
+          {showNavbar && (
+            <View
+              pointerEvents="box-none"
+              style={appLayoutStyles.navbarOverlaySlot}
+            >
+              <LiquidGlassNavbar
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                navigation={navigationRef}
+              />
+            </View>
+          )}
+        </View>
+        </NavigationContainer>
+      </NavigationIndependentTree>
+    </BlockerProvider>
+    </SuperwallProvider>
+    </ErrorBoundary>
+  );
+});
+
+// â”€â”€ Styles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+const navStyles = StyleSheet.create({
+  outerWrapper: {
+    position: "absolute", bottom: 28, left: 0, right: 0,
+    alignItems: "center", zIndex: 100,
+  },
+  pillShadow: {
+    borderRadius: 999, shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18, shadowRadius: 32, elevation: 24,
+  },
+  blurPill: {
+    borderRadius: 999, overflow: "hidden",
+    ...Platform.select({ android: { backgroundColor: "rgba(245,245,245,0.96)" } }),
+  },
+  warmTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255,255,255,0.22)", borderRadius: 999,
+  },
+  specularHighlight: {
+    position: "absolute", top: 0, left: 16, right: 16,
+    height: 1.5, backgroundColor: "rgba(255,255,255,0.85)", borderRadius: 999,
+  },
+  innerBorder: {
+    ...StyleSheet.absoluteFillObject, borderRadius: 999,
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.55)",
+  },
+  tabRow: {
+    flexDirection: "row", alignItems: "center",
+    paddingHorizontal: 12, paddingVertical: 10, gap: 0,
+  },
+  tabItem: { width: 66, alignItems: "center", justifyContent: "center" },
+  tabInner: {
+    alignItems: "center", justifyContent: "center",
+    width: 56, height: 56, borderRadius: 28, position: "relative",
+  },
+  activeCircle: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.08)", borderRadius: 28,
+  },
+  tabLabel: { fontSize: 10, fontWeight: "500", color: "rgba(0,0,0,0.6)", marginTop: 1 },
+  tabLabelActive: { color: "#000000", fontWeight: "600" },
+  profileCircle: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: "#2C2C2C", alignItems: "center",
+    justifyContent: "center", overflow: "hidden",
+  },
+  profileCircleActive: { borderWidth: 2.5, borderColor: "rgba(0,0,0,0.7)" },
+  profileCircleImage: { width: 40, height: 40, borderRadius: 20 },
+});
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Easing,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { usePlacement, useSuperwall } from "expo-superwall";
+import * as Sentry from "@sentry/react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+type RootStackParamList = {
+  OnboardingResult: undefined;
+  MainDashboard: undefined;
+};
+
+type ScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "OnboardingResult"
+>;
+
+const BENEFIT_TAGS: { label: string; bg: string; fg: string }[] = [
+  { label: "Boost Testosterone Levels", bg: "#FFF7ED", fg: "#EA580C" },
+  { label: "Increase Sexual Health", bg: "#F0FDF4", fg: "#16A34A" },
+  { label: "Increase Energy", bg: "#EFF6FF", fg: "#2563EB" },
+  { label: "Improve Mental Focus", bg: "#F5F3FF", fg: "#9333EA" },
+  { label: "Strengthen Motivation", bg: "#FFF1F2", fg: "#DC2626" },
+  { label: "Build Better Relationships", bg: "#F0FDFA", fg: "#0D9488" },
+  { label: "Grow Self Confidence", bg: "#FFFBEB", fg: "#D97706" },
+];
+
+const CHAIN_ITEMS: { icon: string; text: string }[] = [
+  { icon: "ðŸ”„", text: "No more repeating the same mistake." },
+  { icon: "âš¡", text: "No more losing control in the moment." },
+  { icon: "ðŸ§ ", text: "No more guilt after." },
+  { icon: "âœ¨", text: "A clearer mind." },
+  { icon: "ðŸ›¡ï¸", text: "A stronger sense of control." },
+];
+
+const RELATIONSHIP_BULLETS: { icon: string; text: string }[] = [
+  { icon: "ðŸ©·", text: "Build deeper emotional awareness" },
+  { icon: "ðŸ’™", text: "Become more reliable and dependable" },
+  { icon: "â¤ï¸", text: "Experience real intimacy again" },
+  { icon: "ðŸ§¡", text: "Create stronger emotional bonds" },
+  { icon: "â­", text: "Be the partner they deserve" },
+];
+
+const HABIT_GOAL_ROWS: { icon: string; text: string }[] = [
+  { icon: "ðŸ“‹", text: "Use Reclaim's adult blocker" },
+  { icon: "ðŸš¨", text: "Press the Panic Button when you feel tempted" },
+  { icon: "ðŸ§˜", text: "Stay relapse-free. Every day." },
+  { icon: "ðŸƒ", text: "Track your progress over time" },
+];
+
+const SEXUAL_ENERGY_BULLETS: { icon: string; text: string }[] = [
+  { icon: "ðŸš«", text: "Move away from overstimulation." },
+  { icon: "ðŸ”„", text: "Reset your natural responses." },
+  { icon: "âš¡", text: "Feel real sexual energy again." },
+  { icon: "â¤ï¸", text: "Experience deeper, more present intimacy." },
+  { icon: "ðŸ¤", text: "Reconnect with what actually matters." },
+];
+
+const CONTROL_PAIRS: { icon: string; title: string; body: string }[] = [
+  {
+    icon: "ðŸ’ª",
+    title: "More confidence",
+    body: "Trust yourself again, especially in tough moments.",
+  },
+  {
+    icon: "ðŸ˜Œ",
+    title: "No guilt, no regret",
+    body: "Walk away feeling clean, not heavy.",
+  },
+  {
+    icon: "ðŸ˜Š",
+    title: "Real enjoyment again",
+    body: "Enjoy things without constant distraction.",
+  },
+  {
+    icon: "ðŸ•Šï¸",
+    title: "A sense of freedom",
+    body: "No longer stuck in the same loop.",
+  },
+  {
+    icon: "âœ¨",
+    title: "True satisfaction",
+    body: "Not temporary, something that actually lasts.",
+  },
+];
+
+function getFreedomDateLabel(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 90);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+const STAR_SIZE = 38;
+const HALF_STAR_CLIP = 19;
+const STAR_FIVE_SIZE = 28;
+
+const FiveStarsRow: React.FC = () => (
+  <View style={styles.starsRowFive}>
+    {[0, 1, 2, 3, 4].map((i) => (
+      <Text key={i} style={styles.starFiveFull}>
+        â˜…
+      </Text>
+    ))}
+  </View>
+);
+
+const OnboardingResultScreen: React.FC = () => {
+  const navigation = useNavigation<ScreenNavigationProp>();
+  const superwall = useSuperwall();
+  const [userName, setUserName] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const isProcessingRef = useRef(false);
+  const freedomDateLabel = getFreedomDateLabel();
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
+  const resetProcessingState = useCallback(() => {
+    isProcessingRef.current = false;
+    setIsProcessing(false);
+  }, []);
+
+  const checkEntitlementAndNavigate = useCallback(async (): Promise<boolean> => {
+    try {
+      const entitlements = await superwall.getEntitlements();
+      const proActive = entitlements.active.some((e) => e.id === "pro");
+      if (proActive) {
+        Sentry.captureMessage("SUPERWALL_DEBUG entitlement confirmed â€” navigating to MainDashboard", "info");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "MainDashboard" as never }],
+        });
+        return true;
+      }
+      Sentry.captureMessage("SUPERWALL_DEBUG entitlement check failed â€” not navigating", "info");
+      return false;
+    } catch (err) {
+      Sentry.captureMessage("SUPERWALL_DEBUG getEntitlements() threw: " + JSON.stringify(err), "error");
+      return false;
+    }
+  }, [superwall, navigation]);
+
+  // TEMP DEBUG - remove after diagnosing paywall issue
+  const { registerPlacement } = usePlacement({
+    onError: (error) => {
+      Sentry.captureMessage("SUPERWALL_DEBUG onError fired: " + error, "error");
+    },
+    onSkip: (reason) => {
+      Sentry.captureMessage(
+        "SUPERWALL_DEBUG onSkip fired: " + JSON.stringify(reason),
+        "error"
+      );
+    },
+    onDismiss: (info, result) => {
+      Sentry.captureMessage("SUPERWALL_DEBUG onDismiss fired, result.type=" + result.type, "info");
+      if (isProcessingRef.current) {
+        Sentry.captureMessage("SUPERWALL_DEBUG onDismiss skipped â€” already processing", "info");
+        return;
+      }
+      isProcessingRef.current = true;
+      setIsProcessing(true);
+      if (result.type === "declined") {
+        Sentry.captureMessage("SUPERWALL_DEBUG declined - registering discount placement", "info");
+        registerPlacement({
+          placement: "discount_paywall_trigger",
+          feature: () => {
+            Sentry.captureMessage("SUPERWALL_DEBUG discount feature() fired â€” verifying entitlement", "info");
+            checkEntitlementAndNavigate();
+          },
+        }).catch((err) => {
+          Sentry.captureMessage("SUPERWALL_DEBUG discount placement error: " + JSON.stringify(err), "error");
+        }).finally(() => {
+          Sentry.captureMessage("SUPERWALL_DEBUG discount placement finished â€” resetting state", "info");
+          resetProcessingState();
+        });
+      } else {
+        Sentry.captureMessage("SUPERWALL_DEBUG onDismiss result.type=" + result.type + " â€” not navigating, resetting state", "info");
+        resetProcessingState();
+      }
+    },
+  });
+
+  useEffect(() => {
+    const loadUserName = async () => {
+      try {
+        const stored = await AsyncStorage.getItem("userName");
+        if (stored) setUserName(stored);
+      } catch {
+        // ignore
+      }
+    };
+    loadUserName();
+  }, []);
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: -10,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [floatAnim]);
+
+  useEffect(() => {
+    Sentry.captureMessage(
+      "SUPERWALL_DEBUG screen mounted, subscriptionStatus=" + JSON.stringify(superwall.subscriptionStatus),
+      "info"
+    );
+
+    superwall.getEntitlements()
+      .then((entitlements) => {
+        Sentry.captureMessage(
+          "SUPERWALL_DEBUG getEntitlements() on mount: " + JSON.stringify(entitlements),
+          "info"
+        );
+      })
+      .catch((err) => {
+        Sentry.captureMessage(
+          "SUPERWALL_DEBUG getEntitlements() FAILED on mount: " + JSON.stringify(err),
+          "error"
+        );
+      });
+  }, []);
+
+  const displayName = userName.trim() || "Friend";
+
+  const handleContinue = async () => {
+    if (isProcessingRef.current) {
+      Sentry.captureMessage("SUPERWALL_DEBUG CTA tapped â€” already processing (ref guard)", "info");
+      return;
+    }
+    isProcessingRef.current = true;
+    setIsProcessing(true);
+    Sentry.captureMessage("SUPERWALL_DEBUG CTA tapped - calling registerPlacement", "info");
+    try {
+      await registerPlacement({
+        placement: "onboarding_complete",
+        feature: () => {
+          Sentry.captureMessage("SUPERWALL_DEBUG main feature() fired â€” verifying entitlement", "info");
+          checkEntitlementAndNavigate();
+        },
+      });
+      Sentry.captureMessage("SUPERWALL_DEBUG registerPlacement call completed (awaited)", "info");
+    } catch (err) {
+      Sentry.captureMessage("SUPERWALL_DEBUG registerPlacement THREW: " + JSON.stringify(err), "error");
+    } finally {
+      resetProcessingState();
+    }
+  };
+
+  return (
+    <View style={styles.fullScreen}>
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+        <View style={styles.body}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Section 1 â€” Hero */}
+            <View style={styles.hero}>
+              <Text style={styles.heroLine1}>
+                {displayName}, your recovery setup is ready
+              </Text>
+              <Text style={styles.heroSub}>
+                you&apos;ll be free from porn by :
+              </Text>
+              <View style={styles.datePill}>
+                <Text style={styles.datePillText}>{freedomDateLabel}</Text>
+              </View>
+            </View>
+
+            {/* Star rating + laurel */}
+            <View style={styles.starsBlock}>
+              <View style={styles.starsRow}>
+                {[0, 1, 2, 3].map((i) => (
+                  <Text key={i} style={styles.starFull}>
+                    â˜…
+                  </Text>
+                ))}
+                <View style={styles.halfStarOuter}>
+                  <Text style={styles.starGray}>â˜…</Text>
+                  <View style={styles.halfStarClip}>
+                    <Text style={styles.starGold}>â˜…</Text>
+                  </View>
+                </View>
+              </View>
+              <Image
+                source={require("../assets/images/laurel_divider.png")}
+                style={{ width: 400, height: 40, marginTop: 5 }}
+                resizeMode="contain"
+              />
+            </View>
+
+            {/* Start a new Chapter */}
+            <View style={styles.chapter}>
+              <Text style={styles.chapterTitle}>Start a new Chapter</Text>
+              <Text style={styles.chapterSub}>
+                Today marks a new and better page in your life.
+              </Text>
+              <View style={styles.tagsWrap}>
+                {BENEFIT_TAGS.map((tag) => (
+                  <View
+                    key={tag.label}
+                    style={[styles.tag, { backgroundColor: tag.bg }]}
+                  >
+                    <View
+                      style={[styles.tagDot, { backgroundColor: tag.fg }]}
+                    />
+                    <Text style={[styles.tagLabel, { color: tag.fg }]}>
+                      {tag.label}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.tagsSectionDivider} />
+
+            {/* Meditation person */}
+            <View style={styles.illustrationWrap}>
+              <View style={styles.meditationGround} />
+              <Animated.View
+                style={[
+                  styles.meditationFloat,
+                  { transform: [{ translateY: floatAnim }] },
+                ]}
+              >
+                <Image
+                  source={require("../assets/images/meditation_person.png")}
+                  style={{ width: 250, height: 250 }}
+                  resizeMode="contain"
+                />
+              </Animated.View>
+            </View>
+
+            {/* Break the chain */}
+            <View style={styles.breakChain}>
+              <Text style={styles.breakChainTitle}>Break the chain</Text>
+              {CHAIN_ITEMS.map((row) => (
+                <View key={row.text} style={styles.breakRow}>
+                  <Text style={styles.breakIcon}>{row.icon}</Text>
+                  <Text style={styles.breakText}>{row.text}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.postChainStars}>
+              <FiveStarsRow />
+            </View>
+
+            <Text style={styles.testimonialQuote}>
+              For a long time I felt stuck in the same habits and it slowly
+              affected my confidence. Deciding to change helped me take control
+              of my life again.
+            </Text>
+            <Text style={styles.testimonialName}>â€” Marcus T., 29</Text>
+
+            {/* Couple illustration */}
+            <View style={styles.illustrationWrap}>
+              <View style={styles.meditationGround} />
+              <Animated.View
+                style={[
+                  styles.meditationFloat,
+                  { transform: [{ translateY: floatAnim }] },
+                ]}
+              >
+                <Image
+                  source={require("../assets/images/couple_illustration.png")}
+                  style={{ width: 230, height: 230 }}
+                  resizeMode="contain"
+                />
+              </Animated.View>
+            </View>
+
+            {/* Be present in your relationships */}
+            <View style={styles.sectionBlock}>
+              <Text style={styles.sectionHeadingLeft}>
+                Be present in your relationships
+              </Text>
+              {RELATIONSHIP_BULLETS.map((row) => (
+                <View key={row.text} style={styles.bulletRow}>
+                  <Text style={styles.bulletEmoji}>{row.icon}</Text>
+                  <Text style={styles.bulletText}>{row.text}</Text>
+                </View>
+              ))}
+              <View style={styles.starsQuoteSpacing}>
+                <FiveStarsRow />
+              </View>
+              <Text style={styles.italicQuote}>
+                I always thought it was harmless, but I could feel the distance
+                growing in my relationship. That&apos;s when I knew I needed to
+                make a change.
+              </Text>
+              <Text style={styles.testimonialName}>â€” Daniel R., 34</Text>
+            </View>
+
+            {/* Section 4 â€” Clear, Controlled habits card */}
+            <View style={styles.habitsCard}>
+              <Text style={styles.habitsFist}>ðŸ‘Š</Text>
+              <Text style={styles.habitsCardTitle}>
+                Clear, Controlled habits
+              </Text>
+              <Text style={styles.habitsCardBody}>
+                Reclaim builds disciplined habits that create lasting, life-long
+                freedom from pornography.
+              </Text>
+              <View style={styles.cardDivider} />
+              <Text style={styles.habitsDateLabel}>
+                You&apos;ll be porn-free by
+              </Text>
+              <View style={styles.datePill}>
+                <Text style={styles.datePillText}>{freedomDateLabel}</Text>
+              </View>
+              <Text style={styles.goalsHeading}>How to reach your goal:</Text>
+              {HABIT_GOAL_ROWS.map((row) => (
+                <View key={row.text} style={styles.goalRow}>
+                  <Text style={styles.goalEmoji}>{row.icon}</Text>
+                  <Text style={styles.goalText}>{row.text}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={[styles.illustrationWrapStandalone, { marginTop: 36 }]}>
+              <View style={styles.meditationGround} />
+              <Animated.View
+                style={[
+                  styles.meditationFloat,
+                  { transform: [{ translateY: floatAnim }] },
+                ]}
+              >
+                <Image
+                  source={require("../assets/images/standing_man.png")}
+                  style={{ width: 250, height: 250 }}
+                  resizeMode="contain"
+                />
+              </Animated.View>
+            </View>
+
+            {/* Section 5 â€” Feel natural sexual energy again */}
+            <View style={styles.sectionBlock}>
+              <Text style={styles.sectionHeadingLeft}>
+                Feel natural sexual energy again
+              </Text>
+              {SEXUAL_ENERGY_BULLETS.map((row) => (
+                <View key={row.text} style={styles.bulletRow}>
+                  <Text style={styles.bulletEmoji}>{row.icon}</Text>
+                  <Text style={styles.bulletText}>{row.text}</Text>
+                </View>
+              ))}
+              <View style={styles.starsQuoteSpacing}>
+                <FiveStarsRow />
+              </View>
+              <Text style={styles.italicQuote}>
+                Looking back, porn was draining my sexual energy more than I
+                thought. Reclaim helped me notice the pattern and cut it down.
+                Now it feels more natural.
+              </Text>
+              <Text style={styles.testimonialName}>â€” James K., 27</Text>
+              <View style={styles.sectionDivider} />
+            </View>
+
+            {/* Trophy man */}
+            <View style={styles.illustrationWrapStandalone}>
+              <View style={styles.meditationGround} />
+              <Animated.View
+                style={[
+                  styles.meditationFloat,
+                  { transform: [{ translateY: floatAnim }] },
+                ]}
+              >
+                <Image
+                  source={require("../assets/images/trophy_man.png")}
+                  style={{ width: 300, height: 300 }}
+                  resizeMode="contain"
+                />
+              </Animated.View>
+            </View>
+
+            {/* Reclaim your control */}
+            <View style={styles.sectionBlock}>
+              <Text style={styles.sectionHeadingCenter}>
+                Reclaim your control
+              </Text>
+              {CONTROL_PAIRS.map((item) => (
+                <View key={item.title} style={styles.controlPair}>
+                  <Text style={styles.controlBold}>
+                    {item.icon} {item.title}
+                  </Text>
+                  <Text style={styles.controlBody}>{item.body}</Text>
+                </View>
+              ))}
+              <View style={styles.starsAfterControl}>
+                <FiveStarsRow />
+              </View>
+              <Text style={styles.italicQuote}>
+                Willpower alone isn&apos;t enough. You need to change how you
+                see yourself, your habits, and what truly matters.
+              </Text>
+              <Text style={styles.testimonialName}>â€” Alex M., 31</Text>
+            </View>
+
+            <View style={styles.scrollBottomSpacer} />
+          </ScrollView>
+
+          <View style={styles.footer}>
+            <TouchableOpacity
+              disabled={isProcessing}
+              style={[styles.cta, isProcessing && { opacity: 0.6 }]}
+              onPress={handleContinue}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.ctaText}>Become a Reclaimer</Text>
+            </TouchableOpacity>
+            <Text style={styles.footerDisclaimer}>
+              Purchase appears discretely
+            </Text>
+            <Text style={styles.footerDisclaimer}>
+              cancel anytimeâœ…{"  "}Finally quit porn ðŸ›¡ï¸
+            </Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+};
+
+export default OnboardingResultScreen;
+
+const styles = StyleSheet.create({
+  fullScreen: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  safeArea: {
+    flex: 1,
+  },
+  body: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 36,
+    paddingBottom: 24,
+  },
+  hero: {
+    alignItems: "center",
+  },
+  heroLine1: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#0A0A0A",
+    textAlign: "center",
+    lineHeight: 36,
+    letterSpacing: -0.5,
+  },
+  heroSub: {
+    fontSize: 13,
+    color: "#9CA3AF",
+    fontWeight: "400",
+    textAlign: "center",
+    marginTop: 10,
+  },
+  datePill: {
+    backgroundColor: "#1C1C1E",
+    borderRadius: 999,
+    paddingHorizontal: 28,
+    paddingVertical: 10,
+    marginTop: 10,
+    alignSelf: "center",
+  },
+  datePillText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  starsBlock: {
+    alignItems: "center",
+    marginTop: 28,
+  },
+  starsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  starsRowFive: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+  },
+  starFiveFull: {
+    fontSize: STAR_FIVE_SIZE,
+    color: "#F59E0B",
+    lineHeight: STAR_FIVE_SIZE,
+  },
+  starFull: {
+    fontSize: STAR_SIZE,
+    color: "#F59E0B",
+    lineHeight: STAR_SIZE,
+  },
+  halfStarOuter: {
+    width: STAR_SIZE,
+    height: STAR_SIZE,
+    position: "relative",
+  },
+  starGray: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    fontSize: STAR_SIZE,
+    color: "#E5E7EB",
+    lineHeight: STAR_SIZE,
+  },
+  halfStarClip: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: HALF_STAR_CLIP,
+    height: STAR_SIZE,
+    overflow: "hidden",
+  },
+  starGold: {
+    fontSize: STAR_SIZE,
+    color: "#F59E0B",
+    lineHeight: STAR_SIZE,
+  },
+  chapter: {
+    alignItems: "center",
+    marginTop: 32,
+    alignSelf: "stretch",
+  },
+  chapterTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#000000",
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  chapterSub: {
+    fontSize: 13,
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 14,
+    lineHeight: 20,
+  },
+  tagsWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 7,
+    alignSelf: "stretch",
+  },
+  tag: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    gap: 5,
+  },
+  tagDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  tagLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  tagsSectionDivider: {
+    height: 2,
+    backgroundColor: "#E5E7EB",
+    marginTop: 20,
+    marginBottom: 4,
+    alignSelf: "center",
+    width: "40%",
+    borderRadius: 999,
+  },
+  breakChain: {
+    marginTop: 24,
+    alignSelf: "stretch",
+  },
+  breakChainTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#000000",
+    textAlign: "center",
+    marginBottom: 14,
+  },
+  breakRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    marginBottom: 14,
+  },
+  breakIcon: {
+    fontSize: 17,
+    width: 22,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  breakText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#111827",
+    lineHeight: 22,
+  },
+  postChainStars: {
+    alignItems: "center",
+    marginTop: 8,
+    alignSelf: "stretch",
+  },
+  testimonialQuote: {
+    fontSize: 13,
+    color: "#374151",
+    fontStyle: "italic",
+    textAlign: "center",
+    lineHeight: 20,
+    marginTop: 14,
+    paddingHorizontal: 4,
+    alignSelf: "stretch",
+  },
+  sectionBlock: {
+    marginTop: 32,
+    alignSelf: "stretch",
+  },
+  sectionHeadingLeft: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#000000",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  sectionHeadingCenter: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#000000",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  bulletRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 10,
+    gap: 8,
+  },
+  bulletEmoji: {
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#111827",
+    lineHeight: 22,
+  },
+  starsQuoteSpacing: {
+    marginTop: 16,
+    alignItems: "center",
+  },
+  italicQuote: {
+    fontSize: 13,
+    color: "#374151",
+    fontStyle: "italic",
+    textAlign: "center",
+    lineHeight: 20,
+    marginTop: 14,
+  },
+  habitsCard: {
+    backgroundColor: "#EFEFEF",
+    borderRadius: 20,
+    padding: 20,
+    marginTop: 24,
+    alignSelf: "stretch",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  habitsFist: {
+    fontSize: 32,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  habitsCardTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#000000",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  habitsCardBody: {
+    fontSize: 13,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  cardDivider: {
+    height: 1,
+    backgroundColor: "#E5E7EB",
+    marginVertical: 14,
+  },
+  habitsDateLabel: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  goalsHeading: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#000000",
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: "left",
+  },
+  goalRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 12,
+    gap: 8,
+  },
+  goalEmoji: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  goalText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#374151",
+    lineHeight: 20,
+  },
+  illustrationWrap: {
+    position: "relative",
+    height: 210,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
+    alignSelf: "stretch",
+  },
+  illustrationWrapStandalone: {
+    minHeight: 200,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 24,
+    position: "relative",
+    alignSelf: "stretch",
+  },
+  meditationGround: {
+    position: "absolute",
+    bottom: 8,
+    width: 130,
+    height: 16,
+    backgroundColor: "#000",
+    opacity: 0.06,
+    borderRadius: 999,
+    alignSelf: "center",
+  },
+  meditationFloat: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionDivider: {
+    height: 2,
+    backgroundColor: "#E5E7EB",
+    marginTop: 20,
+    alignSelf: "center",
+    width: "40%",
+    borderRadius: 999,
+  },
+  controlPair: {
+    marginBottom: 14,
+    alignSelf: "stretch",
+  },
+  controlBold: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#000000",
+    marginBottom: 4,
+  },
+  controlBody: {
+    fontSize: 13,
+    color: "#6B7280",
+    lineHeight: 20,
+  },
+  starsAfterControl: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  scrollBottomSpacer: {
+    height: 160,
+  },
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 24,
+    paddingTop: 14,
+    paddingBottom: 36,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  cta: {
+    backgroundColor: "#000000",
+    paddingVertical: 17,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ctaText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  footerDisclaimer: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    textAlign: "center",
+    marginTop: 6,
+    lineHeight: 20,
+  },
+  testimonialName: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    fontWeight: "600",
+    textAlign: "center",
+    marginTop: 6,
+    letterSpacing: 0.3,
+  },
+});
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { useSuperwall } from "expo-superwall";
+import { StatusBar } from "expo-status-bar";
+import * as Sentry from "@sentry/react-native";
+import React, { useEffect, useState } from "react";
+import { AccessibilityInfo, Image, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { getActivePanicSessionRemaining } from "../utils/familyControls";
+
+type RootStackParamList = {
+  Splash: undefined;
+  Welcome: undefined;
+  MainDashboard: undefined;
+  OnboardingResult: undefined;
+  PanicLock: { remainingSeconds: number } | undefined;
+};
+
+type SplashScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "Splash"
+>;
+
+const SPLASH_DURATION_MS = 2000;
+const ONBOARDING_COMPLETE_KEY = "@reclaim_onboarding_complete";
+
+const logoImage = require("../assets/images/reclaim-logo-app.png");
+
+export default function SplashScreen() {
+  const navigation = useNavigation<SplashScreenNavigationProp>();
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const superwall = useSuperwall();
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener(
+      "reduceMotionChanged",
+      setReduceMotion
+    );
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      try {
+        const entitlements = await superwall.getEntitlements();
+        const proActive = entitlements.active.some((e) => e.id === "pro");
+        console.log("SPLASH_ENTITLEMENTS_DEBUG:", JSON.stringify(entitlements, null, 2));
+        if (proActive) {
+          Sentry.captureMessage("SUPERWALL_DEBUG SplashScreen â€” returning subscriber detected, routing to MainDashboard", "info");
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "MainDashboard" }],
+          });
+          return;
+        }
+      } catch (err) {
+        Sentry.captureMessage("SUPERWALL_DEBUG SplashScreen â€” entitlement check failed: " + JSON.stringify(err), "error");
+      }
+
+      try {
+        const completed = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
+
+        if (completed === "true") {
+          const remaining = await getActivePanicSessionRemaining();
+          if (remaining !== null) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "PanicLock", params: { remainingSeconds: remaining } } as never],
+            });
+            return;
+          }
+        }
+
+        navigation.reset({
+          index: 0,
+          routes: [
+            { name: completed === "true" ? "OnboardingResult" : "Welcome" },
+          ],
+        });
+      } catch {
+        // If AsyncStorage fails, default to Welcome
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Welcome" }],
+        });
+      }
+    }, reduceMotion ? 0 : SPLASH_DURATION_MS);
+
+    return () => clearTimeout(timeout);
+  }, [navigation, reduceMotion, superwall]);
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" />
+      <View style={styles.container}>
+        <Image source={logoImage} style={styles.logo} resizeMode="contain" />
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 32,
+  },
+  logo: {
+    width: 250,
+    height: 250,
+    marginBottom: 16,
+  },
+});
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import React from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+type RootStackParamList = {
+  SetupComplete: any;
+  OnboardingResult: undefined;
+  MainDashboard: undefined;
+  Home: any;
+};
+
+type ScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "SetupComplete"
+>;
+
+const FEATURES = [
+  {
+    icon: "ðŸ›¡ï¸",
+    title: "24/7 Protection",
+    description: "Blocks triggering content automatically",
+    color: "#EFF6FF",
+  },
+  {
+    icon: "ðŸš¨",
+    title: "Panic Button",
+    description: "Instant help when urges strike",
+    color: "#FEF2F2",
+  },
+  {
+    icon: "ðŸ¤–",
+    title: "AI Coach",
+    description: "Personalized support and motivation",
+    color: "#F5F3FF",
+  },
+  {
+    icon: "ðŸ“Š",
+    title: "Track Progress",
+    description: "See your growth over time",
+    color: "#ECFDF5",
+  },
+  {
+    icon: "ðŸ”’",
+    title: "Private & Secure",
+    description: "Your data stays confidential",
+    color: "#F9FAFB",
+  },
+];
+
+const SetupCompleteScreen: React.FC = () => {
+  const navigation = useNavigation<ScreenNavigationProp>();
+  const route = useRoute<RouteProp<RootStackParamList, "SetupComplete">>();
+  const params = route.params || {};
+
+  const handleActivate = async () => {
+    try {
+      if (params && Object.keys(params).length > 0) {
+        await AsyncStorage.setItem("userProfile", JSON.stringify(params));
+      }
+
+      const existingMemberSince = await AsyncStorage.getItem("memberSinceDate");
+      if (!existingMemberSince) {
+        const now = new Date();
+        await AsyncStorage.setItem("memberSinceDate", now.toISOString());
+      }
+    } catch {
+      // ignore storage failures and continue navigation
+    }
+
+    await AsyncStorage.setItem("@reclaim_onboarding_complete", "true");
+
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "OnboardingResult" as never }],
+    });
+  };
+
+  return (
+    <View style={styles.fullScreen}>
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Your Setup Is Complete</Text>
+          <Text style={styles.subtitle}>
+            Reclaim is now active based on your answers and permissions.
+          </Text>
+          <Text style={styles.secondaryText}>
+            It&apos;s ready to protect you when urges appear.
+          </Text>
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.featuresContainer}>
+            {FEATURES.map((feature, index) => (
+              <View
+                key={index}
+                style={[styles.featureCard, { backgroundColor: "#FFFFFF" }]}
+              >
+                <View
+                  style={[styles.iconContainer, { backgroundColor: feature.color }]}
+                >
+                  <Text style={styles.iconText}>{feature.icon}</Text>
+                </View>
+                <View style={styles.textContainer}>
+                  <Text style={styles.featureTitle}>{feature.title}</Text>
+                  <Text style={styles.featureDescription}>{feature.description}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={styles.ctaButton}
+            onPress={handleActivate}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.buttonText}>Activate protection</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+};
+
+export default SetupCompleteScreen;
+
+const styles = StyleSheet.create({
+  fullScreen: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  safeArea: {
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 48,
+    paddingBottom: 24,
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#000000",
+    textAlign: "center",
+    marginBottom: 12,
+    lineHeight: 34,
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#4B5563",
+    textAlign: "center",
+    lineHeight: 22,
+    paddingHorizontal: 10,
+  },
+  secondaryText: {
+    fontSize: 15,
+    fontWeight: "400",
+    color: "#9CA3AF",
+    textAlign: "center",
+    marginTop: 8,
+    lineHeight: 20,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  featuresContainer: {
+    gap: 16,
+  },
+  featureCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 20,
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
+  },
+  iconContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 16,
+  },
+  iconText: {
+    fontSize: 26,
+  },
+  textContainer: {
+    flex: 1,
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 4,
+  },
+  featureDescription: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: "#6B7280",
+    lineHeight: 20,
+  },
+  footer: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 32,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  ctaButton: {
+    backgroundColor: "#000000",
+    paddingVertical: 18,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+    letterSpacing: 0.3,
+  },
+});
+
