@@ -30,7 +30,22 @@ workflows:
       - name: Install CocoaPods
         script: |
           cd ios
-          pod install
+          pod install --repo-update
+      - name: Commit updated Podfile.lock
+        script: |
+          set -e
+          cd ios
+          if git diff --quiet Podfile.lock; then
+            echo "Podfile.lock unchanged"
+          else
+            git config user.email "codemagic@ci.local"
+            git config user.name "Codemagic CI"
+            git add Podfile.lock
+            git commit -m "chore: update Podfile.lock [skip ci]"
+            if ! git push; then
+              echo "Warning: Failed to push Podfile.lock (permission issue?)"
+            fi
+          fi
       - name: Set Xcode project to manual signing
         script: |
           xcode-project use-profiles
