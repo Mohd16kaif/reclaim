@@ -66,5 +66,16 @@ target 'reclaimapp' do
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
       end
     end
+
+    installer.pods_project.targets.each do |target|
+      target.build_phases.each do |phase|
+        next unless phase.is_a?(Xcodeproj::Project::Object::PBXShellScriptBuildPhase)
+        next unless phase.name&.include?("Replace")
+        next if phase.output_paths && !phase.output_paths.empty?
+
+        sanitized = phase.name.gsub(/[^A-Za-z0-9]/, "_")
+        phase.output_paths = ["$(DERIVED_FILE_DIR)/#{sanitized}.out"]
+      end
+    end
   end
 end

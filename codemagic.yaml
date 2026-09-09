@@ -15,7 +15,7 @@ workflows:
         XCODE_WORKSPACE: "ios/reclaimapp.xcworkspace"
         XCODE_SCHEME: "reclaimapp"
       node: latest
-      xcode: latest
+      xcode: 16.2
       cocoapods: default
     scripts:
       - name: Create .env file
