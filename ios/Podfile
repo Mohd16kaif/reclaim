@@ -78,10 +78,17 @@ target 'reclaimapp' do
           config.build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
           config.build_settings['ARCHS'] = 'arm64'
           config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
-          config.build_settings['HEADER_SEARCH_PATHS'] = '$(inherited)'
-          config.build_settings['USER_HEADER_SEARCH_PATHS'] = ''
-          config.build_settings['CLANG_ENABLE_MODULE_DEBUGGING'] = 'NO'
         end
+
+        removed_count = 0
+        target.source_build_phase.files.each do |file|
+          file_path = file.file_ref.real_path.to_s
+          if file_path.end_with?('.S')
+            target.source_build_phase.remove_file_reference(file.file_ref)
+            removed_count += 1
+          end
+        end
+        puts "Removed #{removed_count} .S files from libdav1d target"
       end
     end
   end
