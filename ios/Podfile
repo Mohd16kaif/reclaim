@@ -93,6 +93,7 @@ target 'reclaimapp' do
         target.build_configurations.each do |config|
           config.build_settings['GCC_PREFIX_HEADER'] = ''
           config.build_settings['GCC_PRECOMPILE_PREFIX_HEADER'] = 'NO'
+          config.build_settings['USE_HEADERMAP'] = 'NO'
         end
       end
     end
