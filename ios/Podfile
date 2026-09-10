@@ -97,5 +97,13 @@ target 'reclaimapp' do
         end
       end
     end
+
+    installer.pods_project.targets.each do |target|
+      if target.name == 'glog'
+        target.build_configurations.each do |config|
+          config.build_settings['USE_HEADERMAP'] = 'NO'
+        end
+      end
+    end
   end
 end
