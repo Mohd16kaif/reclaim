@@ -50,6 +50,25 @@ workflows:
       - name: Set Xcode project to manual signing
         script: |
           xcode-project use-profiles
+      - name: Debug libdav1d wedge.c error
+        script: |
+          set +e
+          xcodebuild -workspace "$XCODE_WORKSPACE" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            DEVELOPMENT_TEAM=6W846KW4B3 \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            CODE_SIGN_STYLE=Manual \
+            -target libdav1d \
+            build 2>&1 | tee /tmp/libdav1d_debug.log
+          echo "===== FULL ERROR CONTEXT FOR wedge.c ====="
+          grep -B 5 -A 30 "wedge" /tmp/libdav1d_debug.log || echo "no wedge.c mentions found"
+          echo "===== ALL error: LINES ====="
+          grep -n "error:" /tmp/libdav1d_debug.log || echo "no error: lines found"
+          echo "===== END DEBUG ====="
+          set -e
       - name: Build iOS
         script: |
           xcode-project build-ipa \
