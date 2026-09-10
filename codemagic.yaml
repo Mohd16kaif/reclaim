@@ -50,19 +50,19 @@ workflows:
       - name: Set Xcode project to manual signing
         script: |
           xcode-project use-profiles
-      - name: Debug libdav1d wedge.c error
+      - name: Debug Pods build errors
         script: |
           set +e
           xcodebuild -project ios/Pods/Pods.xcodeproj \
             -target libdav1d \
+            -target glog \
+            -target Sentry \
             -configuration Release \
             -sdk iphoneos \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            build 2>&1 | tee /tmp/libdav1d_debug.log
-          echo "===== FULL ERROR CONTEXT FOR wedge.c ====="
-          grep -B 5 -A 30 "wedge" /tmp/libdav1d_debug.log || echo "no wedge.c mentions found"
+            build 2>&1 | tee /tmp/pods_debug.log
           echo "===== ALL error: LINES ====="
-          grep -n "error:" /tmp/libdav1d_debug.log || echo "no error: lines found"
+          grep -n "error:" /tmp/pods_debug.log || echo "no error: lines found"
           echo "===== END DEBUG ====="
           set -e
       - name: Build iOS
