@@ -63,7 +63,8 @@
             "deploymentTarget": "15.1"
           }
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "android": {
       "package": "com.reclaim.recovery"
