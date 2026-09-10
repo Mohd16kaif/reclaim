@@ -87,5 +87,14 @@ target 'reclaimapp' do
         end
       end
     end
+
+    installer.pods_project.targets.each do |target|
+      if target.name == 'libdav1d'
+        target.build_configurations.each do |config|
+          config.build_settings['GCC_PREFIX_HEADER'] = ''
+          config.build_settings['GCC_PRECOMPILE_PREFIX_HEADER'] = 'NO'
+        end
+      end
+    end
   end
 end
