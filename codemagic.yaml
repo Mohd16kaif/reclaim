@@ -30,7 +30,7 @@ workflows:
       - name: Install CocoaPods
         script: |
           cd ios
-          pod update lottie-ios Sentry --no-repo-update
+          pod update lottie-ios
           pod install
       - name: Commit updated Podfile.lock
         script: |
