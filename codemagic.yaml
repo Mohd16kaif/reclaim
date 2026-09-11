@@ -27,6 +27,17 @@ workflows:
           echo "EXPO_PUBLIC_SUPERWALL_API_KEY_IOS=$EXPO_PUBLIC_SUPERWALL_API_KEY_IOS" >> .env
       - name: Install npm dependencies
         script: npm install
+      - name: Patch RCTPlatformColorUtils designated initializers
+        script: |
+          set -e
+          FILE="node_modules/react-native/ReactCommon/react/renderer/graphics/platform/ios/react/renderer/graphics/RCTPlatformColorUtils.mm"
+          if [ -f "$FILE" ]; then
+            sed -i '' 's/return {(float)rgba\[0\], (float)rgba\[1\], (float)rgba\[2\], (float)rgba\[3\]};/return {.red = (float)rgba[0], .green = (float)rgba[1], .blue = (float)rgba[2], .alpha = (float)rgba[3]};/' "$FILE"
+            echo "Patched RCTPlatformColorUtils.mm"
+            grep -A1 "_ColorComponentsFromUIColor(UIColor \*color)" "$FILE"
+          else
+            echo "WARNING: RCTPlatformColorUtils.mm not found at expected path"
+          fi
       - name: Install CocoaPods
         script: |
           cd ios
