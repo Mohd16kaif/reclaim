@@ -1,0 +1,941 @@
+================================================================================
+=== SECTION 1: Environment ===
+================================================================================
+
+$ node --version
+v24.15.0
+
+$ npm --version
+11.8.0
+
+$ npx expo --version
+54.0.25
+
+$ cat package.json (full contents)
+{
+  "name": "reclaim",
+  "main": "index.js",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "expo start",
+    "reset-project": "node ./scripts/reset-project.js",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "lint": "expo lint"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-picker/picker": "2.11.1",
+    "@react-navigation/bottom-tabs": "^7.4.0",
+    "@react-navigation/elements": "^2.6.3",
+    "@react-navigation/native": "^7.1.26",
+    "@react-navigation/stack": "^7.6.13",
+    "@sentry/react-native": "~7.2.0",
+    "@supabase/supabase-js": "^2.98.0",
+    "expo": "~54.0.33",
+    "expo-apple-authentication": "~8.0.8",
+    "expo-application": "~7.0.8",
+    "expo-blur": "~15.0.8",
+    "expo-build-properties": "~1.0.10",
+    "expo-constants": "~18.0.13",
+    "expo-dev-client": "~6.0.21",
+    "expo-device": "~8.0.10",
+    "expo-file-system": "~19.0.21",
+    "expo-font": "~14.0.11",
+    "expo-haptics": "~15.0.8",
+    "expo-image": "~3.0.11",
+    "expo-image-picker": "~17.0.10",
+    "expo-linear-gradient": "~15.0.8",
+    "expo-linking": "~8.0.11",
+    "expo-localization": "~17.0.8",
+    "expo-notifications": "~0.32.16",
+    "expo-router": "~6.0.23",
+    "expo-secure-store": "~15.0.8",
+    "expo-splash-screen": "~31.0.13",
+    "expo-status-bar": "~3.0.9",
+    "expo-superwall": "^1.1.6",
+    "expo-symbols": "~1.0.8",
+    "expo-system-ui": "~6.0.9",
+    "expo-video": "~3.0.16",
+    "expo-web-browser": "~15.0.10",
+    "lottie-react-native": "~7.3.1",
+    "posthog-react-native": "^4.37.1",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-gesture-handler": "~2.28.0",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-svg": "15.12.1",
+    "react-native-web": "~0.21.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.0",
+    "@types/react-native": "^0.72.8",
+    "@types/react-native-vector-icons": "^6.4.18",
+    "eslint": "^9.25.0",
+    "eslint-config-expo": "~10.0.0",
+    "typescript": "~5.9.2"
+  },
+  "private": true
+}
+
+$ cat package-lock.json | head -50
+{
+  "name": "reclaim",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "reclaim",
+      "version": "1.0.0",
+      "dependencies": {
+        "@expo/vector-icons": "^15.0.3",
+        "@react-native-async-storage/async-storage": "2.2.0",
+        "@react-native-picker/picker": "2.11.1",
+        "@react-navigation/bottom-tabs": "^7.4.0",
+        "@react-navigation/elements": "^2.6.3",
+        "@react-navigation/native": "^7.1.26",
+        "@react-navigation/stack": "^7.6.13",
+        "@sentry/react-native": "~7.2.0",
+        "@supabase/supabase-js": "^2.98.0",
+        "expo": "~54.0.33",
+        "expo-apple-authentication": "~8.0.8",
+        "expo-application": "~7.0.8",
+        "expo-blur": "~15.0.8",
+        "expo-build-properties": "~1.0.10",
+        "expo-constants": "~18.0.13",
+        "expo-dev-client": "~6.0.21",
+        "expo-device": "~8.0.10",
+        "expo-file-system": "~19.0.21",
+        "expo-font": "~14.0.11",
+        "expo-haptics": "~15.0.8",
+        "expo-image": "~3.0.11",
+        "expo-image-picker": "~17.0.10",
+        "expo-linear-gradient": "~15.0.8",
+        "expo-linking": "~8.0.11",
+        "expo-localization": "~17.0.8",
+        "expo-notifications": "~0.32.16",
+        "expo-router": "~6.0.23",
+        "expo-secure-store": "~15.0.8",
+        "expo-splash-screen": "~31.0.13",
+        "expo-status-bar": "~3.0.9",
+        "expo-superwall": "^1.1.6",
+        "expo-symbols": "~1.0.8",
+        "expo-system-ui": "~6.0.9",
+        "expo-video": "~3.0.16",
+        "expo-web-browser": "~15.0.10",
+        "lottie-react-native": "~7.3.1",
+        "posthog-react-native": "^4.37.1",
+        "react": "19.1.0",
+        "react-dom": "19.1.0",
+        "react-native": "0.81.5",
+
+
+================================================================================
+=== SECTION 2: React Native / Expo versions actually installed ===
+================================================================================
+
+$ cat node_modules/react-native/package.json | grep '"version"'
+  "version": "0.81.5",
+
+$ cat node_modules/expo/package.json | grep '"version"'
+  "version": "54.0.35",
+
+$ cat node_modules/@sentry/react-native/package.json | grep '"version"'
+  "version": "7.2.0",
+
+$ cat node_modules/expo-superwall/package.json | grep '"version"'
+  "version": "1.1.6",
+    "version": "changeset version",
+
+$ ls node_modules/react-native/ReactCommon/react/renderer/graphics/platform/ios/react/renderer/graphics/
+Float.h
+HostPlatformColor.h
+HostPlatformColor.mm
+PlatformColorParser.h
+PlatformColorParser.mm
+RCTPlatformColorUtils.h
+RCTPlatformColorUtils.mm
+
+$ cat node_modules/react-native/ReactCommon/react/renderer/graphics/platform/ios/react/renderer/graphics/RCTPlatformColorUtils.mm (full file)
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+#import "RCTPlatformColorUtils.h"
+
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+#import <react/renderer/graphics/HostPlatformColor.h>
+#import <react/utils/ManagedObjectWrapper.h>
+
+#include <string>
+
+NS_ASSUME_NONNULL_BEGIN
+
+static NSString *const kColorSuffix = @"Color";
+static NSString *const kFallbackARGBKey = @"fallback-argb";
+
+static NSDictionary<NSString *, NSDictionary *> *_PlatformColorSelectorsDict()
+{
+  static NSDictionary<NSString *, NSDictionary *> *dict;
+  static dispatch_once_t once_token;
+  dispatch_once(&once_token, ^(void) {
+    dict = @{
+      // https://developer.apple.com/documentation/uikit/uicolor/ui_element_colors
+      // Label Colors
+      @"label" : @{
+        kFallbackARGBKey : @(0xFF000000) // iOS 13.0
+      },
+      @"secondaryLabel" : @{
+        kFallbackARGBKey : @(0x993c3c43) // iOS 13.0
+      },
+      @"tertiaryLabel" : @{
+        kFallbackARGBKey : @(0x4c3c3c43) // iOS 13.0
+      },
+      @"quaternaryLabel" : @{
+        kFallbackARGBKey : @(0x2d3c3c43) // iOS 13.0
+      },
+      // Fill Colors
+      @"systemFill" : @{
+        kFallbackARGBKey : @(0x33787880) // iOS 13.0
+      },
+      @"secondarySystemFill" : @{
+        kFallbackARGBKey : @(0x28787880) // iOS 13.0
+      },
+      @"tertiarySystemFill" : @{
+        kFallbackARGBKey : @(0x1e767680) // iOS 13.0
+      },
+      @"quaternarySystemFill" : @{
+        kFallbackARGBKey : @(0x14747480) // iOS 13.0
+      },
+      // Text Colors
+      @"placeholderText" : @{
+        kFallbackARGBKey : @(0x4c3c3c43) // iOS 13.0
+      },
+      // Standard Content Background Colors
+      @"systemBackground" : @{
+        kFallbackARGBKey : @(0xFFffffff) // iOS 13.0
+      },
+      @"secondarySystemBackground" : @{
+        kFallbackARGBKey : @(0xFFf2f2f7) // iOS 13.0
+      },
+      @"tertiarySystemBackground" : @{
+        kFallbackARGBKey : @(0xFFffffff) // iOS 13.0
+      },
+      // Grouped Content Background Colors
+      @"systemGroupedBackground" : @{
+        kFallbackARGBKey : @(0xFFf2f2f7) // iOS 13.0
+      },
+      @"secondarySystemGroupedBackground" : @{
+        kFallbackARGBKey : @(0xFFffffff) // iOS 13.0
+      },
+      @"tertiarySystemGroupedBackground" : @{
+        kFallbackARGBKey : @(0xFFf2f2f7) // iOS 13.0
+      },
+      // Separator Colors
+      @"separator" : @{
+        kFallbackARGBKey : @(0x493c3c43) // iOS 13.0
+      },
+      @"opaqueSeparator" : @{
+        kFallbackARGBKey : @(0xFFc6c6c8) // iOS 13.0
+      },
+      // Link Color
+      @"link" : @{
+        kFallbackARGBKey : @(0xFF007aff) // iOS 13.0
+      },
+      // Nonadaptable Colors
+      @"darkText" : @{},
+      @"lightText" : @{},
+      // https://developer.apple.com/documentation/uikit/uicolor/standard_colors
+      // Adaptable Colors
+      @"systemBlue" : @{},
+      @"systemBrown" : @{
+        kFallbackARGBKey : @(0xFFa2845e) // iOS 13.0
+      },
+      @"systemCyan" : @{},
+      @"systemGreen" : @{},
+      @"systemIndigo" : @{
+        kFallbackARGBKey : @(0xFF5856d6) // iOS 13.0
+      },
+      @"systemMint" : @{},
+      @"systemOrange" : @{},
+      @"systemPink" : @{},
+      @"systemPurple" : @{},
+      @"systemRed" : @{},
+      @"systemTeal" : @{},
+      @"systemYellow" : @{},
+      // Adaptable Gray Colors
+      @"systemGray" : @{},
+      @"systemGray2" : @{
+        kFallbackARGBKey : @(0xFFaeaeb2) // iOS 13.0
+      },
+      @"systemGray3" : @{
+        kFallbackARGBKey : @(0xFFc7c7cc) // iOS 13.0
+      },
+      @"systemGray4" : @{
+        kFallbackARGBKey : @(0xFFd1d1d6) // iOS 13.0
+      },
+      @"systemGray5" : @{
+        kFallbackARGBKey : @(0xFFe5e5ea) // iOS 13.0
+      },
+      @"systemGray6" : @{
+        kFallbackARGBKey : @(0xFFf2f2f7) // iOS 13.0
+      },
+      // Transparent Color
+      @"clear" : @{
+        kFallbackARGBKey : @(0x00000000) // iOS 13.0
+      },
+    };
+  });
+  return dict;
+}
+
+static UIColor *_UIColorFromHexValue(NSNumber *hexValue)
+{
+  NSUInteger hexIntValue = [hexValue unsignedIntegerValue];
+
+  CGFloat red = ((CGFloat)((hexIntValue & 0xFF000000) >> 24)) / 255.0;
+  CGFloat green = ((CGFloat)((hexIntValue & 0xFF0000) >> 16)) / 255.0;
+  CGFloat blue = ((CGFloat)((hexIntValue & 0xFF00) >> 8)) / 255.0;
+  CGFloat alpha = ((CGFloat)(hexIntValue & 0xFF)) / 255.0;
+
+  return [UIColor colorWithRed:red green:green blue:blue alpha:alpha];
+}
+
+static UIColor *_Nullable _UIColorFromSemanticString(NSString *semanticString)
+{
+  NSString *platformColorString = [semanticString hasSuffix:kColorSuffix]
+      ? [semanticString substringToIndex:[semanticString length] - [kColorSuffix length]]
+      : semanticString;
+  NSDictionary<NSString *, NSDictionary *> *platformColorSelectorsDict = _PlatformColorSelectorsDict();
+  NSDictionary<NSString *, id> *colorInfo = platformColorSelectorsDict[platformColorString];
+  if (colorInfo) {
+    SEL objcColorSelector = NSSelectorFromString([platformColorString stringByAppendingString:kColorSuffix]);
+    if (![UIColor respondsToSelector:objcColorSelector]) {
+      NSNumber *fallbackRGB = colorInfo[kFallbackARGBKey];
+      if (fallbackRGB) {
+        return _UIColorFromHexValue(fallbackRGB);
+      }
+    } else {
+      Class uiColorClass = [UIColor class];
+      IMP imp = [uiColorClass methodForSelector:objcColorSelector];
+      id (*getUIColor)(id, SEL) = ((id(*)(id, SEL))imp);
+      id colorObject = getUIColor(uiColorClass, objcColorSelector);
+      if ([colorObject isKindOfClass:[UIColor class]]) {
+        return colorObject;
+      }
+    }
+  }
+  return nil;
+}
+
+static inline NSString *_NSStringFromCString(
+    const std::string &string,
+    const NSStringEncoding &encoding = NSUTF8StringEncoding)
+{
+  return [NSString stringWithCString:string.c_str() encoding:encoding];
+}
+
+static inline facebook::react::ColorComponents _ColorComponentsFromUIColor(UIColor *color)
+{
+  CGFloat rgba[4];
+  [color getRed:&rgba[0] green:&rgba[1] blue:&rgba[2] alpha:&rgba[3]];
+  return {(float)rgba[0], (float)rgba[1], (float)rgba[2], (float)rgba[3]};
+}
+
+facebook::react::ColorComponents RCTPlatformColorComponentsFromSemanticItems(std::vector<std::string> &semanticItems)
+{
+  return _ColorComponentsFromUIColor(RCTPlatformColorFromSemanticItems(semanticItems));
+}
+
+UIColor *RCTPlatformColorFromSemanticItems(std::vector<std::string> &semanticItems)
+{
+  for (const auto &semanticCString : semanticItems) {
+    NSString *semanticNSString = _NSStringFromCString(semanticCString);
+    UIColor *uiColor = [UIColor colorNamed:semanticNSString];
+    if (uiColor != nil) {
+      return uiColor;
+    }
+    uiColor = _UIColorFromSemanticString(semanticNSString);
+    if (uiColor != nil) {
+      return uiColor;
+    }
+  }
+
+  return UIColor.clearColor;
+}
+
+UIColor *RCTPlatformColorFromColor(const facebook::react::Color &color)
+{
+  return (UIColor *)facebook::react::unwrapManagedObject(color.getUIColor());
+}
+
+NS_ASSUME_NONNULL_END
+
+
+================================================================================
+=== SECTION 3: RCT-Folly version and the exact failing file ===
+================================================================================
+
+$ find node_modules -maxdepth 2 -iname "*folly*" -type d
+C:\Users\kaif3\OneDrive\Desktop\reclaim\reclaim\node_modules\react-native\third-party-podspecs\RCT-Folly
+
+$ cat node_modules/react-native/third-party-podspecs/RCT-Folly.podspec (full file)
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+folly_config = get_folly_config()
+folly_config_file = folly_config[:config_file]
+folly_release_version = folly_config[:version]
+folly_git_url = folly_config[:git]
+
+Pod::Spec.new do |spec|
+  spec.name = 'RCT-Folly'
+  # Patched to v2 to address https://github.com/react-native-community/releases/issues/251
+  spec.version = folly_release_version
+  spec.license = { :type => 'Apache License, Version 2.0' }
+  spec.homepage = 'https://github.com/facebook/folly'
+  spec.summary = 'An open-source C++ library developed and used at Facebook.'
+  spec.authors = 'Facebook'
+  spec.source = { :git => folly_git_url,
+                  :tag => "v#{folly_release_version}" }
+  spec.module_name = 'folly'
+  spec.prepare_command = "echo '#{folly_config_file.join("\n")}' > folly/folly-config.h"
+  spec.header_mappings_dir = '.'
+  spec.dependency "boost"
+  spec.dependency "DoubleConversion"
+  spec.dependency "glog"
+  spec.dependency "fast_float", "8.0.0"
+  spec.dependency "fmt", "11.0.2"
+  spec.compiler_flags = '-Wno-documentation -faligned-new'
+  spec.source_files = 'folly/String.cpp',
+                      'folly/Conv.cpp',
+                      'folly/Demangle.cpp',
+                      'folly/FileUtil.cpp',
+                      'folly/Format.cpp',
+                      'folly/lang/SafeAssert.cpp',
+                      'folly/lang/ToAscii.cpp',
+                      'folly/ScopeGuard.cpp',
+                      'folly/Unicode.cpp',
+                      'folly/json/dynamic.cpp',
+                      'folly/json/json.cpp',
+                      'folly/json/json_pointer.cpp',
+                      'folly/container/detail/F14Table.cpp',
+                      'folly/detail/Demangle.cpp',
+                      'folly/detail/FileUtilDetail.cpp',
+                      'folly/detail/SplitStringSimd.cpp',
+                      'folly/detail/StaticSingletonManager.cpp',
+                      'folly/detail/UniqueInstance.cpp',
+                      'folly/hash/SpookyHashV2.cpp',
+                      'folly/lang/CString.cpp',
+                      'folly/lang/Exception.cpp',
+                      'folly/memory/ReentrantAllocator.cpp',
+                      'folly/memory/detail/MallocImpl.cpp',
+                      'folly/net/NetOps.cpp',
+                      'folly/portability/SysUio.cpp',
+                      'folly/synchronization/SanitizeThread.cpp',
+                      'folly/system/AtFork.cpp',
+                      'folly/system/ThreadId.cpp',
+                      'folly/*.h',
+                      'folly/algorithm/simd/*.h',
+                      'folly/algorithm/simd/detail/*.h',
+                      'folly/chrono/*.h',
+                      'folly/container/*.h',
+                      'folly/container/detail/*.h',
+                      'folly/detail/*.h',
+                      'folly/functional/*.h',
+                      'folly/hash/*.h',
+                      'folly/json/*.h',
+                      'folly/lang/*.h',
+                      'folly/memory/*.h',
+                      'folly/memory/detail/*.h',
+                      'folly/net/*.h',
+                      'folly/net/detail/*.h',
+                      'folly/portability/*.h',
+                      'folly/system/*.h',
+
+  # workaround for https://github.com/facebook/react-native/issues/14326
+  spec.preserve_paths = 'folly/*.h',
+                        'folly/algorithm/simd/*.h',
+                        'folly/algorithm/simd/detail/*.h',
+                        'folly/chrono/*.h',
+                        'folly/container/*.h',
+                        'folly/container/detail/*.h',
+                        'folly/detail/*.h',
+                        'folly/functional/*.h',
+                        'folly/hash/*.h',
+                        'folly/json/*.h',
+                        'folly/lang/*.h',
+                        'folly/memory/*.h',
+                        'folly/memory/detail/*.h',
+                        'folly/net/*.h',
+                        'folly/net/detail/*.h',
+                        'folly/portability/*.h',
+                        'folly/system/*.h',
+  spec.libraries           = "c++abi" # NOTE Apple-only: Keep c++abi here due to https://github.com/react-native-community/releases/issues/251
+  spec.pod_target_xcconfig = { "USE_HEADERMAP" => "NO",
+                               "DEFINES_MODULE" => "YES",
+                               "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
+                               "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/fast_float/include\" \"$(PODS_ROOT)/fmt/include\"",
+                               # In dynamic framework (use_frameworks!) mode, ignore the unused and undefined boost symbols when generating the library.
+                               "OTHER_LDFLAGS" => "\"-Wl,-U,_jump_fcontext\" \"-Wl,-U,_make_fcontext\"",
+                               "GCC_WARN_INHIBIT_ALL_WARNINGS" => "YES" # Disable warnings because we don't control this library
+                             }
+
+  # TODO: The boost spec should really be selecting these files so that dependents of Folly can also access the required headers.
+  spec.user_target_xcconfig = { "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\"" }
+
+  spec.default_subspec = 'Default'
+
+  spec.resource_bundles = {'RCT-Folly_privacy' => 'RCT-Folly/PrivacyInfo.xcprivacy'}
+
+  spec.subspec 'Default' do
+    # no-op
+  end
+
+  spec.subspec 'Fabric' do |fabric|
+    fabric.source_files = 'folly/SharedMutex.cpp',
+                          'folly/concurrency/CacheLocality.cpp',
+                          'folly/detail/Futex.cpp',
+                          'folly/synchronization/ParkingLot.cpp',
+                          'folly/concurrency/CacheLocality.h',
+                          'folly/synchronization/*.h',
+                          'folly/system/ThreadId.h'
+
+    fabric.preserve_paths = 'folly/concurrency/CacheLocality.h',
+                            'folly/synchronization/*.h',
+                            'folly/system/ThreadId.h'
+  end
+
+  # Folly has issues when compiled with iOS 10 set as deployment target
+  # See https://github.com/facebook/folly/issues/1470 for details
+  spec.platforms = min_supported_versions
+end
+
+$ ios/Pods/RCT-Folly does NOT exist (ios/Pods directory does NOT exist)
+$ ios/Pods/RCT-Folly/folly/portability/Stdlib.h does NOT exist
+$ ios/Pods/RCT-Folly/folly/portability/Stdio.h does NOT exist
+$ ios/Pods/RCT-Folly/folly/Math.h does NOT exist
+
+$ find ios/Pods -maxdepth 1 -iname "RCT-Folly*" 2>/dev/null
+(NO OUTPUT — ios/Pods directory does not exist)
+
+
+================================================================================
+=== SECTION 4: Full Podfile and Podfile.lock RCT-Folly / React-graphics entries ===
+================================================================================
+
+$ cat ios/Podfile (full file, current state)
+require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
+require File.join(File.dirname(`node --print "require.resolve('react-native/package.json')"`), "scripts/react_native_pods")
+
+require 'json'
+project 'reclaimapp.xcodeproj'
+podfile_properties = JSON.parse(File.read(File.join(__dir__, 'Podfile.properties.json'))) rescue {}
+
+def ccache_enabled?(podfile_properties)
+  # Environment variable takes precedence
+  return ENV['USE_CCACHE'] == '1' if ENV['USE_CCACHE']
+  
+  # Fall back to Podfile properties
+  podfile_properties['apple.ccacheEnabled'] == 'true'
+end
+
+ENV['RCT_USE_RN_DEP'] = '0'
+ENV['RCT_USE_PREBUILT_RNCORE'] = '0'
+ENV['RCT_NEW_ARCH_ENABLED'] ||= '0' if podfile_properties['newArchEnabled'] == 'false'
+ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] ||= podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
+platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
+
+prepare_react_native_project!
+
+pre_install do |installer|
+  installer.pod_targets.each do |pod|
+    if pod.name == 'libdav1d'
+      pod.specs.each do |spec|
+        if spec.attributes_hash['source_files']
+          original = Array(spec.attributes_hash['source_files'])
+          filtered = original.reject { |pattern| pattern.include?('tmpl_arm') && pattern.end_with?('.S') }
+          spec.attributes_hash['source_files'] = filtered
+          puts "libdav1d source_files BEFORE: #{original.inspect}"
+          puts "libdav1d source_files AFTER:  #{filtered.inspect}"
+        end
+      end
+    end
+  end
+end
+
+target 'reclaimapp' do
+  use_expo_modules!
+
+  if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'
+    config_command = ['node', '-e', "process.argv=['', '', 'config'];require('@react-native-community/cli').run()"];
+  else
+    config_command = [
+      'node',
+      '--no-warnings',
+      '--eval',
+      'require(\'expo/bin/autolinking\')',
+      'expo-modules-autolinking',
+      'react-native-config',
+      '--json',
+      '--platform',
+      'ios'
+    ]
+  end
+
+  config = use_native_modules!(config_command)
+
+  use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
+  use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    :hermes_enabled => podfile_properties['expo.jsEngine'] == nil || podfile_properties['expo.jsEngine'] == 'hermes',
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/..",
+    :privacy_file_aggregation_enabled => podfile_properties['apple.privacyManifestAggregationEnabled'] != 'false',
+  )
+
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false,
+      :ccache_enabled => ccache_enabled?(podfile_properties),
+    )
+
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+        config.build_settings['USE_HEADERMAP'] = 'YES'
+        if target.name == 'Sentry' || target.name == 'RNSentry' || target.name.include?('Sentry')
+          config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
+          config.build_settings['DEFINES_MODULE'] = 'YES'
+        end
+      end
+    end
+
+    installer.pods_project.targets.each do |target|
+      if target.name == 'libdav1d'
+        target.build_configurations.each do |config|
+          config.build_settings['GCC_PREFIX_HEADER'] = ''
+          config.build_settings['GCC_PRECOMPILE_PREFIX_HEADER'] = 'NO'
+          config.build_settings['USE_HEADERMAP'] = 'NO'
+        end
+      end
+    end
+
+    installer.pods_project.targets.each do |target|
+      if target.name == 'glog'
+        target.build_configurations.each do |config|
+          config.build_settings['USE_HEADERMAP'] = 'NO'
+        end
+      end
+    end
+  end
+end
+
+CONFIRMED: Podfile does NOT contain CLANG_ENABLE_EXPLICIT_MODULES=NO
+
+$ grep -A 5 "RCT-Folly" ios/Podfile.lock
+(NO OUTPUT — RCT-Folly is NOT referenced in Podfile.lock at all in this RN 0.81.5 project)
+
+$ grep -A 5 "React-graphics" ios/Podfile.lock (key entries only)
+  - React-graphics (0.81.5):
+    - hermes-engine
+    - React-Core-prebuilt
+    - React-jsi
+    - React-jsiexecutor
+    - React-utils
+    - ReactNativeDependencies
+
+  React-graphics:
+    :path: "../node_modules/react-native/ReactCommon/react/renderer/graphics"
+
+  React-graphics: 192ec701def5b3f2a07db2814dfba5a44986cff6
+
+$ cat ios/Podfile.properties.json
+{
+  "expo.jsEngine": "hermes",
+  "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true",
+  "newArchEnabled": "true"
+}
+
+
+================================================================================
+=== SECTION 5: Xcode project build settings relevant to C++/libc++ header search order ===
+================================================================================
+
+$ ios/Pods/Pods.xcodeproj does NOT exist (ios/Pods directory does not exist)
+  -> Cannot grep for CLANG_CXX_LIBRARY, CLANG_ENABLE_MODULES, CLANG_ENABLE_EXPLICIT_MODULES,
+     HEADER_SEARCH_PATHS, SYSTEM_HEADER_SEARCH_PATHS, USE_HEADERMAP in project.pbxproj
+
+$ grep -B2 -A 10 "'React-graphics'" ios/Podfile 2>/dev/null
+(NO OUTPUT — No special-casing for React-graphics in Podfile)
+
+
+================================================================================
+=== SECTION 6: Full list of Podfile post_install customizations ===
+================================================================================
+
+  72:   post_install do |installer|
+  73:     react_native_post_install(
+  74:       installer,
+  75:       config[:reactNativePath],
+  76:       :mac_catalyst_enabled => false,
+  77:       :ccache_enabled => ccache_enabled?(podfile_properties),
+  78:     )
+  79: 
+  80:     installer.pods_project.targets.each do |target|
+  81:       target.build_configurations.each do |config|
+  82:         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+  83:         config.build_settings['USE_HEADERMAP'] = 'YES'
+  84:         if target.name == 'Sentry' || target.name == 'RNSentry' || target.name.include?('Sentry')
+  85:           config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
+  86:           config.build_settings['DEFINES_MODULE'] = 'YES'
+  87:         end
+  88:       end
+  89:     end
+  90: 
+  91:     installer.pods_project.targets.each do |target|
+  92:       if target.name == 'libdav1d'
+  93:         target.build_configurations.each do |config|
+  94:           config.build_settings['GCC_PREFIX_HEADER'] = ''
+  95:           config.build_settings['GCC_PRECOMPILE_PREFIX_HEADER'] = 'NO'
+  96:           config.build_settings['USE_HEADERMAP'] = 'NO'
+  97:         end
+  98:       end
+  99:     end
+ 100: 
+ 101:     installer.pods_project.targets.each do |target|
+ 102:       if target.name == 'glog'
+ 103:         target.build_configurations.each do |config|
+ 104:           config.build_settings['USE_HEADERMAP'] = 'NO'
+ 105:         end
+ 106:       end
+ 107:     end
+ 108:   end
+ 109: end
+
+Summary of post_install customizations:
+1. Calls react_native_post_install() with default args
+2. Sets IPHONEOS_DEPLOYMENT_TARGET = '15.1' for ALL pods
+3. Sets USE_HEADERMAP = 'YES' for ALL pods
+4. Enables CLANG_ENABLE_MODULES and DEFINES_MODULE for Sentry/RNSentry targets
+5. Clears GCC_PREFIX_HEADER and disables USE_HEADERMAP for libdav1d
+6. Disables USE_HEADERMAP for glog
+
+
+================================================================================
+=== SECTION 7: node_modules react-native version deployment target and C++ standard ===
+================================================================================
+
+$ grep -r "IPHONEOS_DEPLOYMENT_TARGET\|CLANG_CXX_LANGUAGE_STANDARD" node_modules/react-native/scripts/react_native_pods.rb
+(no direct match for IPHONEOS_DEPLOYMENT_TARGET or CLANG_CXX_LANGUAGE_STANDARD as literal strings)
+(deployment target is set via: platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1' in Podfile)
+(CLANG_CXX_LANGUAGE_STANDARD is set via: spec.pod_target_xcconfig = { "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard() } in each podspec)
+
+$ cat node_modules/react-native/scripts/react_native_pods.rb | grep -A 20 "def react_native_post_install"
+def react_native_post_install(
+  installer,
+  react_native_path = "../node_modules/react-native",
+  mac_catalyst_enabled: false,
+  ccache_enabled: ENV['USE_CCACHE'] == '1'
+)
+  ReactNativePodsUtils.turn_off_resource_bundle_react_core(installer)
+
+  ReactNativePodsUtils.apply_mac_catalyst_patches(installer) if mac_catalyst_enabled
+
+  privacy_file_aggregation_enabled = ENV['RCT_AGGREGATE_PRIVACY_FILES'] == '1'
+
+  if use_hermes()
+    ReactNativePodsUtils.set_gcc_preprocessor_definition_for_React_hermes(installer)
+  end
+  ReactNativePodsUtils.set_gcc_preprocessor_definition_for_debugger(installer)
+
+  ReactNativePodsUtils.fix_library_search_paths(installer)
+  ReactNativePodsUtils.update_search_paths(installer)
+  ReactNativePodsUtils.set_build_setting(installer, build_setting: "USE_HERMES", value: use_hermes())
+  ReactNativePodsUtils.set_build_setting(installer, build_setting: "REACT_NATIVE_PATH", value: File.join("${PODS_ROOT}", "..", react_native_path))
+  ReactNativePodsUtils.set_build_setting(installer, build_setting: "SWIFT_ACTIVE_COMPILATION_CONDITIONS", value: ['$(inherited)', 'DEBUG'], config_name: "Debug")
+
+  ReactNativePodsUtils.set_ccache_compiler_and_linker_build_settings(installer, react_native_path, ccache_enabled)
+  ReactNativePodsUtils.updateOSDeploymentTarget(installer)
+  ReactNativePodsUtils.set_dynamic_frameworks_flags(installer)
+  ReactNativePodsUtils.add_ndebug_flag_to_pods_in_release(installer)
+
+  if !ReactNativeCoreUtils.build_rncore_from_source()
+    # In XCode 26 we need to revert the new setting SWIFT_ENABLE_EXPLICIT_MODULES when building
+    # with precompiled binaries.
+    ReactNativePodsUtils.set_build_setting(installer, build_setting: "SWIFT_ENABLE_EXPLICIT_MODULES", value: "NO")
+  end
+
+  SPM.apply_on_post_install(installer)
+
+  if privacy_file_aggregation_enabled
+    PrivacyManifestUtils.add_aggregated_privacy_manifest(installer)
+  else
+    PrivacyManifestUtils.add_privacy_manifest_if_needed(installer)
+  end
+
+  NewArchitectureHelper.set_clang_cxx_language_standard_if_needed(installer)
+  NewArchitectureHelper.modify_flags_for_new_architecture(installer, NewArchitectureHelper.new_arch_enabled)
+  NewArchitectureHelper.set_RCTNewArchEnabled_in_info_plist(installer, NewArchitectureHelper.new_arch_enabled)
+
+  if !use_hermes() && !use_third_party_jsc()
+    print_jsc_removal_message()
+  end
+
+  print_cocoapods_deprecation_message
+  Pod::UI.puts "Pod install took #{Time.now.to_i - $START_TIME} [s] to run".green
+end
+
+NOTE: NewArchitectureHelper.set_clang_cxx_language_standard_if_needed(installer) is called
+which sets CLANG_CXX_LANGUAGE_STANDARD on all pod targets when new arch is enabled.
+
+
+================================================================================
+=== SECTION 8: Known-good baseline check ===
+================================================================================
+
+$ npm ls react-native expo @sentry/react-native
+reclaim@1.0.0 C:\Users\kaif3\OneDrive\Desktop\reclaim\reclaim
+├─┬ @sentry/react-native@7.2.0
+│ ├── expo@54.0.35 deduped
+│ └── react-native@0.81.5 deduped
+├─┬ expo@54.0.35
+│ └── react-native@0.81.5 deduped
+├─┬ expo-superwall@1.1.6
+│ ├── expo@54.0.35 deduped
+│ └── react-native@0.81.5 deduped
+└─┬ react-native@0.81.5
+  └─┬ @react-native/virtualized-lists@0.81.5
+    └── react-native@0.81.5 deduped
+
+(all dependency trees resolve react-native to 0.81.5 without duplication)
+
+$ npx expo-doctor 2>&1 | tail -40
+Running 18 checks on your project...
+15/18 checks passed. 3 checks failed. Possible issues detected:
+
+✖ Check dependencies for packages that should not be installed directly
+The package  "@types/react-native" should not be installed directly in your project, as types are included with the "react-native" package.
+Advice:
+Remove these packages from your package.json.
+
+✖ Check for app config fields that may not be synced in a non-CNG project
+This project contains native project folders but also has native configuration properties in app.json, indicating it is configured to use Prebuild. When the android/ios folders are present, EAS Build will not sync the following properties: orientation, icon, scheme, userInterfaceStyle, ios, plugins, android, androidStatusBar. 
+
+✖ Check that packages match versions required by installed Expo SDK
+
+🔧 Patch version mismatches
+package                   expected  found    
+expo                      ~54.0.37  54.0.35  
+expo-constants            ~18.0.14  18.0.13  
+expo-file-system          ~19.0.24  19.0.23  
+@react-navigation/native  ^7.1.8    ^7.1.26  
+
+Changelogs:
+- expo-constants → https://github.com/expo/expo/blob/sdk-54/packages/expo-constants/CHANGELOG.md
+- expo-file-system → https://github.com/expo/expo/blob/sdk-54/packages/expo-file-system/CHANGELOG.md
+
+4 packages out of date.
+Advice:
+Use 'npx expo install --check' to review and upgrade your dependencies.
+To ignore specific packages, add them to "expo.install.exclude" in package.json. Learn more: https://expo.fyi/dependency-validation
+
+3 checks failed, indicating possible issues with the project.
+
+
+================================================================================
+=== SECTION 9: Git history of Podfile and package.json changes this session ===
+================================================================================
+
+$ git log --oneline -15 -- ios/Podfile package.json
+217fc6a revert: remove CLANG_ENABLE_EXPLICIT_MODULES=NO, confirmed to break libc++ header resolution
+588fefb fix: disable Clang explicit modules to resolve silent ScanDependencies/CompileC failures
+2244f4f another try
+af5f5ef fix: disable header maps for glog to stop config.h collision, same as libdav1d
+5d9f527 fix: disable header maps for libdav1d to stop config.h resolving to Yoga's Config.h
+b1b3018 fix: disable libdav1d prefix header to stop Yoga C++ header leaking into pure-C compile
+ecbd3a9 fix: exclude libdav1d ARM assembly source_files at pre_install, use pure-C build
+7b075f4 fix: exclude libdav1d ARM assembly sources, build C implementation only
+95d077a fix: isolate libdav1d header search paths to resolve Config.h collision
+3bb5db1 fix: work around libdav1d .S assembler failure on Xcode 16.2
+3396bb1 fix: apply Xcode 16 module flags for Sentry pod compilation
+a383cfe cc fix
+9a03718 fix: disable prebuilt RN deps to resolve [RNDeps] archive crash
+b004189 fix: set minimum deployment target to 15.1 in Podfile post_install
+69c7f89 feat: integrate Superwall hard paywall after onboarding flow
+
+$ git diff HEAD~15 HEAD -- ios/Podfile
+diff --git a/ios/Podfile b/ios/Podfile
+index 8fef6fa..f6c5a12 100644
+--- a/ios/Podfile
++++ b/ios/Podfile
+@@ -21,6 +21,22 @@ platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
+ 
+ prepare_react_native_project!
+ 
++pre_install do |installer|
++  installer.pod_targets.each do |pod|
++    if pod.name == 'libdav1d'
++      pod.specs.each do |spec|
++        if spec.attributes_hash['source_files']
++          original = Array(spec.attributes_hash['source_files'])
++          filtered = original.reject { |pattern| pattern.include?('tmpl_arm') && pattern.end_with?('.S') }
++          spec.attributes_hash['source_files'] = filtered
++          puts "libdav1d source_files BEFORE: #{original.inspect}"
++          puts "libdav1d source_files AFTER:  #{filtered.inspect}"
++        end
++      end
++    end
++  end
++end
++
+ target 'reclaimapp' do
+   use_expo_modules!
+ 
+@@ -75,20 +91,18 @@ target 'reclaimapp' do
+     installer.pods_project.targets.each do |target|
+       if target.name == 'libdav1d'
+         target.build_configurations.each do |config|
+-          config.build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
+-          config.build_settings['ARCHS'] = 'arm64'
+-          config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
++          config.build_settings['GCC_PREFIX_HEADER'] = ''
++          config.build_settings['GCC_PRECOMPILE_PREFIX_HEADER'] = 'NO'
++          config.build_settings['USE_HEADERMAP'] = 'NO'
+         end
++      end
++    end
+ 
+-        removed_count = 0
+-        target.source_build_phase.files.each do |file|
+-          file_path = file.file_ref.real_path.to_s
+-          if file_path.end_with?('.S')
+-            target.source_build_phase.remove_file_reference(file.file_ref)
+-            removed_count += 1
+-          end
++    installer.pods_project.targets.each do |target|
++      if target.name == 'glog'
++        target.build_configurations.each do |config|
++          config.build_settings['USE_HEADERMAP'] = 'NO'
+         end
+-        puts "Removed #{removed_count} .S files from libdav1d target"
+       end
+     end
+   end
+
+END OF BUILD_DIAGNOSTIC.txt
