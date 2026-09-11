@@ -70,7 +70,7 @@ workflows:
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME" \
-            --build-flag="-jobs 2"
+            --archive-flags "-jobs 2"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
