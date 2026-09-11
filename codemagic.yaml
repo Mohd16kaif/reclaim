@@ -64,16 +64,24 @@ workflows:
       - name: Debug Pods build errors
         script: |
           set +e
+          echo "===== Isolated build of React-graphics target with full verbosity ====="
           xcodebuild -project ios/Pods/Pods.xcodeproj \
-            -target libdav1d \
-            -target glog \
-            -target Sentry \
+            -target React-graphics \
             -configuration Release \
             -sdk iphoneos \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            build 2>&1 | tee /tmp/pods_debug.log
-          echo "===== ALL error: LINES ====="
-          grep -n "error:" /tmp/pods_debug.log || echo "no error: lines found"
+            -verbose \
+            build 2>&1 | tee /tmp/graphics_debug.log
+          echo "===== EXIT CODE: $? ====="
+          echo "===== Searching for error/crash/fatal lines ====="
+          grep -n -i "error:\|fatal\|crash\|Segmentation\|internal error\|Stack dump\|PLEASE submit a bug report" /tmp/graphics_debug.log || echo "no matches found"
+          echo "===== Checking for clang crash logs ====="
+          find ~/Library/Logs/DiagnosticReports -name "*.crash" -newer /tmp/graphics_debug.log 2>/dev/null | while read f; do
+            echo "--- CRASH LOG: $f ---"
+            cat "$f"
+          done
+          echo "===== Last 100 lines of full log for context ====="
+          tail -n 100 /tmp/graphics_debug.log
           echo "===== END DEBUG ====="
           set -e
       - name: Build iOS
