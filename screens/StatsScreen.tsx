@@ -4,8 +4,8 @@ import {
   useFocusEffect,
   useNavigation,
   useRoute,
-} from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+} from "expo-router/react-navigation";
+import { StackNavigationProp } from "expo-router/js-stack";
 import * as Haptics from "expo-haptics";
 import { LinearGradient as ExpoLinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useRef, useState } from "react";

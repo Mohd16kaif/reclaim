@@ -4,10 +4,18 @@ import * as Sentry from "@sentry/react-native";
 import * as Application from "expo-application";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { getUserName, getUserEmail, setUserName, setUserEmail } from "./profileStorage";
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim();
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim();
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+// Supabase is an optional cloud service for local development. Creating its
+// client with undefined values throws during module import, which prevents the
+// local-first onboarding flow from even opening. A loopback placeholder keeps
+// the client shape available; every sync operation already handles failures.
+export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+const clientUrl = SUPABASE_URL || "http://127.0.0.1:1";
+const clientAnonKey = SUPABASE_ANON_KEY || "local-development-placeholder";
+
+export const supabase = createClient(clientUrl, clientAnonKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
@@ -32,6 +40,10 @@ export const getOrCreateUserId = async (): Promise<string> => {
   try {
     const cachedUserId = await AsyncStorage.getItem("@reclaim_user_id");
     if (cachedUserId) return cachedUserId;
+
+    if (!isSupabaseConfigured) {
+      return await getDeviceId();
+    }
 
     const { data, error } = await supabase.auth.signInAnonymously();
     if (error) {
@@ -76,6 +88,13 @@ export type AppleSignInResult =
   | { status: "error"; message: string };
 
 export const signInWithApple = async (): Promise<AppleSignInResult> => {
+  if (!isSupabaseConfigured) {
+    return {
+      status: "error",
+      message: "Cloud sign-in is not configured for this build.",
+    };
+  }
+
   try {
     const credential = await AppleAuthentication.signInAsync({
       requestedScopes: [
@@ -574,6 +593,14 @@ export const deleteAccount = async (): Promise<
   { success: true } | { success: false; error: string }
 > => {
   try {
+    // A local-development build has no cloud identity to delete. Its account
+    // is the data stored on this device, so erase that data and treat the
+    // operation as a successful local account reset.
+    if (!isSupabaseConfigured) {
+      await AsyncStorage.clear();
+      return { success: true };
+    }
+
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     if (sessionError || !session) {
       return { success: false, error: "No active session found." };
@@ -599,4 +626,3 @@ export const deleteAccount = async (): Promise<
     return { success: false, error: e.message ?? "Unknown error" };
   }
 };
-

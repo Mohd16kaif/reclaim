@@ -1,4 +1,4 @@
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation } from "expo-router/react-navigation";
 import React, { useEffect } from "react";
 import { ActivityIndicator, Linking, View } from "react-native";
 

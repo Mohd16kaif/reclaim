@@ -1,0 +1,18 @@
+diff --git a/node_modules/expo-notifications/build/DevicePushTokenAutoRegistration.fx.js b/node_modules/expo-notifications/build/DevicePushTokenAutoRegistration.fx.js
+index 85cd97c..17d0101 100644
+--- a/node_modules/expo-notifications/build/DevicePushTokenAutoRegistration.fx.js
++++ b/node_modules/expo-notifications/build/DevicePushTokenAutoRegistration.fx.js
+@@ -100,6 +100,13 @@ if (ServerRegistrationModule.getRegistrationInfoAsync) {
+     // has successfully uploaded last known
+     // device push token. If not, retry.
+     ServerRegistrationModule.getRegistrationInfoAsync().then(__handlePersistedRegistrationInfoAsync, (e) => {
++        // iOS Simulators do not provide the Keychain storage required by this
++        // optional server-registration probe. Local notifications continue to
++        // work, so avoid surfacing a false application error in development.
++        if (e?.code === 'ERR_NOTIFICATIONS_KEYCHAIN_ACCESS' ||
++            String(e).includes('ERR_NOTIFICATIONS_KEYCHAIN_ACCESS')) {
++            return;
++        }
+         console.error('[expo-notifications] Error reading persisted server registration info: ', e);
+     });
+ }

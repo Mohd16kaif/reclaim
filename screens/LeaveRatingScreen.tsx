@@ -1,5 +1,5 @@
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { RouteProp, useNavigation, useRoute } from "expo-router/react-navigation";
+import { StackNavigationProp } from "expo-router/js-stack";
 import React, { useRef, useState } from "react";
 import { Alert, Animated, Dimensions, Linking, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

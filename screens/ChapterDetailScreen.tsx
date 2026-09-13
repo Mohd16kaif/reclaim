@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp, useFocusEffect, useNavigation, useRoute } from "expo-router/react-navigation";
+import { StackNavigationProp } from "expo-router/js-stack";
 import React, { useCallback, useRef, useState } from 'react';
 import {
   ScrollView,

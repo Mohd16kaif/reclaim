@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { RouteProp, useNavigation, useRoute } from "expo-router/react-navigation";
+import { StackNavigationProp } from "expo-router/js-stack";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -42,6 +42,7 @@ const OnboardingQuestionScreen: React.FC = () => {
   const route = useRoute<OnboardingRouteProp>();
   const progressAnim = useRef(new Animated.Value(0)).current;
   const [userName, setUserName] = useState<string>("");
+  const [nameError, setNameError] = useState<string | null>(null);
 
   const questionNumber = route.params?.questionNumber ?? 1;
   const totalQuestions =
@@ -64,22 +65,41 @@ const OnboardingQuestionScreen: React.FC = () => {
   }, [progress, progressAnim]);
 
   const handleBack = () => {
-    navigation.goBack();
+    // Local onboarding enters this screen with `replace`, so there is no
+    // previous route in that flow. Guarding prevents React Navigation's
+    // unhandled GO_BACK warning and still gives the user a way to return.
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Welcome" }],
+    });
   };
 
-  const handleContinue = async () => {
-    // Only proceed if name is valid
-    if (!isNameValid) return;
+  const handleContinue = () => {
+    if (!isNameValid) {
+      setNameError("Enter a name to continue.");
+      return;
+    }
 
-    await saveUserNameToProfile(userName.trim());
-
-    syncUserToSupabase().catch((e) => console.error("syncUserToSupabase failed:", e));
+    const name = userName.trim();
+    // Persisting/syncing must not hold up navigation. Both operations are
+    // best-effort and the app remains local-first when cloud sync is absent.
+    saveUserNameToProfile(name).catch((e) =>
+      console.error("saveUserNameToProfile failed:", e),
+    );
+    syncUserToSupabase().catch((e) =>
+      console.error("syncUserToSupabase failed:", e),
+    );
 
     // Navigate to gender selection screen (question 2)
     navigation.navigate("GenderSelection", {
       questionNumber: 2,
       totalQuestions: totalQuestions,
-      userName: userName.trim(),
+      userName: name,
     });
   };
 
@@ -120,9 +140,14 @@ const OnboardingQuestionScreen: React.FC = () => {
             placeholderTextColor="#A1A1AA"
             textAlign="center"
             value={userName}
-            onChangeText={setUserName}
+            onChangeText={(value) => {
+              setUserName(value);
+              if (value.trim()) setNameError(null);
+            }}
+            onSubmitEditing={handleContinue}
             accessibilityLabel="Your name"
           />
+          {nameError && <Text style={styles.errorText}>{nameError}</Text>}
         </View>
 
         {/* Bottom button */}
@@ -130,12 +155,10 @@ const OnboardingQuestionScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.continueButton,
-              !isNameValid && styles.continueButtonDisabled,
+              !isNameValid && styles.continueButtonInactive,
             ]}
-            activeOpacity={isNameValid ? 0.85 : 1}
+            activeOpacity={0.85}
             onPress={handleContinue}
-            disabled={!isNameValid}
-            accessibilityState={{ disabled: !isNameValid }}
           >
             <Text style={styles.continueButtonText}>Continue</Text>
           </TouchableOpacity>
@@ -211,6 +234,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#000000",
   },
+  errorText: {
+    color: "#DC2626",
+    fontSize: 14,
+    marginTop: 12,
+    textAlign: "center",
+  },
   footer: {
     paddingHorizontal: 24,
     paddingTop: 20,
@@ -230,7 +259,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  continueButtonDisabled: {
+  continueButtonInactive: {
     backgroundColor: "#000000",
     opacity: 0.4,
   },

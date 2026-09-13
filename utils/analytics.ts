@@ -4,9 +4,16 @@ import PostHog from "posthog-react-native";
 let client: PostHog | null = null;
 
 export const initAnalytics = (): PostHog | null => {
+  const apiKey = process.env.EXPO_PUBLIC_POSTHOG_KEY?.trim();
+  if (!apiKey) {
+    // Analytics is optional in local and preview builds. Do not construct a
+    // PostHog client without a key because its SDK reports that as an error.
+    return null;
+  }
+
   if (!client) {
     try {
-      client = new PostHog(process.env.EXPO_PUBLIC_POSTHOG_KEY!, {
+      client = new PostHog(apiKey, {
         host: "https://us.i.posthog.com",
         flushInterval: 10000,
         flushAt: 20,

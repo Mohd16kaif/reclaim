@@ -4,8 +4,8 @@ import {
   NavigationContainer,
   NavigationIndependentTree,
   useNavigationContainerRef,
-} from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
+} from "expo-router/react-navigation";
+import { createStackNavigator } from "expo-router/js-stack";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef, useState } from "react";
@@ -66,6 +66,7 @@ import NotificationsScreen from "./screens/NotificationsScreen";
 import OnboardingCarouselScreen from "./screens/OnboardingCarouselScreen";
 import OnboardingQuestionScreen from "./screens/OnboardingQuestionScreen";
 import OnboardingResultScreen from "./screens/OnboardingResultScreen";
+import PaywallPreviewScreen from "./screens/PaywallPreviewScreen";
 import PanicActivatedScreen from "./screens/PanicActivatedScreen";
 import PanicButtonInfoScreen from "./screens/PanicButtonInfoScreen";
 import PanicCoachScreen from "./screens/PanicCoachScreen";
@@ -102,7 +103,7 @@ import UrgeIntensityScreen from "./screens/UrgeIntensityScreen";
 import UrgeLoopScreen from "./screens/UrgeLoopScreen";
 import UrgeResponseScreen from "./screens/UrgeResponseScreen";
 import WelcomeScreen from "./screens/WelcomeScreen";
-import { SuperwallProvider } from "expo-superwall";
+import { SuperwallContext, SuperwallProvider } from "expo-superwall";
 import * as Sentry from '@sentry/react-native';
 
 const SENSITIVE_SCREEN_RE = /Masturbation|SexualFantasy|UrgeIntensity|RelationshipImpact|Relapse|Panic/;
@@ -156,6 +157,26 @@ const NAVBAR_VISIBLE_SCREENS = [
 ];
 
 const SKIP_TRACKING_SCREENS = ["Splash"];
+
+const superwallApiKey = process.env.EXPO_PUBLIC_SUPERWALL_API_KEY_IOS?.trim();
+
+const SuperwallGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  if (!superwallApiKey) {
+    // Local builds without vendor credentials keep the app usable while
+    // intentionally disabling paywall configuration.
+    return (
+      <SuperwallContext.Provider value={true}>
+        {children}
+      </SuperwallContext.Provider>
+    );
+  }
+
+  return (
+    <SuperwallProvider apiKeys={{ ios: superwallApiKey }}>
+      {children}
+    </SuperwallProvider>
+  );
+};
 
 // ── Transition ────────────────────────────────────────────────────────────────
 
@@ -528,7 +549,7 @@ export default Sentry.wrap(function App() {
 
   return (
     <ErrorBoundary>
-    <SuperwallProvider apiKeys={{ ios: process.env.EXPO_PUBLIC_SUPERWALL_API_KEY_IOS ?? "" }}>
+    <SuperwallGate>
     <BlockerProvider>
       <NavigationIndependentTree>
         <NavigationContainer
@@ -608,6 +629,7 @@ export default Sentry.wrap(function App() {
             <Stack.Screen name="GrantPermissions" component={GrantPermissionsScreen} options={{ headerShown: false }} />
             <Stack.Screen name="SetupComplete" component={SetupCompleteScreen} />
             <Stack.Screen name="OnboardingResult" component={OnboardingResultScreen} />
+            <Stack.Screen name="PaywallPreview" component={PaywallPreviewScreen} />
             <Stack.Screen name="MainDashboard" component={MainDashboardScreen} options={{ headerShown: false, animation: "none" }} />
             <Stack.Screen name="ChaptersScreen" component={ChaptersScreen} options={{ headerShown: false }} />
             <Stack.Screen name="ChapterDetail" component={ChapterDetailScreen} options={{ headerShown: false }} />
@@ -664,7 +686,7 @@ export default Sentry.wrap(function App() {
         </NavigationContainer>
       </NavigationIndependentTree>
     </BlockerProvider>
-    </SuperwallProvider>
+    </SuperwallGate>
     </ErrorBoundary>
   );
 });

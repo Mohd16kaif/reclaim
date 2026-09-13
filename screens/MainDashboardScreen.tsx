@@ -7,9 +7,9 @@ import {
   useFocusEffect,
   useNavigation,
   useRoute,
-} from "@react-navigation/native";
+} from "expo-router/react-navigation";
 import { StatusBar } from "expo-status-bar";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { StackNavigationProp } from "expo-router/js-stack";
 import * as Haptics from "expo-haptics";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {

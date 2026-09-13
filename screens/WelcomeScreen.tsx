@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { StackNavigationProp } from "expo-router/js-stack";
 import React, { useEffect, useRef, useState } from "react";
 import {
     AccessibilityInfo,
@@ -18,6 +18,7 @@ import {
   getOrCreateUserId,
   signInWithApple,
   restoreFromSupabase,
+  isSupabaseConfigured,
   syncUserToSupabase,
   AppleSignInResult,
 } from "../utils/supabase";
@@ -94,6 +95,17 @@ const WelcomeScreen: React.FC = () => {
   const handleGetStarted = async () => {
     if (isSigningIn) return;
     setIsSigningIn(true);
+
+    // Apple Sign In is not dependable in the iOS Simulator and should not
+    // prevent local flow testing. Production builds retain the cloud auth
+    // path; development builds (or builds without Supabase) start locally.
+    if (__DEV__ || !isSupabaseConfigured) {
+      navigation.replace("OnboardingQuestion", {
+        questionNumber: 1,
+        totalQuestions: 23,
+      });
+      return;
+    }
 
     // Ensure an anonymous session exists before linking Apple identity —
     // linkIdentity requires an active session's JWT to attach to.

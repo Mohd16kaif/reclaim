@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { StackNavigationProp } from "expo-router/js-stack";
 import { useSuperwall } from "expo-superwall";
 import { StatusBar } from "expo-status-bar";
 import * as Sentry from "@sentry/react-native";
@@ -24,13 +24,18 @@ type SplashScreenNavigationProp = StackNavigationProp<
 
 const SPLASH_DURATION_MS = 2000;
 const ONBOARDING_COMPLETE_KEY = "@reclaim_onboarding_complete";
+const superwallEnabled = Boolean(
+  process.env.EXPO_PUBLIC_SUPERWALL_API_KEY_IOS?.trim(),
+);
 
 const logoImage = require("../assets/images/reclaim-logo-app.png");
 
 export default function SplashScreen() {
   const navigation = useNavigation<SplashScreenNavigationProp>();
   const [reduceMotion, setReduceMotion] = useState(false);
-  const superwall = useSuperwall();
+  // Selecting the method, rather than the full store, keeps this effect from
+  // restarting when Superwall updates its internal state during app startup.
+  const getEntitlements = useSuperwall((state) => state.getEntitlements);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -44,19 +49,31 @@ export default function SplashScreen() {
   useEffect(() => {
     const timeout = setTimeout(async () => {
       try {
-        const entitlements = await superwall.getEntitlements();
-        const proActive = entitlements.active.some((e) => e.id === "pro");
-        console.log("SPLASH_ENTITLEMENTS_DEBUG:", JSON.stringify(entitlements, null, 2));
-        if (proActive) {
-          Sentry.captureMessage("SUPERWALL_DEBUG SplashScreen — returning subscriber detected, routing to MainDashboard", "info");
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "MainDashboard" }],
-          });
-          return;
+        if (superwallEnabled) {
+          // An unavailable purchase service must never hold the user on the
+          // splash screen. Fall through to the normal onboarding flow after a
+          // short timeout.
+          const entitlements = await Promise.race([
+            getEntitlements(),
+            new Promise<never>((_, reject) =>
+              setTimeout(
+                () =>
+                  reject(new Error("Superwall entitlement request timed out")),
+                1500,
+              ),
+            ),
+          ]);
+          const proActive = entitlements.active.some((e) => e.id === "pro");
+          if (proActive) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "MainDashboard" }],
+            });
+            return;
+          }
         }
       } catch (err) {
-        Sentry.captureMessage("SUPERWALL_DEBUG SplashScreen — entitlement check failed: " + JSON.stringify(err), "error");
+        Sentry.captureException(err);
       }
 
       try {
@@ -89,7 +106,7 @@ export default function SplashScreen() {
     }, reduceMotion ? 0 : SPLASH_DURATION_MS);
 
     return () => clearTimeout(timeout);
-  }, [navigation, reduceMotion, superwall]);
+  }, [getEntitlements, navigation, reduceMotion]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

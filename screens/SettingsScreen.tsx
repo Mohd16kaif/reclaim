@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { useFocusEffect, useNavigation } from "expo-router/react-navigation";
+import { StackNavigationProp } from "expo-router/js-stack";
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -462,7 +462,7 @@ const [deletingAccount, setDeletingAccount] = useState(false);
     useCallback(() => {
       let mounted = true;
       const loadAiModel = async () => {
-        const saved = await AsyncStorage.getItem('aiCoachMode') ?? 'calm';
+        const saved = (await AsyncStorage.getItem('aiCoachMode')) ?? 'calm';
         const modeLabels: Record<string, string> = {
           calm: 'Calm Mode',
           strict: 'Strict Mode',

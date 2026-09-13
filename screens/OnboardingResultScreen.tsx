@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "expo-router/react-navigation";
+import { StackNavigationProp } from "expo-router/js-stack";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 type RootStackParamList = {
   OnboardingResult: undefined;
+  PaywallPreview: undefined;
   MainDashboard: undefined;
 };
 
@@ -108,6 +109,9 @@ function getFreedomDateLabel(): string {
 const STAR_SIZE = 38;
 const HALF_STAR_CLIP = 19;
 const STAR_FIVE_SIZE = 28;
+const superwallEnabled = Boolean(
+  process.env.EXPO_PUBLIC_SUPERWALL_API_KEY_IOS?.trim(),
+);
 
 const FiveStarsRow: React.FC = () => (
   <View style={styles.starsRowFive}>
@@ -256,6 +260,8 @@ const OnboardingResultScreen: React.FC = () => {
   }, [floatAnim]);
 
   useEffect(() => {
+    if (!superwallEnabled) return;
+
     Sentry.captureMessage(
       "SUPERWALL_DEBUG screen mounted, subscriptionStatus=" + JSON.stringify(superwall.subscriptionStatus),
       "info"
@@ -279,6 +285,13 @@ const OnboardingResultScreen: React.FC = () => {
   const displayName = userName.trim() || "Friend";
 
   const handleContinue = async () => {
+    // Cloud monetization is optional in local builds. Do not leave a tester at
+    // the final onboarding CTA while Superwall waits for an absent API key.
+    if (!superwallEnabled) {
+      navigation.navigate("PaywallPreview");
+      return;
+    }
+
     if (isProcessingRef.current) {
       Sentry.captureMessage("SUPERWALL_DEBUG CTA tapped — already processing", "info");
       return;
