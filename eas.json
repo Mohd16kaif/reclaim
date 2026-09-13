@@ -9,19 +9,22 @@
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "image": "sdk-57"
       }
     },
     "preview": {
       "distribution": "internal",
       "ios": {
-        "buildConfiguration": "Release"
+        "buildConfiguration": "Release",
+        "image": "sdk-57"
       }
     },
     "production": {
       "autoIncrement": true,
       "ios": {
-        "buildConfiguration": "Release"
+        "buildConfiguration": "Release",
+        "image": "sdk-57"
       }
     }
   },
