@@ -172,7 +172,6 @@ const OnboardingResultScreen: React.FC = () => {
     };
   }, []);
 
-  // TEMP DEBUG - remove after diagnosing paywall issue
   const { registerPlacement } = usePlacement({
     onError: (error) => {
       Sentry.captureMessage("SUPERWALL_DEBUG onError fired: " + error, "error");
@@ -205,10 +204,6 @@ const OnboardingResultScreen: React.FC = () => {
         discountTimerRef.current = setTimeout(() => {
           registerPlacement({
             placement: "discount_paywall_trigger",
-            feature: () => {
-              Sentry.captureMessage("SUPERWALL_DEBUG discount feature() fired — verifying entitlement", "info");
-              checkEntitlementAndNavigate();
-            },
           })
             .catch((err) => {
               Sentry.captureMessage("SUPERWALL_DEBUG discount placement error: " + JSON.stringify(err), "error");
@@ -304,12 +299,21 @@ const OnboardingResultScreen: React.FC = () => {
     Sentry.captureMessage("SUPERWALL_DEBUG CTA tapped - calling registerPlacement", "info");
 
     try {
+      // `feature` is intentionally not passed to registerPlacement below.
+      // Superwall runs that callback whenever it allows a placement through,
+      // including a non-gated paywall dismissal, a holdout, or a campaign
+      // configuration issue. This screen is a hard subscription gate, so a
+      // placement outcome is never itself proof of access.
+      //
+      // Check first to retain the already-subscribed path. Every new user
+      // remains on this screen until a purchase/restore dismissal is followed
+      // by a positive entitlement check in onDismiss.
+      if (await checkEntitlementAndNavigate()) {
+        return;
+      }
+
       await registerPlacement({
         placement: "onboarding_complete",
-        feature: () => {
-          Sentry.captureMessage("SUPERWALL_DEBUG main feature() fired — verifying entitlement", "info");
-          checkEntitlementAndNavigate();
-        },
       });
     } catch (err) {
       Sentry.captureMessage("SUPERWALL_DEBUG registerPlacement THREW: " + JSON.stringify(err), "error");
