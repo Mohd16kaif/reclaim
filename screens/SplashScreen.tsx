@@ -48,34 +48,8 @@ export default function SplashScreen() {
 
   useEffect(() => {
     const timeout = setTimeout(async () => {
-      try {
-        if (superwallEnabled) {
-          // An unavailable purchase service must never hold the user on the
-          // splash screen. Fall through to the normal onboarding flow after a
-          // short timeout.
-          const entitlements = await Promise.race([
-            getEntitlements(),
-            new Promise<never>((_, reject) =>
-              setTimeout(
-                () =>
-                  reject(new Error("Superwall entitlement request timed out")),
-                1500,
-              ),
-            ),
-          ]);
-          const proActive = entitlements.active.some((e) => e.id === "pro");
-          if (proActive) {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "MainDashboard" }],
-            });
-            return;
-          }
-        }
-      } catch (err) {
-        Sentry.captureException(err);
-      }
-
+      // Panic protection is a safety-critical, time-bound state. Restore it
+      // before evaluating entitlements or the normal post-launch destination.
       try {
         const completed = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
 
@@ -90,13 +64,44 @@ export default function SplashScreen() {
           }
         }
 
+        // A returning subscriber should go to the dashboard only when there
+        // is no active panic session to resume.
+        try {
+          if (superwallEnabled) {
+            // An unavailable purchase service must never hold the user on the
+            // splash screen. Fall through to the normal onboarding flow after a
+            // short timeout.
+            const entitlements = await Promise.race([
+              getEntitlements(),
+              new Promise<never>((_, reject) =>
+                setTimeout(
+                  () =>
+                    reject(new Error("Superwall entitlement request timed out")),
+                  1500,
+                ),
+              ),
+            ]);
+            const proActive = entitlements.active.some((e) => e.id === "pro");
+            if (proActive) {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "MainDashboard" }],
+              });
+              return;
+            }
+          }
+        } catch (err) {
+          Sentry.captureException(err);
+        }
+
         navigation.reset({
           index: 0,
           routes: [
             { name: completed === "true" ? "OnboardingResult" : "Welcome" },
           ],
         });
-      } catch {
+      } catch (err) {
+        Sentry.captureException(err);
         // If AsyncStorage fails, default to Welcome
         navigation.reset({
           index: 0,
