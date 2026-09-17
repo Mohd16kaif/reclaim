@@ -8,11 +8,11 @@ import {
     Animated,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEvent } from "expo";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { useVideoPlayer, VideoView } from "expo-video";
 import {
   getOrCreateUserId,
@@ -146,19 +146,20 @@ const WelcomeScreen: React.FC = () => {
         </Animated.View>
 
         <View style={styles.bottomContent}>
-          <Text style={styles.heading}>Quit Porn{"\n"}Addiction Easily</Text>
+          <Text style={styles.heading}>Build healthier{"\n"}digital habits</Text>
+          <Text style={styles.signInExplanation}>
+            Sign in to securely save and restore your progress.
+          </Text>
 
-          <TouchableOpacity
-            style={[
-              styles.primaryButton,
-              isSigningIn && styles.primaryButtonDisabled,
-            ]}
-            activeOpacity={0.8}
-            onPress={handleGetStarted}
-            disabled={isSigningIn}
-          >
-            <Text style={styles.primaryButtonText}>Get Started</Text>
-          </TouchableOpacity>
+          <View style={isSigningIn ? styles.primaryButtonDisabled : undefined}>
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              cornerRadius={12}
+              style={styles.appleButton}
+              onPress={handleGetStarted}
+            />
+          </View>
         </View>
       </Animated.View>
     </SafeAreaView>
@@ -198,22 +199,21 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#000000",
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 8,
   },
-  primaryButton: {
-    backgroundColor: "#000000",
-    borderRadius: 999,
-    paddingVertical: 16,
-    alignItems: "center",
-    justifyContent: "center",
+  signInExplanation: {
+    color: "#6B7280",
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  appleButton: {
+    width: "100%",
+    height: 52,
     marginBottom: 12,
   },
   primaryButtonDisabled: {
     opacity: 0.5,
-  },
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
   },
 });

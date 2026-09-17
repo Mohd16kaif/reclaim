@@ -1,8 +1,7 @@
 import { useNavigation } from "expo-router/react-navigation";
 import React, { useEffect } from "react";
 import { ActivityIndicator, Linking, View } from "react-native";
-
-const PRIVACY_POLICY_URL = "https://mohd16kaif.github.io/reclaim-privacy-policy/";
+import { PRIVACY_POLICY_URL } from "../constants/legal";
 
 const PrivacyPolicyScreen: React.FC = () => {
   const navigation = useNavigation<any>();

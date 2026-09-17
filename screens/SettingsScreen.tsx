@@ -20,6 +20,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { IconSymbol } from '../components/ui/icon-symbol';
+import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from '../constants/legal';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { getAvatarBase64Jpeg } from '../utils/profileStorage';
 import {
@@ -813,7 +814,7 @@ const [deletingAccount, setDeletingAccount] = useState(false);
               title="Privacy Policy"
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                Linking.openURL('https://mohd16kaif.github.io/reclaim-privacy-policy/');
+                Linking.openURL(PRIVACY_POLICY_URL);
               }}
             />
             <InsetDivider />
@@ -821,10 +822,10 @@ const [deletingAccount, setDeletingAccount] = useState(false);
               icon={<DocIcon color="#FFFFFF" />}
               iconBackground="#8E8E93"
               title="Terms of Service"
-             onPress={() => {
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  navigation.navigate('TermsOfService');
-}}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                Linking.openURL(TERMS_OF_USE_URL);
+              }}
             />
             <InsetDivider />
             <SettingsRow

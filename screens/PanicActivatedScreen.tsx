@@ -56,13 +56,13 @@ const NotificationBellIcon = () => (
 // SUB-COMPONENTS
 // ============================================================================
 
-/** NSFW badge card — red rounded rect with "18+" text */
-const NsfwCard = () => (
+/** Neutral restricted-content card suitable for App Store screenshots. */
+const RestrictedContentCard = () => (
   <View style={styles.iconCard}>
-    <View style={styles.nsfwBadge}>
-      <Text style={styles.nsfwText}>18+</Text>
+    <View style={styles.restrictedBadge}>
+      <Ionicons name="shield-checkmark" size={24} color="#FFFFFF" />
     </View>
-    <Text style={styles.nsfwLabel}>NSFW</Text>
+    <Text style={styles.restrictedLabel}>BLOCKED</Text>
   </View>
 );
 
@@ -222,7 +222,7 @@ const PanicActivatedScreen: React.FC = () => {
             accessibilityElementsHidden={true}
             importantForAccessibility="no-hide-descendants"
           >
-            <NsfwCard />
+            <RestrictedContentCard />
             <LockCard />
             <BrowserBlockedCard />
           </View>
@@ -365,20 +365,15 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 
-  // NSFW card
-  nsfwBadge: {
-    backgroundColor: "#EF4444",
+  // Restricted-content card
+  restrictedBadge: {
+    backgroundColor: "#2563EB",
     borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  nsfwText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  nsfwLabel: {
-    color: "#EF4444",
+  restrictedLabel: {
+    color: "#2563EB",
     fontSize: 10,
     fontWeight: "700",
     marginTop: 4,

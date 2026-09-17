@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "expo-router/react-navigation";
 import { StackNavigationProp } from "expo-router/js-stack";
@@ -33,7 +33,7 @@ type SignInScreenNavigationProp = StackNavigationProp<
 
 const SignInScreen: React.FC = () => {
   const navigation = useNavigation<SignInScreenNavigationProp>();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const runSignIn = async () => {
@@ -64,26 +64,25 @@ const SignInScreen: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    runSignIn();
-  }, []);
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        <Text style={styles.title}>Sign in to Reclaim</Text>
+        <Text style={styles.subtitle}>
+          Use your Apple ID to securely restore your account and progress.
+        </Text>
         {isLoading ? (
           <ActivityIndicator size="large" color="#000000" />
-        ) : errorMessage !== null ? (
-          <>
-            <Text style={styles.errorText}>{errorMessage}</Text>
-            <TouchableOpacity
-              style={styles.retryButton}
-              onPress={runSignIn}
-            >
-              <Text style={styles.retryButtonText}>Try Again</Text>
-            </TouchableOpacity>
-          </>
-        ) : null}
+        ) : (
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+            cornerRadius={12}
+            style={styles.appleButton}
+            onPress={runSignIn}
+          />
+        )}
+        {errorMessage !== null && <Text style={styles.errorText}>{errorMessage}</Text>}
       </View>
     </SafeAreaView>
   );
@@ -102,22 +101,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 24,
   },
+  title: {
+    color: "#111111",
+    fontSize: 28,
+    fontWeight: "700",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  subtitle: {
+    color: "#6B7280",
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 28,
+    textAlign: "center",
+  },
+  appleButton: {
+    height: 52,
+    width: "100%",
+  },
   errorText: {
     fontSize: 16,
     color: "#333333",
     textAlign: "center",
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: "#000000",
-    borderRadius: 999,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    alignItems: "center",
-  },
-  retryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    marginTop: 20,
   },
 });
