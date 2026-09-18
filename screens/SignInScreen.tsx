@@ -77,7 +77,7 @@ const SignInScreen: React.FC = () => {
           <AppleAuthentication.AppleAuthenticationButton
             buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
             buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-            cornerRadius={12}
+            cornerRadius={26}
             style={styles.appleButton}
             onPress={runSignIn}
           />
