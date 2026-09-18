@@ -146,10 +146,7 @@ const WelcomeScreen: React.FC = () => {
         </Animated.View>
 
         <View style={styles.bottomContent}>
-          <Text style={styles.heading}>Build healthier{"\n"}digital habits</Text>
-          <Text style={styles.signInExplanation}>
-            Sign in to securely save and restore your progress.
-          </Text>
+          <Text style={styles.heading}>Quit Porn{"\n"}Addiction Easily</Text>
 
           <View style={isSigningIn ? styles.primaryButtonDisabled : undefined}>
             <AppleAuthentication.AppleAuthenticationButton
@@ -199,14 +196,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#000000",
     textAlign: "center",
-    marginBottom: 8,
-  },
-  signInExplanation: {
-    color: "#6B7280",
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
-    marginBottom: 12,
+    marginBottom: 20,
   },
   appleButton: {
     width: "100%",
