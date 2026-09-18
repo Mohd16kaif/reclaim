@@ -6,7 +6,6 @@ import {
   Animated,
   Easing,
   Image,
-  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,11 +15,6 @@ import {
 import { usePlacement, useSuperwall } from "expo-superwall";
 import * as Sentry from "@sentry/react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  PRIVACY_POLICY_URL,
-  SUBSCRIPTION_PLANS,
-  TERMS_OF_USE_URL,
-} from "../constants/legal";
 
 type RootStackParamList = {
   OnboardingResult: undefined;
@@ -578,64 +572,18 @@ const OnboardingResultScreen: React.FC = () => {
               <Text style={styles.testimonialName}>— Alex M., 31</Text>
             </View>
 
-            <View style={styles.subscriptionCard}>
-              <Text style={styles.subscriptionHeading}>Reclaim Premium</Text>
-              <Text style={styles.subscriptionIntro}>
-                Choose your billing period on the next screen.
-              </Text>
-              {SUBSCRIPTION_PLANS.map((plan) => (
-                <View key={plan.title} style={styles.planRow}>
-                  <View style={styles.planCopy}>
-                    <Text style={styles.planTitle}>{plan.title}</Text>
-                    <Text style={styles.planDuration}>{plan.duration}</Text>
-                  </View>
-                  <Text style={styles.planPrice}>{plan.price}</Text>
-                </View>
-              ))}
-              <Text style={styles.renewalText}>
-                Payment is charged to your Apple ID. Subscriptions renew
-                automatically unless canceled at least 24 hours before the end
-                of the current period. The App Store purchase screen shows the
-                final price for your country or region before confirmation.
-              </Text>
-              <View style={styles.legalLinks}>
-                <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}>
-                  <Text style={styles.legalLink}>Privacy Policy</Text>
-                </TouchableOpacity>
-                <Text style={styles.legalSeparator}>•</Text>
-                <TouchableOpacity onPress={() => Linking.openURL(TERMS_OF_USE_URL)}>
-                  <Text style={styles.legalLink}>Terms of Use</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
             <View style={styles.scrollBottomSpacer} />
           </ScrollView>
 
           <View style={styles.footer}>
-            <Text style={styles.footerPlanSummary}>
-              Monthly $4.99 / 1 month  •  Yearly $39.99 / 1 year
-            </Text>
             <TouchableOpacity
               disabled={isProcessing}
               style={[styles.cta, isProcessing && { opacity: 0.6 }]}
               onPress={handleContinue}
               activeOpacity={0.85}
             >
-              <Text style={styles.ctaText}>View subscription options</Text>
+              <Text style={styles.ctaText}>Become a Reclaimer</Text>
             </TouchableOpacity>
-            <Text style={styles.footerDisclaimer}>
-              Cancel anytime in your Apple ID subscription settings.
-            </Text>
-            <View style={styles.footerLegalLinks}>
-              <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}>
-                <Text style={styles.footerLegalLink}>Privacy Policy</Text>
-              </TouchableOpacity>
-              <Text style={styles.footerLegalSeparator}>•</Text>
-              <TouchableOpacity onPress={() => Linking.openURL(TERMS_OF_USE_URL)}>
-                <Text style={styles.footerLegalLink}>Terms of Use</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
       </SafeAreaView>
@@ -1008,60 +956,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     alignItems: "center",
   },
-  subscriptionCard: {
-    alignSelf: "stretch",
-    backgroundColor: "#F9FAFB",
-    borderColor: "#E5E7EB",
-    borderRadius: 20,
-    borderWidth: 1,
-    marginTop: 32,
-    padding: 20,
-  },
-  subscriptionHeading: {
-    color: "#111827",
-    fontSize: 21,
-    fontWeight: "800",
-    textAlign: "center",
-  },
-  subscriptionIntro: {
-    color: "#6B7280",
-    fontSize: 13,
-    marginBottom: 16,
-    marginTop: 6,
-    textAlign: "center",
-  },
-  planRow: {
-    alignItems: "center",
-    borderTopColor: "#E5E7EB",
-    borderTopWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 14,
-  },
-  planCopy: { flex: 1, paddingRight: 12 },
-  planTitle: { color: "#111827", fontSize: 14, fontWeight: "700" },
-  planDuration: { color: "#6B7280", fontSize: 12, marginTop: 3 },
-  planPrice: { color: "#111827", fontSize: 14, fontWeight: "700" },
-  renewalText: {
-    color: "#6B7280",
-    fontSize: 11,
-    lineHeight: 17,
-    marginTop: 4,
-    textAlign: "center",
-  },
-  legalLinks: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 14,
-  },
-  legalLink: {
-    color: "#2563EB",
-    fontSize: 12,
-    fontWeight: "600",
-    textDecorationLine: "underline",
-  },
-  legalSeparator: { color: "#9CA3AF", marginHorizontal: 9 },
   scrollBottomSpacer: {
     height: 160,
   },
@@ -1087,37 +981,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  footerPlanSummary: {
-    color: "#374151",
-    fontSize: 11,
-    fontWeight: "600",
-    marginBottom: 8,
-    textAlign: "center",
-  },
   ctaText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
   },
-  footerDisclaimer: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    textAlign: "center",
-    marginTop: 6,
-    lineHeight: 20,
-  },
-  footerLegalLinks: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 3,
-  },
-  footerLegalLink: {
-    color: "#2563EB",
-    fontSize: 11,
-    textDecorationLine: "underline",
-  },
-  footerLegalSeparator: { color: "#9CA3AF", marginHorizontal: 8 },
   testimonialName: {
     fontSize: 12,
     color: "#9CA3AF",
